@@ -1,52 +1,38 @@
 <template>
-  <!-- Mobile Backdrop Overlay -->
+  <!-- Mobile Backdrop Overlay (< lg): positioned below navbar -->
   <div 
     v-if="uiStore.isSidebarOpen" 
     @click="uiStore.closeSidebar()"
-    class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-40 lg:hidden transition-opacity"
+    class="fixed inset-x-0 top-[57px] bottom-0 bg-slate-900/50 backdrop-blur-xs z-30 lg:hidden transition-opacity"
   ></div>
 
-  <!-- Sidebar Container (Fixed Drawer on Mobile, Collapsible Static on Desktop) -->
+  <!-- Sidebar Container (Fixed Drawer on Mobile below navbar, Collapsible Static on Desktop) -->
   <aside 
-    class="bg-white border-r border-slate-200 flex flex-col justify-between z-30 transition-all duration-300 ease-in-out shrink-0"
+    class="bg-white border-r border-slate-200 flex flex-col justify-between transition-all duration-300 ease-in-out shrink-0"
     :class="[
-      // Mobile positioning (Fixed drawer)
-      'fixed inset-y-0 left-0 w-72 p-4 shadow-2xl lg:shadow-none',
+      // Mobile positioning (Fixed drawer, strictly below navbar top-[57px])
+      'fixed top-[57px] bottom-0 left-0 w-72 p-4 shadow-2xl z-40 lg:shadow-none',
       uiStore.isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
-      // Desktop positioning (Static collapsible sidebar)
-      'lg:static lg:translate-x-0 lg:min-h-[calc(100vh-61px)]',
+      // Desktop positioning (Static collapsible sidebar under navbar)
+      'lg:static lg:top-0 lg:z-10 lg:translate-x-0 lg:min-h-[calc(100vh-57px)]',
       uiStore.isSidebarCollapsed 
         ? 'lg:w-0 lg:p-0 lg:border-r-0 lg:opacity-0 lg:pointer-events-none lg:overflow-hidden' 
         : 'lg:w-64 lg:p-4 lg:opacity-100'
     ]"
   >
     <div class="space-y-4" :class="{ 'lg:hidden': uiStore.isSidebarCollapsed }">
-      <!-- Drawer / Sidebar Top Bar with Collapse & Close Buttons -->
-      <div class="flex items-center justify-between pb-2 border-b border-slate-100">
-        <div class="flex items-center space-x-2">
-          <img src="/gtt-logo.png" alt="GTT" class="h-6 w-auto object-contain" />
-          <span class="font-bold text-slate-800 text-xs tracking-tight">Navigasi Helpdesk</span>
-        </div>
+      <!-- Mobile Close Bar (Only visible on mobile drawer < lg) -->
+      <div class="flex items-center justify-between pb-2 border-b border-slate-100 lg:hidden">
+        <span class="font-bold text-slate-700 text-xs uppercase tracking-wider">Navigasi Menu</span>
 
         <!-- Mobile Close Button -->
         <button 
           @click="uiStore.closeSidebar()" 
-          class="lg:hidden p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
+          class="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100"
           title="Tutup Menu"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-          </svg>
-        </button>
-
-        <!-- Desktop Collapse Button -->
-        <button 
-          @click="uiStore.toggleSidebarCollapse()" 
-          class="hidden lg:flex p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-          title="Sembunyikan Sidebar"
-        >
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"></path>
           </svg>
         </button>
       </div>

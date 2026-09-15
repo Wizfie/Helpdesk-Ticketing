@@ -277,42 +277,55 @@
               <div 
                 v-for="card in mttrPerformanceCards" 
                 :key="card.code"
-                class="bg-white border border-slate-200/80 rounded-xl p-3 sm:p-3.5 space-y-2 shadow-xs transition-all hover:border-slate-300"
+                class="bg-white border border-slate-200/90 rounded-xl p-3 sm:p-3.5 space-y-2.5 shadow-xs transition-all hover:border-slate-300"
               >
-                <div class="flex items-center justify-between gap-1.5">
-                  <div class="flex items-center space-x-1.5 min-w-0">
-                    <span class="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] shrink-0" :class="card.badgeColor">
-                      {{ card.code }}
-                    </span>
-                    <span class="text-xs font-bold text-slate-800 truncate" :title="card.label">{{ card.label }}</span>
+                <!-- 1. Point Title Highlighted Clearly (Full width, no truncation!) -->
+                <div class="flex items-center space-x-2 pb-1 border-b border-slate-100">
+                  <span class="px-2 py-0.5 rounded font-mono font-bold text-xs shrink-0 shadow-2xs" :class="card.badgeColor">
+                    {{ card.code }}
+                  </span>
+                  <span class="text-xs sm:text-sm font-bold text-slate-900 tracking-tight">
+                    {{ card.label }}
+                  </span>
+                </div>
+
+                <!-- 2. Realisasi MTTR vs Target + Badge Efisiensi Lebih Cepat -->
+                <div class="flex items-center justify-between pt-0.5">
+                  <div class="space-y-0.5">
+                    <span class="text-[10px] text-slate-400 block font-medium leading-none">Realisasi MTTR</span>
+                    <div class="flex items-baseline space-x-1.5">
+                      <span class="text-base sm:text-lg font-black text-slate-900 font-mono tracking-tight">
+                        {{ card.actualLabel }}
+                      </span>
+                      <span class="text-[10px] text-slate-500 font-mono">
+                        / {{ card.targetLabel }}
+                      </span>
+                    </div>
                   </div>
-                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0 whitespace-nowrap">
-                    {{ card.speedup }}
-                  </span>
+
+                  <!-- Prominent Speedup Highlight Badge -->
+                  <div class="text-right">
+                    <span class="inline-flex items-center space-x-1 text-[10px] sm:text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 shadow-2xs shrink-0 whitespace-nowrap">
+                      <span>⚡</span>
+                      <span>{{ card.speedup }}</span>
+                    </span>
+                  </div>
                 </div>
 
-                <!-- Metric Numbers -->
-                <div class="flex items-baseline justify-between pt-0.5">
-                  <span class="text-sm sm:text-base font-black text-slate-900 font-mono tracking-tight">
-                    {{ card.actualLabel }}
-                  </span>
-                  <span class="text-[11px] sm:text-xs text-slate-500 whitespace-nowrap">
-                    Target: <strong class="text-slate-800 font-mono font-bold">{{ card.targetLabel }}</strong>
-                  </span>
-                </div>
+                <!-- 3. Bullet Progress Gauge with Contract Target Line -->
+                <div class="space-y-1">
+                  <div class="relative w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/80">
+                    <div 
+                      class="h-full bg-gradient-to-r rounded-full transition-all"
+                      :class="card.barColor"
+                      :style="{ width: `${card.utilization}%` }"
+                    ></div>
+                  </div>
 
-                <!-- Bullet Progress Gauge with Contract Target Line -->
-                <div class="relative w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/80">
-                  <div 
-                    class="h-full bg-gradient-to-r rounded-full transition-all"
-                    :class="card.barColor"
-                    :style="{ width: `${card.utilization}%` }"
-                  ></div>
-                </div>
-
-                <div class="flex items-center justify-between text-[10px] text-slate-500 pt-0.5 gap-1 flex-wrap">
-                  <span class="whitespace-nowrap">{{ card.utilization }}% terpakai</span>
-                  <span class="text-emerald-600 font-semibold whitespace-nowrap">{{ card.marginSafe }}</span>
+                  <div class="flex items-center justify-between text-[10px] text-slate-500 pt-0.5 gap-1 flex-wrap">
+                    <span class="whitespace-nowrap">{{ card.utilization }}% terpakai</span>
+                    <span class="text-emerald-600 font-semibold whitespace-nowrap">{{ card.marginSafe }}</span>
+                  </div>
                 </div>
               </div>
             </div>

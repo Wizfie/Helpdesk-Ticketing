@@ -261,18 +261,20 @@
 
         <!-- Digital Attachments & Evidence Card -->
         <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="font-bold text-slate-900 text-xs uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-              <span>Berkas Lampiran & Bukti Digital</span>
-              <span class="bg-blue-50 text-blue-700 font-bold px-1.5 py-0.5 rounded text-[10px] border border-blue-200">
+          <div class="flex items-center justify-between gap-3 pb-0.5">
+            <div class="flex items-center space-x-2 min-w-0">
+              <h3 class="font-bold text-slate-700 text-xs uppercase tracking-wider truncate">
+                Berkas Lampiran
+              </h3>
+              <span class="bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded-full text-[10px] border border-blue-200 shrink-0">
                 {{ (ticket.attachments || []).length }}
               </span>
-            </h3>
+            </div>
             <button
               v-if="canUploadAttachment"
               type="button"
               @click="$refs.attFileInput.click()"
-              class="text-[11px] font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2 py-1 rounded transition-colors flex items-center space-x-1"
+              class="text-[11px] font-semibold text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg transition-colors flex items-center space-x-1 shrink-0 ml-auto"
             >
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
