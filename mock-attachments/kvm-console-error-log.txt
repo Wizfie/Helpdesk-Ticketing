@@ -1,0 +1,10 @@
+[2026-09-13 03:35:12 UTC] CONSOLE KVM SESSION OPENED by Engineer: Budi Santoso
+[2026-09-13 03:35:18 UTC] Interface TenGigabitEthernet1/0/10 link status: DOWN (carrier lost)
+[2026-09-13 03:35:22 UTC] Interface TenGigabitEthernet1/0/10 link status: UP (10000 Mb/s Full Duplex)
+[2026-09-13 03:35:29 UTC] Interface TenGigabitEthernet1/0/10 link status: DOWN (carrier lost)
+[2026-09-13 03:35:40 UTC] %LINK-3-UPDOWN: Interface TenGigabitEthernet1/0/10, changed state to down
+[2026-09-13 03:36:01 UTC] DIAGNOSTIC: show int transceiver detail
+  - Optical Rx Power: -28.4 dBm (Threshold Low Alarm: -18.0 dBm) [CRITICAL]
+  - Optical Tx Power: -2.1 dBm [NORMAL]
+  - SFP Model: SFP-10G-LR Cisco Systems
+  - Fault: Optic transceiver diode degradation. Hardware replacement required.
