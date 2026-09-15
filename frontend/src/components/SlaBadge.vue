@@ -1,13 +1,17 @@
 <template>
-  <div class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-semibold" :class="badgeClasses">
+  <div 
+    class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap shrink-0 cursor-help" 
+    :class="badgeClasses"
+    :title="slaData.label"
+  >
     <!-- Status Dot / Icon -->
-    <span v-if="slaData.status === 'PAUSED'" class="animate-pulse">⏸</span>
-    <span v-else-if="slaData.status === 'BREACHED'" class="inline-block w-2 h-2 rounded-full bg-rose-500"></span>
-    <span v-else-if="slaData.status === 'WARNING'" class="inline-block w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-    <span v-else class="inline-block w-2 h-2 rounded-full bg-emerald-500"></span>
+    <span v-if="slaData.status === 'PAUSED'" class="text-[10px]">⏸</span>
+    <span v-else-if="slaData.status === 'BREACHED'" class="inline-block w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
+    <span v-else-if="slaData.status === 'WARNING'" class="inline-block w-2 h-2 rounded-full bg-amber-500 animate-ping shrink-0"></span>
+    <span v-else class="inline-block w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
 
-    <span>{{ typeLabel }}:</span>
-    <span class="font-mono">{{ slaData.label }}</span>
+    <span class="text-[11px] opacity-80">{{ typeLabel }}:</span>
+    <span class="font-mono text-[11px] font-bold">{{ compactLabel }}</span>
   </div>
 </template>
 
@@ -36,6 +40,22 @@ const props = defineProps({
 
 const slaData = computed(() => {
   return calculateSlaCountdown(props.deadlineUtc, props.isPaused, props.resolvedAtUtc);
+});
+
+const compactLabel = computed(() => {
+  const d = slaData.value;
+  if (!d) return '-';
+  if (props.resolvedAtUtc) {
+    return d.isBreached 
+      ? `Lewat (-${d.hours}j ${d.minutes}m)` 
+      : `Tuntas (+${d.hours}j ${d.minutes}m)`;
+  }
+  if (props.isPaused) {
+    return `Ditahan (${d.hours}j ${d.minutes}m)`;
+  }
+  return d.isBreached 
+    ? `Lewat (-${d.hours}j ${d.minutes}m)` 
+    : `Sisa ${d.hours}j ${d.minutes}m`;
 });
 
 const badgeClasses = computed(() => {

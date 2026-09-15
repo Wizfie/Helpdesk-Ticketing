@@ -3,14 +3,19 @@
     <div class="flex items-center justify-between gap-2">
       <!-- Left: Hamburger Menu (Mobile) & Brand Logo -->
       <div class="flex items-center space-x-2 sm:space-x-3">
-        <!-- Hamburger Button (Visible on Mobile/Tablet < lg) -->
+        <!-- Hamburger / Sidebar Toggle Button (Visible on Mobile & Desktop) -->
         <button
           @click="uiStore.toggleSidebar()"
           type="button"
-          class="lg:hidden p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors focus:outline-none"
-          title="Buka / Tutup Menu"
+          class="p-1.5 rounded-lg transition-colors focus:outline-none flex items-center justify-center"
+          :class="[
+            uiStore.isSidebarCollapsed 
+              ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 hover:bg-blue-100' 
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+          ]"
+          :title="uiStore.isSidebarCollapsed ? 'Tampilkan Sidebar (Klik)' : 'Sembunyikan Sidebar Menu (Klik)'"
         >
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
           </svg>
         </button>

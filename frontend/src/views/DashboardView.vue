@@ -109,8 +109,8 @@
         </div>
       </div>
 
-      <!-- 4-Grid Tailored Analytics Layout -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- 4-Grid Tailored Analytics Layout (Optimized for Laptop 13" & Desktop) -->
+      <div class="grid grid-cols-1 xl:grid-cols-2 gap-5 sm:gap-6">
         <!-- 1. Smooth Area Trend Chart: Volume Insiden & Kepatuhan SLA -->
         <div class="bg-slate-50/70 border border-slate-200/80 rounded-2xl p-5 sm:p-6 flex flex-col justify-between shadow-xs">
           <div>
@@ -273,36 +273,36 @@
             </div>
 
             <!-- 2x2 Benchmark Bullet Cards Grid -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5 mt-4">
               <div 
                 v-for="card in mttrPerformanceCards" 
                 :key="card.code"
-                class="bg-white border border-slate-200/80 rounded-xl p-3.5 sm:p-4 space-y-2 shadow-xs transition-all hover:border-slate-300"
+                class="bg-white border border-slate-200/80 rounded-xl p-3 sm:p-3.5 space-y-2 shadow-xs transition-all hover:border-slate-300"
               >
-                <div class="flex items-center justify-between">
-                  <div class="flex items-center space-x-1.5">
-                    <span class="px-2 py-0.5 rounded font-mono font-bold text-[10px]" :class="card.badgeColor">
+                <div class="flex items-center justify-between gap-1.5">
+                  <div class="flex items-center space-x-1.5 min-w-0">
+                    <span class="px-1.5 py-0.5 rounded font-mono font-bold text-[10px] shrink-0" :class="card.badgeColor">
                       {{ card.code }}
                     </span>
-                    <span class="text-xs font-bold text-slate-800">{{ card.label }}</span>
+                    <span class="text-xs font-bold text-slate-800 truncate" :title="card.label">{{ card.label }}</span>
                   </div>
-                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                  <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0 whitespace-nowrap">
                     {{ card.speedup }}
                   </span>
                 </div>
 
                 <!-- Metric Numbers -->
-                <div class="flex items-baseline justify-between pt-1">
-                  <span class="text-base font-black text-slate-900 font-mono tracking-tight">
+                <div class="flex items-baseline justify-between pt-0.5">
+                  <span class="text-sm sm:text-base font-black text-slate-900 font-mono tracking-tight">
                     {{ card.actualLabel }}
                   </span>
-                  <span class="text-xs text-slate-500">
+                  <span class="text-[11px] sm:text-xs text-slate-500 whitespace-nowrap">
                     Target: <strong class="text-slate-800 font-mono font-bold">{{ card.targetLabel }}</strong>
                   </span>
                 </div>
 
                 <!-- Bullet Progress Gauge with Contract Target Line -->
-                <div class="relative w-full bg-slate-100 h-2.5 rounded-full overflow-hidden border border-slate-200/80">
+                <div class="relative w-full bg-slate-100 h-2 rounded-full overflow-hidden border border-slate-200/80">
                   <div 
                     class="h-full bg-gradient-to-r rounded-full transition-all"
                     :class="card.barColor"
@@ -310,9 +310,9 @@
                   ></div>
                 </div>
 
-                <div class="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
-                  <span>{{ card.utilization }}% toleransi terpakai</span>
-                  <span class="text-emerald-600 font-semibold">{{ card.marginSafe }}</span>
+                <div class="flex items-center justify-between text-[10px] text-slate-500 pt-0.5 gap-1 flex-wrap">
+                  <span class="whitespace-nowrap">{{ card.utilization }}% terpakai</span>
+                  <span class="text-emerald-600 font-semibold whitespace-nowrap">{{ card.marginSafe }}</span>
                 </div>
               </div>
             </div>
@@ -532,17 +532,17 @@
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-left text-xs">
+        <table class="w-full text-left text-xs min-w-[980px]">
           <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
             <tr>
-              <th class="py-3 px-4">No. Tiket & Saluran</th>
-              <th class="py-3 px-4">Customer & PIC</th>
-              <th class="py-3 px-4">Judul Permasalahan</th>
-              <th class="py-3 px-4">Severity</th>
-              <th class="py-3 px-4">Status & Teknisi</th>
-              <th class="py-3 px-4">Response SLA</th>
-              <th class="py-3 px-4">Resolution SLA (24/7)</th>
-              <th class="py-3 px-4 text-right">Aksi</th>
+              <th class="py-2.5 px-3 whitespace-nowrap">No. Tiket & Saluran</th>
+              <th class="py-2.5 px-3 whitespace-nowrap">Customer & PIC</th>
+              <th class="py-2.5 px-3">Judul Permasalahan</th>
+              <th class="py-2.5 px-3 whitespace-nowrap">Severity</th>
+              <th class="py-2.5 px-3 whitespace-nowrap">Status & Teknisi</th>
+              <th class="py-2.5 px-3 whitespace-nowrap">Response SLA</th>
+              <th class="py-2.5 px-3 whitespace-nowrap">Resolution SLA (24/7)</th>
+              <th class="py-2.5 px-3 text-right whitespace-nowrap">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
@@ -553,7 +553,7 @@
               @click="$router.push(`/tickets/${t.id}`)"
             >
               <!-- Ticket Number & Channel -->
-              <td class="py-3 px-4 font-mono font-bold text-blue-700">
+              <td class="py-2.5 px-3 font-mono font-bold text-blue-700 whitespace-nowrap">
                 <div class="flex items-center space-x-1.5">
                   <span>{{ t.ticketNumber }}</span>
                 </div>
@@ -564,36 +564,36 @@
               </td>
 
               <!-- Customer & PIC -->
-              <td class="py-3 px-4">
-                <div class="font-semibold text-slate-800">{{ getCustomerName(t.customerId) }}</div>
-                <div class="text-[11px] text-slate-500">{{ getPicName(t.customerId, t.customerPicId) }}</div>
+              <td class="py-2.5 px-3 min-w-[140px] max-w-[180px]">
+                <div class="font-semibold text-slate-800 truncate" :title="getCustomerName(t.customerId)">{{ getCustomerName(t.customerId) }}</div>
+                <div class="text-[11px] text-slate-500 truncate" :title="getPicName(t.customerId, t.customerPicId)">{{ getPicName(t.customerId, t.customerPicId) }}</div>
               </td>
 
               <!-- Title & Category -->
-              <td class="py-3 px-4 max-w-xs">
+              <td class="py-2.5 px-3 min-w-[200px] max-w-xs">
                 <div class="font-medium text-slate-900 truncate" :title="t.title">{{ t.title }}</div>
-                <div class="text-[10px] text-slate-500 mt-0.5">{{ getCategoryName(t.categoryId) }}</div>
+                <div class="text-[10px] text-slate-500 mt-0.5 truncate">{{ getCategoryName(t.categoryId) }}</div>
               </td>
 
               <!-- Severity Badge -->
-              <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded text-[11px] font-bold" :class="getSeverityBadge(t.severity)">
+              <td class="py-2.5 px-3 whitespace-nowrap">
+                <span class="px-2 py-0.5 rounded text-[11px] font-bold inline-block" :class="getSeverityBadge(t.severity)">
                   {{ t.severity }}
                 </span>
               </td>
 
               <!-- Status & Assigned -->
-              <td class="py-3 px-4">
+              <td class="py-2.5 px-3 whitespace-nowrap">
                 <span class="px-2 py-0.5 rounded text-[11px] font-semibold block w-fit" :class="getStatusBadge(t.status)">
                   {{ t.status }}
                 </span>
-                <span class="text-[10px] text-slate-500 block mt-0.5">
+                <span class="text-[10px] text-slate-500 block mt-0.5 truncate max-w-[120px]">
                   {{ t.assignedToId ? getEngineerName(t.assignedToId) : '(Belum Ditugaskan)' }}
                 </span>
               </td>
 
               <!-- Response SLA Badge -->
-              <td class="py-3 px-4">
+              <td class="py-2.5 px-3 whitespace-nowrap">
                 <SlaBadge 
                   :deadlineUtc="t.responseDeadline" 
                   :resolvedAtUtc="t.respondedAt"
@@ -602,7 +602,7 @@
               </td>
 
               <!-- Resolution SLA Badge -->
-              <td class="py-3 px-4">
+              <td class="py-2.5 px-3 whitespace-nowrap">
                 <SlaBadge 
                   :deadlineUtc="t.resolutionDeadline" 
                   :isPaused="t.isPaused"
@@ -612,7 +612,7 @@
               </td>
 
               <!-- Action Link -->
-              <td class="py-3 px-4 text-right">
+              <td class="py-2.5 px-3 text-right whitespace-nowrap">
                 <router-link 
                   :to="`/tickets/${t.id}`"
                   class="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 font-semibold text-xs bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded transition-colors"
