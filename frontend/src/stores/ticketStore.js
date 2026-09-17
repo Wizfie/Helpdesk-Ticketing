@@ -45,6 +45,28 @@ function saveStoredData(key, data) {
   }
 }
 
+const DATA_VERSION_KEY = 'gtt_data_version';
+const CURRENT_DATA_VERSION = 'v2.4-enterprise-realistic';
+
+function checkAndMigrateData() {
+  if (typeof window === 'undefined' || !window.localStorage) return;
+  try {
+    const currentVersion = localStorage.getItem(DATA_VERSION_KEY);
+    if (currentVersion !== CURRENT_DATA_VERSION) {
+      localStorage.setItem(DATA_VERSION_KEY, CURRENT_DATA_VERSION);
+      localStorage.setItem(STORAGE_KEYS.TICKETS, JSON.stringify(INITIAL_TICKETS));
+      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(MOCK_CUSTOMERS));
+      localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(MOCK_CATEGORIES));
+      localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(MOCK_AUDIT_LOGS));
+      localStorage.setItem(STORAGE_KEYS.KNOWLEDGE_BASE, JSON.stringify(MOCK_KNOWLEDGE_BASE));
+      localStorage.setItem(STORAGE_KEYS.SELECTED_TICKET_ID, '1');
+    }
+  } catch (e) {
+    console.error('Data migration error:', e);
+  }
+}
+checkAndMigrateData();
+
 export const useTicketStore = defineStore('tickets', {
   state: () => ({
     tickets: loadStoredData(STORAGE_KEYS.TICKETS, INITIAL_TICKETS),
@@ -805,6 +827,7 @@ export const useTicketStore = defineStore('tickets', {
       this.quickPresets = JSON.parse(JSON.stringify(QUICK_PRESETS));
       this.auditLogs = JSON.parse(JSON.stringify(MOCK_AUDIT_LOGS));
       this.knowledgeBase = JSON.parse(JSON.stringify(MOCK_KNOWLEDGE_BASE));
+      this.pendingKbApprovals = JSON.parse(JSON.stringify(MOCK_PENDING_KB_APPROVALS));
       this.selectedTicketId = 1;
       this.persistState();
     }

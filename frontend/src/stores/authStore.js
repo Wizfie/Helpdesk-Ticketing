@@ -5,15 +5,24 @@ const STORAGE_KEY_USER_ID = 'gtt_current_user_id';
 const STORAGE_KEY_ROLE = 'gtt_current_role';
 const STORAGE_KEY_USERS = 'gtt_mock_users';
 
+const USER_DATA_VERSION_KEY = 'gtt_user_data_version';
+const CURRENT_USER_DATA_VERSION = 'v2.2-users';
+
 function getStoredUsers() {
   if (typeof window === 'undefined' || !window.localStorage) {
     return MOCK_USERS;
   }
   try {
+    const ver = localStorage.getItem(USER_DATA_VERSION_KEY);
+    if (ver !== CURRENT_USER_DATA_VERSION) {
+      localStorage.setItem(USER_DATA_VERSION_KEY, CURRENT_USER_DATA_VERSION);
+      localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(MOCK_USERS));
+      return MOCK_USERS;
+    }
     const raw = localStorage.getItem(STORAGE_KEY_USERS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) {
+      if (Array.isArray(parsed) && parsed.length >= 8) {
         return parsed;
       }
     }
