@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Rancangan Arsitektur, Matriks Akses, dan Alur Sistem Helpdesk Ticketing</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
     
     @page {
       size: A4 portrait;
@@ -134,7 +134,7 @@
       height: auto;
     }
 
-    /* Data Tables */
+    /* Data Tables - Clean Standard Borders, No Badge Backgrounds */
     table.data-table {
       width: 100%;
       border-collapse: collapse;
@@ -152,9 +152,10 @@
     }
 
     table.data-table td {
-      padding: 4px 6px;
-      border: 1px solid #e2e8f0;
+      padding: 5px 6px;
+      border: 1px solid #cbd5e1;
       vertical-align: middle;
+      color: #1e293b;
     }
 
     table.data-table tr:nth-child(even) {
@@ -163,46 +164,6 @@
 
     .text-center {
       text-align: center !important;
-    }
-
-    /* Standard badges */
-    .status-allowed {
-      font-weight: 600;
-      color: #0f172a;
-    }
-
-    .status-denied {
-      color: #94a3b8;
-    }
-
-    .tag-blue {
-      background: #eff6ff;
-      color: #1d4ed8;
-      border: 1px solid #bfdbfe;
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-size: 7pt;
-      font-weight: 600;
-    }
-
-    .tag-green {
-      background: #f0fdf4;
-      color: #15803d;
-      border: 1px solid #bbf7d0;
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-size: 7pt;
-      font-weight: 600;
-    }
-
-    .tag-amber {
-      background: #fffbeb;
-      color: #b45309;
-      border: 1px solid #fde68a;
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-size: 7pt;
-      font-weight: 600;
     }
 
     /* Formula Cards */
@@ -428,69 +389,69 @@
     <tbody>
       <tr>
         <td>Monitoring Dashboard & Antrean Global Tiket</td>
-        <td class="text-center"><span class="tag-blue">Akses Penuh</span></td>
-        <td class="text-center"><span class="tag-green">Tiket Ditugaskan</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
+        <td class="text-center"><strong>Akses Penuh</strong></td>
+        <td class="text-center">Tiket Ditugaskan</td>
+        <td class="text-center">Ditolak</td>
       </tr>
       <tr>
         <td>Penerbitan Tiket Baru & Pengisian Data Awal</td>
-        <td class="text-center"><span class="tag-blue">Akses Penuh</span></td>
-        <td class="text-center"><span class="tag-green">Input Lapangan</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
+        <td class="text-center"><strong>Akses Penuh</strong></td>
+        <td class="text-center">Input Lapangan</td>
+        <td class="text-center">Ditolak</td>
       </tr>
       <tr>
         <td>Penugasan & Pergantian Teknisi Penanggung Jawab</td>
-        <td class="text-center"><span class="tag-blue">Kontrol Penuh</span></td>
-        <td class="text-center"><span class="status-denied">Hanya Baca</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
+        <td class="text-center"><strong>Kontrol Penuh</strong></td>
+        <td class="text-center">Hanya Baca</td>
+        <td class="text-center">Ditolak</td>
       </tr>
       <tr>
-        <td><strong>Penyalinan Tautan Pelacakan Klien (Token URL)</strong></td>
-        <td class="text-center"><span class="tag-blue">Akses Khusus</span></td>
-        <td class="text-center"><span class="status-denied">Disembunyikan</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
+        <td>Penyalinan Tautan Pelacakan Klien (Token URL)</td>
+        <td class="text-center"><strong>Akses Khusus</strong></td>
+        <td class="text-center">Disembunyikan</td>
+        <td class="text-center">Ditolak</td>
       </tr>
       <tr>
-        <td><strong>Pratinjau & Pengiriman Surel Notifikasi Manual</strong></td>
-        <td class="text-center"><span class="tag-blue">Akses Khusus</span></td>
-        <td class="text-center"><span class="status-denied">Disembunyikan</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
+        <td>Pratinjau & Pengiriman Surel Notifikasi Manual</td>
+        <td class="text-center"><strong>Akses Khusus</strong></td>
+        <td class="text-center">Disembunyikan</td>
+        <td class="text-center">Ditolak</td>
       </tr>
       <tr>
         <td>Pencatatan Milestone & Log Perintah Perbaikan</td>
-        <td class="text-center"><span class="status-allowed">Bisa Menambah</span></td>
-        <td class="text-center"><span class="tag-green">Pelaksana Utama</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
+        <td class="text-center">Bisa Menambah</td>
+        <td class="text-center"><strong>Pelaksana Utama</strong></td>
+        <td class="text-center">Ditolak</td>
       </tr>
       <tr>
         <td>Pengajuan & Pencabutan Jeda SLA (Pause)</td>
-        <td class="text-center"><span class="tag-blue">Validasi Otoritas</span></td>
-        <td class="text-center"><span class="tag-green">Pelaksana Utama</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
+        <td class="text-center">Validasi Otoritas</td>
+        <td class="text-center"><strong>Pelaksana Utama</strong></td>
+        <td class="text-center">Ditolak</td>
       </tr>
       <tr>
         <td>Penyelesaian Tiket & Analisis Akar Masalah (RCA)</td>
-        <td class="text-center"><span class="tag-blue">Verifikasi Akhir</span></td>
-        <td class="text-center"><span class="tag-green">Pelaksana Utama</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
+        <td class="text-center">Verifikasi Akhir</td>
+        <td class="text-center"><strong>Pelaksana Utama</strong></td>
+        <td class="text-center">Ditolak</td>
       </tr>
       <tr>
         <td>Pengaturan Matriks SLA & Data Klien</td>
-        <td class="text-center"><span class="tag-blue">Akses Penuh</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
+        <td class="text-center"><strong>Akses Penuh</strong></td>
+        <td class="text-center">Ditolak</td>
+        <td class="text-center">Ditolak</td>
       </tr>
       <tr>
         <td>Laporan SLA & Ekspor Berkas Laporan</td>
-        <td class="text-center"><span class="tag-blue">Akses Penuh</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
-        <td class="text-center"><span class="status-denied">Ditolak</span></td>
+        <td class="text-center"><strong>Akses Penuh</strong></td>
+        <td class="text-center">Ditolak</td>
+        <td class="text-center">Ditolak</td>
       </tr>
       <tr>
         <td>Basis Pengetahuan (Knowledge Base)</td>
-        <td class="text-center"><span class="tag-blue">Persetujuan SOP</span></td>
-        <td class="text-center"><span class="tag-green">Ajukan & Membaca</span></td>
-        <td class="text-center"><span class="status-allowed">Hanya Baca</span></td>
+        <td class="text-center"><strong>Persetujuan SOP</strong></td>
+        <td class="text-center">Ajukan & Membaca</td>
+        <td class="text-center">Hanya Baca</td>
       </tr>
     </tbody>
   </table>
@@ -511,7 +472,7 @@
       <text x="35" y="37" fill="#0f172a" font-family="Inter, sans-serif" font-size="7" font-weight="700">1. LAPORAN MASUK</text>
       <text x="26" y="49" fill="#475569" font-family="Inter, sans-serif" font-size="6">Insiden Diterima Helpdesk</text>
 
-      <path d="M120 41 L145 41" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <path d="M120 41 L145 41" stroke="#475569" stroke-width="1.5"/>
 
       <!-- Step 2: Logging & SLA Lock -->
       <rect x="145" y="15" width="140" height="52" rx="3" fill="#ffffff" stroke="#475569" stroke-width="1.2"/>
