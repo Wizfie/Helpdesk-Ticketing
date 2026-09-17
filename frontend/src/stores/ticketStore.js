@@ -93,9 +93,22 @@ export const useTicketStore = defineStore('tickets', {
       const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
       const ticketNumber = `TICK-${dateStr}-${padNum}`;
 
-      // Calculate SLA response & resolution deadlines (in UTC)
-      const respHours = ticketData.severity === 'HIGH' ? 0.5 : ticketData.severity === 'MEDIUM' ? 1 : 2;
-      const resHours = ticketData.severity === 'HIGH' ? 4 : ticketData.severity === 'MEDIUM' ? 8 : 24;
+      // Calculate SLA response & resolution deadlines based on Customer's Contract Tier & Severity
+      const contract = (ticketData.contractSla || '').toUpperCase();
+      let respHours = 1;
+      let resHours = 8;
+
+      if (contract.includes('PLATINUM')) {
+        respHours = ticketData.severity === 'HIGH' ? 0.5 : ticketData.severity === 'MEDIUM' ? 1 : 1.5;
+        resHours = ticketData.severity === 'HIGH' ? 4 : ticketData.severity === 'MEDIUM' ? 6 : 12;
+      } else if (contract.includes('SILVER')) {
+        respHours = ticketData.severity === 'HIGH' ? 1 : ticketData.severity === 'MEDIUM' ? 2 : 4;
+        resHours = ticketData.severity === 'HIGH' ? 12 : ticketData.severity === 'MEDIUM' ? 16 : 24;
+      } else {
+        // Default / GOLD Enterprise
+        respHours = ticketData.severity === 'HIGH' ? 0.5 : ticketData.severity === 'MEDIUM' ? 1 : 2;
+        resHours = ticketData.severity === 'HIGH' ? 8 : ticketData.severity === 'MEDIUM' ? 12 : 24;
+      }
 
       const responseDeadline = new Date(Date.now() + respHours * 3600 * 1000).toISOString();
       const resolutionDeadline = new Date(Date.now() + resHours * 3600 * 1000).toISOString();

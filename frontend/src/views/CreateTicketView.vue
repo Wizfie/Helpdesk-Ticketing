@@ -753,14 +753,38 @@ const availableEngineers = computed(() => {
 });
 
 const targetFirstTouchHours = computed(() => {
+  const contract = (selectedCustomer.value?.contractSla || '').toUpperCase();
+  if (contract.includes('PLATINUM')) {
+    if (form.value.severity === 'HIGH') return '00:30:00';
+    if (form.value.severity === 'MEDIUM') return '01:00:00';
+    return '01:30:00';
+  }
+  if (contract.includes('SILVER')) {
+    if (form.value.severity === 'HIGH') return '01:00:00';
+    if (form.value.severity === 'MEDIUM') return '02:00:00';
+    return '04:00:00';
+  }
+  // Default / GOLD
   if (form.value.severity === 'HIGH') return '00:30:00';
   if (form.value.severity === 'MEDIUM') return '01:00:00';
   return '02:00:00';
 });
 
 const targetResolutionHours = computed(() => {
-  if (form.value.severity === 'HIGH') return '04:00:00';
-  if (form.value.severity === 'MEDIUM') return '08:00:00';
+  const contract = (selectedCustomer.value?.contractSla || '').toUpperCase();
+  if (contract.includes('PLATINUM')) {
+    if (form.value.severity === 'HIGH') return '04:00:00';
+    if (form.value.severity === 'MEDIUM') return '06:00:00';
+    return '12:00:00';
+  }
+  if (contract.includes('SILVER')) {
+    if (form.value.severity === 'HIGH') return '12:00:00';
+    if (form.value.severity === 'MEDIUM') return '16:00:00';
+    return '24:00:00';
+  }
+  // Default / GOLD
+  if (form.value.severity === 'HIGH') return '08:00:00';
+  if (form.value.severity === 'MEDIUM') return '12:00:00';
   return '24:00:00';
 });
 
