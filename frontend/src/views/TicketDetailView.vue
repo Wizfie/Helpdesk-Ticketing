@@ -759,6 +759,11 @@ const getEngineerName = (id) => {
   const u = authStore.users.find(item => item.id === id);
   return u ? u.name : '-';
 };
+const getEngineerInitials = (id) => {
+  const u = authStore.users.find(item => item.id === id);
+  if (!u || !u.name) return 'NA';
+  return u.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+};
 
 const resolutionCountdown = computed(() => {
   if (!ticket.value) return '00:00:00';
