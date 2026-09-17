@@ -1,3 +1,7 @@
+import os
+import re
+import subprocess
+from PIL import Image
 import docx
 from docx.shared import Inches, Pt, RGBColor
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -5,26 +9,99 @@ from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import nsdecls, qn
 
+base_dir = r"d:\Unpam\Semester 6\KP\Ticketing-helpdesk"
+html_path = os.path.join(base_dir, "Spesifikasi_Teknis_Arsitektur_dan_Alur_Logika_Helpdesk_GTT.html")
+docx_path = os.path.join(base_dir, "Rancangan_Arsitektur_dan_Alur_Helpdesk_Ticketing.docx")
+edge_path = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
+if not os.path.exists(edge_path):
+    edge_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
+
+# --- 1. RENDER SVG DIAGRAMS TO HIGH-RES PNG IMAGES ---
+with open(html_path, "r", encoding="utf-8") as f:
+    html_content = f.read()
+
+svgs = re.findall(r"(<svg.*?</svg>)", html_content, re.DOTALL)
+print(f"Total SVGs found in HTML: {len(svgs)}")
+
+arch_png = os.path.join(base_dir, "diagram_arsitektur.png")
+flow_png = os.path.join(base_dir, "diagram_flowchart.png")
+
+for i, svg in enumerate(svgs[:2]):
+    tag = "arsitektur" if i == 0 else "flowchart"
+    target_png = arch_png if i == 0 else flow_png
+    temp_html = os.path.join(base_dir, f"temp_{tag}.html")
+    temp_screenshot = os.path.join(base_dir, f"temp_{tag}.png")
+
+    page_markup = f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
+    body {{
+      margin: 0;
+      padding: 10px;
+      background: #ffffff;
+      font-family: 'Inter', sans-serif;
+      display: inline-block;
+    }}
+    svg {{
+      width: 1000px;
+      height: auto;
+      display: block;
+    }}
+  </style>
+</head>
+<body>
+{svg}
+</body>
+</html>"""
+    
+    with open(temp_html, "w", encoding="utf-8") as f_tmp:
+        f_tmp.write(page_markup)
+
+    cmd = [
+        edge_path,
+        "--headless=new",
+        "--disable-gpu",
+        "--window-size=1100,500",
+        f"--screenshot={temp_screenshot}",
+        temp_html
+    ]
+    subprocess.run(cmd, capture_output=True, text=True)
+
+    if os.path.exists(temp_screenshot):
+        im = Image.open(temp_screenshot)
+        bbox = im.getbbox()
+        if bbox:
+            cropped = im.crop(bbox)
+            cropped.save(target_png)
+            print(f"Rendered {target_png} ({cropped.size[0]}x{cropped.size[1]} px)")
+        else:
+            im.save(target_png)
+        os.remove(temp_screenshot)
+    if os.path.exists(temp_html):
+        os.remove(temp_html)
+
+# --- 2. BUILD THE WORD DOCUMENT (.DOCX) ---
 doc = docx.Document()
 
-# Set standard A4 margins (top=3cm, left=3cm, right=2.5cm, bottom=2.5cm)
-sections = doc.sections
-for section in sections:
+# Page Margins (Standard A4)
+for section in doc.sections:
     section.page_width = Inches(8.27)
     section.page_height = Inches(11.69)
-    section.top_margin = Inches(1.0)
-    section.bottom_margin = Inches(1.0)
-    section.left_margin = Inches(1.0)
-    section.right_margin = Inches(1.0)
+    section.top_margin = Inches(0.9)
+    section.bottom_margin = Inches(0.9)
+    section.left_margin = Inches(0.9)
+    section.right_margin = Inches(0.9)
 
-# Base font
-style = doc.styles['Normal']
-font = style.font
-font.name = 'Times New Roman'
-font.size = Pt(11)
-font.color.rgb = RGBColor(0x1e, 0x29, 0x3b)
+# Default style
+normal_style = doc.styles['Normal']
+normal_style.font.name = 'Times New Roman'
+normal_style.font.size = Pt(11)
+normal_style.font.color.rgb = RGBColor(0x1e, 0x29, 0x3b)
 
-def set_cell_margins(cell, top=100, bottom=100, left=150, right=150):
+def set_cell_margins(cell, top=80, bottom=80, left=120, right=120):
     tcPr = cell._tc.get_or_add_tcPr()
     tcMar = OxmlElement('w:tcMar')
     for m, val in [('top', top), ('bottom', bottom), ('left', left), ('right', right)]:
@@ -35,49 +112,65 @@ def set_cell_margins(cell, top=100, bottom=100, left=150, right=150):
     tcPr.append(tcMar)
 
 def set_cell_shading(cell, color_hex):
-    shading = parse_xml(f'<w:shd {nsdecls("w")} w:fill="{color_hex}"/>')
-    cell._tc.get_or_add_tcPr().append(shading)
+    shd = parse_xml(f'<w:shd {nsdecls("w")} w:fill="{color_hex}"/>')
+    cell._tc.get_or_add_tcPr().append(shd)
 
-# --- JUDUL DOKUMEN ---
+def set_table_borders(table, color="CBD5E1", sz="4", val="single"):
+    tblPr = table._tbl.tblPr
+    borders = parse_xml(f"""
+        <w:tblBorders {nsdecls("w")}>
+            <w:top w:val="{val}" w:sz="{sz}" w:space="0" w:color="{color}"/>
+            <w:bottom w:val="{val}" w:sz="{sz}" w:space="0" w:color="{color}"/>
+            <w:left w:val="{val}" w:sz="{sz}" w:space="0" w:color="{color}"/>
+            <w:right w:val="{val}" w:sz="{sz}" w:space="0" w:color="{color}"/>
+            <w:insideH w:val="{val}" w:sz="{sz}" w:space="0" w:color="{color}"/>
+            <w:insideV w:val="{val}" w:sz="{sz}" w:space="0" w:color="{color}"/>
+        </w:tblBorders>
+    """)
+    tblPr.append(borders)
+
+# --- HEADER / TITLE ---
 p_title = doc.add_paragraph()
 p_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+p_title.paragraph_format.space_before = Pt(0)
 p_title.paragraph_format.space_after = Pt(2)
-run_title = p_title.add_run("RANCANGAN ARSITEKTUR, MATRIKS AKSES, DAN ALUR SISTEM HELPDESK TICKETING")
-run_title.bold = True
-run_title.font.size = Pt(14)
-run_title.font.name = 'Times New Roman'
+r_t = p_title.add_run("RANCANGAN ARSITEKTUR, MATRIKS AKSES, DAN ALUR SISTEM HELPDESK TICKETING")
+r_t.bold = True
+r_t.font.size = Pt(13.5)
 
 p_sub = doc.add_paragraph()
 p_sub.alignment = WD_ALIGN_PARAGRAPH.CENTER
-p_sub.paragraph_format.space_after = Pt(16)
-run_sub = p_sub.add_run("Spesifikasi Desain Sistem: Arsitektur Full-Stack (Vue.js, Express.js, MySQL, SMTP Relay), RBAC Matrix, Flowchart Alur Penanganan Insiden, dan Formula Dual-SLA Engine")
-run_sub.font.size = Pt(10)
-run_sub.italic = True
-run_sub.font.color.rgb = RGBColor(0x47, 0x55, 0x69)
+p_sub.paragraph_format.space_after = Pt(12)
+r_s = p_sub.add_run("Dokumen Spesifikasi Teknis: Desain Arsitektur Full-Stack (Vue.js, Express.js, MySQL, SMTP), Matriks Hak Akses (RBAC), Flowchart Penanganan Insiden, dan Logika Evaluasi SLA")
+r_s.font.size = Pt(9.5)
+r_s.italic = True
+r_s.font.color.rgb = RGBColor(0x47, 0x55, 0x69)
 
 # --- DAFTAR SINGKATAN & GLOSARIUM ---
-p_h_glo = doc.add_paragraph()
-p_h_glo.paragraph_format.space_before = Pt(12)
-p_h_glo.paragraph_format.space_after = Pt(6)
-r_glo = p_h_glo.add_run("DAFTAR ISTILAH DAN SINGKATAN")
-r_glo.bold = True
-r_glo.font.size = Pt(11)
+p_glo_h = doc.add_paragraph()
+p_glo_h.paragraph_format.space_before = Pt(6)
+p_glo_h.paragraph_format.space_after = Pt(4)
+r_gh = p_glo_h.add_run("DAFTAR ISTILAH DAN SINGKATAN")
+r_gh.bold = True
+r_gh.font.size = Pt(10.5)
 
 t_glo = doc.add_table(rows=1, cols=3)
 t_glo.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr_cells = t_glo.rows[0].cells
-hdr_cells[0].text = "Singkatan"
-hdr_cells[1].text = "Kepanjangan / Istilah Lengkap"
-hdr_cells[2].text = "Penjelasan Fungsi dalam Sistem"
-for cell in hdr_cells:
-    set_cell_shading(cell, "F1F5F9")
-    set_cell_margins(cell, top=100, bottom=100, left=120, right=120)
-    for p in cell.paragraphs:
+set_table_borders(t_glo)
+
+hdr_g = t_glo.rows[0].cells
+hdr_g[0].text = "Singkatan"
+hdr_g[1].text = "Kepanjangan / Istilah Lengkap"
+hdr_g[2].text = "Penjelasan Fungsi dalam Sistem"
+for c in hdr_g:
+    set_cell_shading(c, "F1F5F9")
+    set_cell_margins(c, top=80, bottom=80, left=100, right=100)
+    for p in c.paragraphs:
         for r in p.runs:
             r.bold = True
-            r.font.size = Pt(9.5)
+            r.font.size = Pt(9)
 
-glo_data = [
+glo_rows = [
     ("CPIG", "Customer Problem Incident Group", "Staf Helpdesk & Dispatcher yang menerima keluhan, menerbitkan tiket, mengalokasikan teknisi, dan berkomunikasi dengan klien."),
     ("SLA", "Service Level Agreement", "Kesepakatan batas waktu layanan penanganan insiden yang mengikat secara kontraktual."),
     ("MTTR", "Mean Time To Resolve", "Rata-rata durasi waktu yang dibutuhkan dari insiden tercatat hingga sistem normal kembali."),
@@ -90,107 +183,127 @@ glo_data = [
     ("PKS", "Perjanjian Kerja Sama", "Dokumen kontrak tingkat layanan antara penyedia layanan dengan mitra perusahaan.")
 ]
 
-for row_idx, data in enumerate(glo_data):
+for idx, item in enumerate(glo_rows):
     row = t_glo.add_row()
-    for col_idx, text in enumerate(data):
-        cell = row.cells[col_idx]
-        cell.text = text
-        if row_idx % 2 == 1:
+    for c_idx, val in enumerate(item):
+        cell = row.cells[c_idx]
+        cell.text = val
+        if idx % 2 == 1:
             set_cell_shading(cell, "F8FAFC")
-        set_cell_margins(cell, top=80, bottom=80, left=120, right=120)
+        set_cell_margins(cell, top=60, bottom=60, left=100, right=100)
         for p in cell.paragraphs:
             for r in p.runs:
-                r.font.size = Pt(9.5)
-                if col_idx == 0:
+                r.font.size = Pt(8.5)
+                if c_idx == 0:
                     r.bold = True
 
-doc.add_paragraph().paragraph_format.space_after = Pt(10)
+doc.add_paragraph().paragraph_format.space_after = Pt(8)
 
 # --- 1. ARSITEKTUR SISTEM FULL-STACK ---
-p_sec1 = doc.add_paragraph()
-p_sec1.paragraph_format.space_before = Pt(14)
-p_sec1.paragraph_format.space_after = Pt(4)
-r_sec1 = p_sec1.add_run("1. ARSITEKTUR SISTEM FULL-STACK")
-r_sec1.bold = True
-r_sec1.font.size = Pt(12)
+p_s1 = doc.add_paragraph()
+p_s1.paragraph_format.space_before = Pt(10)
+p_s1.paragraph_format.space_after = Pt(4)
+r_s1 = p_s1.add_run("1. ARSITEKTUR SISTEM FULL-STACK")
+r_s1.bold = True
+r_s1.font.size = Pt(11.5)
 
-p_arch_desc = doc.add_paragraph()
-p_arch_desc.paragraph_format.space_after = Pt(8)
-p_arch_desc.add_run(
-    "Sistem dirancang menggunakan arsitektur berlapis (multi-tier) yang memisahkan lapisan presentasi antarmuka "
-    "berbasis Vue.js 3, lapisan pemrosesan logika bisnis berbasis Express.js (Node.js), lapisan persistensi basis data "
-    "relasional MySQL, dan lapisan integrasi komunikasi surel resmi melalui SMTP Relay."
+p_s1_desc = doc.add_paragraph()
+p_s1_desc.paragraph_format.space_after = Pt(6)
+p_s1_desc.add_run(
+    "Sistem dirancang dengan arsitektur berlapis (multi-tier architecture) yang menghubungkan antarmuka pengguna berbasis "
+    "Vue.js 3, backend pemrosesan logika bisnis berbasis Express.js (Node.js), basis data relasional MySQL, dan "
+    "pengiriman notifikasi surat elektronik melalui SMTP Relay:"
 )
+
+# Insert Picture of Architecture Diagram
+if os.path.exists(arch_png):
+    p_img1 = doc.add_paragraph()
+    p_img1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_img1.paragraph_format.space_before = Pt(4)
+    p_img1.paragraph_format.space_after = Pt(4)
+    p_img1.add_run().add_picture(arch_png, width=Inches(6.4))
+    p_cap1 = doc.add_paragraph()
+    p_cap1.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_cap1.paragraph_format.space_after = Pt(8)
+    r_cap1 = p_cap1.add_run("Gambar 1.1 Diagram Arsitektur Sistem Full-Stack (Vue.js, Express.js, MySQL, SMTP Relay)")
+    r_cap1.font.size = Pt(8.5)
+    r_cap1.italic = True
+    r_cap1.font.color.rgb = RGBColor(0x47, 0x55, 0x69)
 
 t_arch = doc.add_table(rows=1, cols=3)
 t_arch.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr_cells = t_arch.rows[0].cells
-hdr_cells[0].text = "Lapisan Sistem"
-hdr_cells[1].text = "Teknologi Terpilih"
-hdr_cells[2].text = "Peran & Fungsi dalam Rancangan"
-for cell in hdr_cells:
-    set_cell_shading(cell, "F1F5F9")
-    set_cell_margins(cell, top=100, bottom=100, left=120, right=120)
-    for p in cell.paragraphs:
-        for r in p.runs:
-            r.bold = True
-            r.font.size = Pt(9.5)
+set_table_borders(t_arch)
 
-arch_data = [
-    ("1. Lapisan Antarmuka Pengguna (Frontend)", "Vue 3, Vite, Pinia, Vue Router", "Menyediakan antarmuka interaktif bagi Helpdesk, ruang kerja diagnosa teknisi, dan portal tracking pelanggan berbasis URL token."),
-    ("2. Layanan Backend (API Tier)", "Express.js, Node-Cron, Nodemailer", "Menyediakan endpoint REST API, menjalankan validasi RBAC, menghitung batas waktu SLA, menangani jeda SLA, dan mengeksekusi cron monitoring berkala."),
-    ("3. Basis Data Relasional (Data Tier)", "MySQL (Engine InnoDB)", "Menyimpan seluruh tabel operasional tiket, relasi pelanggan, kebijakan SLA, riwayat jeda, dan catatan rekam audit dengan dukungan transaksi ACID."),
-    ("4. Layanan Notifikasi (Integration)", "SMTP Relay Server", "Mengirimkan pembaruan status tiket dan surat peringatan eskalasi resmi langsung ke kotak masuk surel teknisi dan klien.")
-]
-
-for row_idx, data in enumerate(arch_data):
-    row = t_arch.add_row()
-    for col_idx, text in enumerate(data):
-        cell = row.cells[col_idx]
-        cell.text = text
-        if row_idx % 2 == 1:
-            set_cell_shading(cell, "F8FAFC")
-        set_cell_margins(cell, top=80, bottom=80, left=120, right=120)
-        for p in cell.paragraphs:
-            for r in p.runs:
-                r.font.size = Pt(9.5)
-                if col_idx == 0:
-                    r.bold = True
-
-doc.add_page_break()
-
-# --- 2. MATRIKS HAK AKSES PENGGUNA (RBAC MATRIX) ---
-p_sec2 = doc.add_paragraph()
-p_sec2.paragraph_format.space_before = Pt(10)
-p_sec2.paragraph_format.space_after = Pt(4)
-r_sec2 = p_sec2.add_run("2. MATRIKS HAK AKSES PENGGUNA (RBAC MATRIX)")
-r_sec2.bold = True
-r_sec2.font.size = Pt(12)
-
-p_rbac_desc = doc.add_paragraph()
-p_rbac_desc.paragraph_format.space_after = Pt(8)
-p_rbac_desc.add_run(
-    "Matriks ini mendefinisikan pembatasan kewenangan operasional antara Admin / CPIG (sebagai Helpdesk Dispatcher) "
-    "dengan Support Engineer (staf teknis pelaksana penanganan), serta akses terbatas pada Portal Klien:"
-)
-
-t_rbac = doc.add_table(rows=1, cols=4)
-t_rbac.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr_cells = t_rbac.rows[0].cells
-hdr_cells[0].text = "Fungsi / Modul Sistem"
-hdr_cells[1].text = "ADMIN / CPIG\n(Helpdesk Dispatcher)"
-hdr_cells[2].text = "SUPPORT ENGINEER\n(Teknisi Penanganan)"
-hdr_cells[3].text = "PORTAL KLIEN\n(Pelacakan Mandiri)"
-for cell in hdr_cells:
-    set_cell_shading(cell, "F1F5F9")
-    set_cell_margins(cell, top=100, bottom=100, left=120, right=120)
-    for p in cell.paragraphs:
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER if cell != hdr_cells[0] else WD_ALIGN_PARAGRAPH.LEFT
+hdr_a = t_arch.rows[0].cells
+hdr_a[0].text = "Komponen Sistem"
+hdr_a[1].text = "Teknologi Terpilih"
+hdr_a[2].text = "Peran & Fungsi dalam Rancangan"
+for c in hdr_a:
+    set_cell_shading(c, "F1F5F9")
+    set_cell_margins(c, top=80, bottom=80, left=100, right=100)
+    for p in c.paragraphs:
         for r in p.runs:
             r.bold = True
             r.font.size = Pt(9)
 
-rbac_data = [
+arch_rows = [
+    ("Lapisan Antarmuka", "Vue 3, Vite, Pinia, Vue Router", "Menyediakan antarmuka interaktif bagi staf Helpdesk, lembar kerja diagnosa teknisi, dan portal tracking publik bagi pelanggan."),
+    ("Layanan Backend", "Express.js, Node-Cron, Nodemailer", "Memproses endpoint REST API, menjalankan validasi RBAC, menghitung batas SLA, serta mengeksekusi cron monitoring berkala."),
+    ("Basis Data Relasional", "MySQL (Engine InnoDB)", "Menyimpan seluruh tabel operasional tiket, relasi pelanggan, kebijakan SLA, riwayat jeda, dan catatan rekam audit."),
+    ("Layanan Notifikasi", "SMTP Relay Server", "Mengirimkan pembaruan status tiket dan surat peringatan eskalasi resmi langsung ke kotak masuk surel teknisi dan klien.")
+]
+
+for idx, item in enumerate(arch_rows):
+    row = t_arch.add_row()
+    for c_idx, val in enumerate(item):
+        cell = row.cells[c_idx]
+        cell.text = val
+        if idx % 2 == 1:
+            set_cell_shading(cell, "F8FAFC")
+        set_cell_margins(cell, top=60, bottom=60, left=100, right=100)
+        for p in cell.paragraphs:
+            for r in p.runs:
+                r.font.size = Pt(8.5)
+                if c_idx == 0:
+                    r.bold = True
+
+doc.add_page_break()
+
+# --- 2. MATRIKS HAK AKSES PENGGUNA (RBAC) ---
+p_s2 = doc.add_paragraph()
+p_s2.paragraph_format.space_before = Pt(8)
+p_s2.paragraph_format.space_after = Pt(4)
+r_s2 = p_s2.add_run("2. MATRIKS HAK AKSES PENGGUNA (RBAC MATRIX)")
+r_s2.bold = True
+r_s2.font.size = Pt(11.5)
+
+p_s2_desc = doc.add_paragraph()
+p_s2_desc.paragraph_format.space_after = Pt(6)
+p_s2_desc.add_run(
+    "Pembagian hak akses memisahkan tugas ADMIN / CPIG (sebagai Helpdesk Dispatcher yang mengatur antrean dan penugasan) "
+    "dengan SUPPORT ENGINEER (sebagai teknisi pelaksana investigasi dan perbaikan), serta membatasi akses PORTAL KLIEN:"
+)
+
+t_rbac = doc.add_table(rows=1, cols=4)
+t_rbac.alignment = WD_TABLE_ALIGNMENT.CENTER
+set_table_borders(t_rbac)
+
+hdr_r = t_rbac.rows[0].cells
+hdr_r[0].text = "Fungsi / Modul Sistem"
+hdr_r[1].text = "ADMIN / CPIG\n(Helpdesk Dispatcher)"
+hdr_r[2].text = "SUPPORT ENGINEER\n(Teknisi Penanganan)"
+hdr_r[3].text = "PORTAL KLIEN\n(Pelacakan Mandiri)"
+for c in hdr_r:
+    set_cell_shading(c, "F1F5F9")
+    set_cell_margins(c, top=80, bottom=80, left=100, right=100)
+    for p in c.paragraphs:
+        if c != hdr_r[0]:
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        for r in p.runs:
+            r.bold = True
+            r.font.size = Pt(8.5)
+
+rbac_rows = [
     ("Monitoring Dashboard & Antrean Global Tiket", "Akses Penuh", "Tiket Ditugaskan", "Ditolak", True, False, False),
     ("Penerbitan Tiket Baru & Pengisian Data Awal", "Akses Penuh", "Input Lapangan", "Ditolak", True, False, False),
     ("Penugasan & Pergantian Teknisi Penanggung Jawab", "Kontrol Penuh", "Hanya Baca", "Ditolak", True, False, False),
@@ -204,247 +317,260 @@ rbac_data = [
     ("Basis Pengetahuan (Knowledge Base)", "Persetujuan SOP", "Ajukan & Membaca", "Hanya Baca", True, False, False)
 ]
 
-for row_idx, data in enumerate(rbac_data):
+for idx, (mod, adm, tch, clt, b_adm, b_tch, b_clt) in enumerate(rbac_rows):
     row = t_rbac.add_row()
-    # data: (modul, admin, tech, client, bold_admin, bold_tech, bold_client)
-    modul, admin_txt, tech_txt, client_txt, b_admin, b_tech, b_client = data
+    row.cells[0].text = mod
+    row.cells[1].text = adm
+    row.cells[2].text = tch
+    row.cells[3].text = clt
     
-    cell0 = row.cells[0]
-    cell0.text = modul
-    
-    cell1 = row.cells[1]
-    cell1.text = admin_txt
-    
-    cell2 = row.cells[2]
-    cell2.text = tech_txt
-    
-    cell3 = row.cells[3]
-    cell3.text = client_txt
-
-    if row_idx % 2 == 1:
+    if idx % 2 == 1:
         for c in row.cells:
             set_cell_shading(c, "F8FAFC")
-
-    for idx, cell in enumerate(row.cells):
-        set_cell_margins(cell, top=70, bottom=70, left=100, right=100)
+            
+    for c_idx, cell in enumerate(row.cells):
+        set_cell_margins(cell, top=55, bottom=55, left=90, right=90)
         for p in cell.paragraphs:
-            if idx > 0:
+            if c_idx > 0:
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             for r in p.runs:
-                r.font.size = Pt(9)
-                if idx == 1 and b_admin:
+                r.font.size = Pt(8.5)
+                if c_idx == 1 and b_adm:
                     r.bold = True
-                elif idx == 2 and b_tech:
+                elif c_idx == 2 and b_tch:
                     r.bold = True
-                elif idx == 3 and b_client:
+                elif c_idx == 3 and b_clt:
                     r.bold = True
 
-doc.add_paragraph().paragraph_format.space_after = Pt(10)
+doc.add_paragraph().paragraph_format.space_after = Pt(8)
 
-# --- 3. ALUR PROSES PENANGANAN TIKET (FLOWCHART) ---
-p_sec3 = doc.add_paragraph()
-p_sec3.paragraph_format.space_before = Pt(14)
-p_sec3.paragraph_format.space_after = Pt(4)
-r_sec3 = p_sec3.add_run("3. ALUR PROSES PENANGANAN TIKET (FLOWCHART)")
-r_sec3.bold = True
-r_sec3.font.size = Pt(12)
+# --- 3. DIAGRAM ALUR PROSES (FLOWCHART) ---
+p_s3 = doc.add_paragraph()
+p_s3.paragraph_format.space_before = Pt(10)
+p_s3.paragraph_format.space_after = Pt(4)
+r_s3 = p_s3.add_run("3. DIAGRAM ALUR PROSES PENANGANAN TIKET (FLOWCHART)")
+r_s3.bold = True
+r_s3.font.size = Pt(11.5)
 
-p_flow_desc = doc.add_paragraph()
-p_flow_desc.paragraph_format.space_after = Pt(6)
-p_flow_desc.add_run(
-    "Setiap insiden ditangani melalui 6 tahapan kerja berurutan dengan alur kendali logika sebagai berikut:"
+p_s3_desc = doc.add_paragraph()
+p_s3_desc.paragraph_format.space_after = Pt(6)
+p_s3_desc.add_run(
+    "Siklus hidup setiap insiden dimodelkan dalam bentuk diagram alur proses terstruktur dari pelaporan awal hingga tiket ditutup:"
 )
 
+# Insert Picture of Flowchart Diagram
+if os.path.exists(flow_png):
+    p_img2 = doc.add_paragraph()
+    p_img2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_img2.paragraph_format.space_before = Pt(4)
+    p_img2.paragraph_format.space_after = Pt(4)
+    p_img2.add_run().add_picture(flow_png, width=Inches(6.4))
+    p_cap2 = doc.add_paragraph()
+    p_cap2.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p_cap2.paragraph_format.space_after = Pt(8)
+    r_cap2 = p_cap2.add_run("Gambar 1.2 Diagram Alur Logika Penanganan Tiket (Incident Lifecycle Flowchart)")
+    r_cap2.font.size = Pt(8.5)
+    r_cap2.italic = True
+    r_cap2.font.color.rgb = RGBColor(0x47, 0x55, 0x69)
+
 flow_steps = [
-    ("Tahap 1: Laporan Masuk & Pencatatan Tiket", "Petugas Helpdesk/CPIG mencatat tiket baru ke sistem Express.js. Sistem mengunci target respon dan resolusi SLA secara otomatis dari tabel master SLA sesuai kontrak pelanggan. Email konfirmasi dan tautan token dibuat dan dikirimkan via SMTP."),
-    ("Tahap 2: Respon Awal Teknisi (First Touch SLA)", "Teknisi mengubah status tiket menjadi IN_PROGRESS. Sistem menghentikan timer perhitungan Response SLA dan mencatat waktu respon pertama secara permanen di database."),
-    ("Tahap 3: Investigasi Diagnostik & Milestone", "Teknisi melakukan penelusuran masalah dan mencatatkan setiap tindakan teknis, hasil observasi, serta riwayat eksekusi perintah terminal ke dalam tabel ticket_milestones."),
-    ("Tahap 4: Penanganan Jeda Waktu SLA (Clock Pause)", "Jika perbaikan terhenti akibat menunggu komponen suku cadang dari vendor principal atau menunggu jendela pemeliharaan klien, teknisi mengaktifkan status Pause. Timer resolusi SLA dibekukan sementara sehingga sisa waktu SLA tidak terpotong."),
-    ("Tahap 5: Pemulihan Sistem & Pengisian RCA", "Setelah infrastruktur kembali normal, teknisi mengisi formulir penyelesaian yang memuat penyebab gangguan (Root Cause), langkah pemulihan, dan saran preventif. Tiket diubah ke status RESOLVED dan waktu resolusi bersih (Net MTTR) dikunci."),
-    ("Tahap 6: Verifikasi Klien & Penutupan Tiket (Closed)", "Prosedur perbaikan yang efektif dapat diajukan ke antrean persetujuan Knowledge Base (KCS). Tiket ditutup permanen (CLOSED) setelah adanya konfirmasi dari pelanggan atau melewati masa evaluasi.")
+    ("1. Laporan Masuk & Pencatatan Tiket", "Petugas Helpdesk/CPIG mencatat tiket baru ke sistem Express.js. Sistem mengunci target respon dan resolusi SLA secara otomatis dari tabel master SLA sesuai kontrak pelanggan. Email konfirmasi dan tautan token dibuat dan dikirimkan via SMTP."),
+    ("2. Respon Awal Teknisi (First Touch SLA)", "Teknisi mengubah status tiket menjadi IN_PROGRESS. Sistem menghentikan timer perhitungan Response SLA dan mencatat waktu respon pertama secara permanen di database."),
+    ("3. Investigasi Diagnostik & Milestone", "Teknisi melakukan penelusuran masalah dan mencatatkan setiap tindakan teknis, hasil observasi, serta riwayat eksekusi perintah terminal ke dalam tabel ticket_milestones."),
+    ("4. Penanganan Jeda Waktu SLA (Clock Pause)", "Jika perbaikan terhenti akibat menunggu komponen suku cadang dari vendor principal atau menunggu jendela pemeliharaan klien, teknisi mengaktifkan status Pause. Timer resolusi SLA dibekukan sementara sehingga sisa waktu SLA tidak terpotong."),
+    ("5. Pemulihan Sistem & Pengisian RCA", "Setelah infrastruktur kembali normal, teknisi mengisi formulir penyelesaian yang memuat penyebab gangguan (Root Cause), langkah pemulihan, dan saran preventif. Tiket diubah ke status RESOLVED dan waktu resolusi bersih (Net MTTR) dikunci."),
+    ("6. Verifikasi Klien & Penutupan Tiket (Closed)", "Prosedur perbaikan yang efektif dapat diajukan ke antrean persetujuan Knowledge Base (KCS). Tiket ditutup permanen (CLOSED) setelah adanya konfirmasi dari pelanggan atau melewati masa evaluasi.")
 ]
 
 for title, desc in flow_steps:
-    p_step = doc.add_paragraph()
-    p_step.paragraph_format.space_before = Pt(2)
-    p_step.paragraph_format.space_after = Pt(3)
-    p_step.paragraph_format.left_indent = Inches(0.2)
-    r_t = p_step.add_run(f"• {title}: ")
-    r_t.bold = True
-    r_t.font.size = Pt(9.5)
-    r_d = p_step.add_run(desc)
-    r_d.font.size = Pt(9.5)
+    p_st = doc.add_paragraph()
+    p_st.paragraph_format.space_before = Pt(2)
+    p_st.paragraph_format.space_after = Pt(3)
+    p_st.paragraph_format.left_indent = Inches(0.2)
+    rt = p_st.add_run(f"• {title}: ")
+    rt.bold = True
+    rt.font.size = Pt(9)
+    rd = p_st.add_run(desc)
+    rd.font.size = Pt(9)
 
 doc.add_page_break()
 
-# --- 4. FORMULA & MATRIKS PERHITUNGAN SLA ---
-p_sec4 = doc.add_paragraph()
-p_sec4.paragraph_format.space_before = Pt(10)
-p_sec4.paragraph_format.space_after = Pt(4)
-r_sec4 = p_sec4.add_run("4. FORMULA & MATRIKS PERHITUNGAN SLA (SERVICE LEVEL AGREEMENT)")
-r_sec4.bold = True
-r_sec4.font.size = Pt(12)
+# --- 4. FORMULA & MATRIKS SLA ---
+p_s4 = doc.add_paragraph()
+p_s4.paragraph_format.space_before = Pt(8)
+p_s4.paragraph_format.space_after = Pt(4)
+r_s4 = p_s4.add_run("4. FORMULA & MATRIKS PERHITUNGAN SLA (SERVICE LEVEL AGREEMENT)")
+r_s4.bold = True
+r_s4.font.size = Pt(11.5)
 
-p_sla_intro = doc.add_paragraph()
-p_sla_intro.paragraph_format.space_after = Pt(6)
-p_sla_intro.add_run(
-    "Evaluasi kepatuhan tingkat layanan memisahkan dua parameter utama secara independen pada backend Express.js:"
+p_s4_desc = doc.add_paragraph()
+p_s4_desc.paragraph_format.space_after = Pt(6)
+p_s4_desc.add_run(
+    "Evaluasi performa layanan memisahkan dua parameter utama secara independen pada backend Express.js:"
 )
 
 # Formula Cards Table
 t_form = doc.add_table(rows=1, cols=2)
 t_form.alignment = WD_TABLE_ALIGNMENT.CENTER
-f_cell1 = t_form.rows[0].cells[0]
-f_cell2 = t_form.rows[0].cells[1]
+set_table_borders(t_form)
 
-set_cell_shading(f_cell1, "F8FAFC")
-set_cell_shading(f_cell2, "F8FAFC")
-set_cell_margins(f_cell1, top=100, bottom=100, left=150, right=150)
-set_cell_margins(f_cell2, top=100, bottom=100, left=150, right=150)
+fc1 = t_form.rows[0].cells[0]
+fc2 = t_form.rows[0].cells[1]
+set_cell_shading(fc1, "F8FAFC")
+set_cell_shading(fc2, "F8FAFC")
+set_cell_margins(fc1, top=80, bottom=80, left=120, right=120)
+set_cell_margins(fc2, top=80, bottom=80, left=120, right=120)
 
-p1 = f_cell1.paragraphs[0]
+p1 = fc1.paragraphs[0]
 r = p1.add_run("A. Formula Waktu Respon Awal (First Touch SLA)\n")
 r.bold = True
-r.font.size = Pt(9.5)
+r.font.size = Pt(9)
 r2 = p1.add_run("ΔT_respon = T_respon - T_dibuat\n")
 r2.bold = True
 r2.font.name = 'Consolas'
-r2.font.size = Pt(10)
+r2.font.size = Pt(9.5)
 r3 = p1.add_run("Kriteria Terpenuhi: ΔT_respon ≤ Batas Respon Kontrak PKS")
-r3.font.size = Pt(8.5)
+r3.font.size = Pt(8)
 r3.font.color.rgb = RGBColor(0x47, 0x55, 0x69)
 
-p2 = f_cell2.paragraphs[0]
+p2 = fc2.paragraphs[0]
 r = p2.add_run("B. Formula Waktu Resolusi Bersih (Net MTTR SLA)\n")
 r.bold = True
-r.font.size = Pt(9.5)
+r.font.size = Pt(9)
 r2 = p2.add_run("Net MTTR = (T_selesai - T_dibuat) - Σ T_pause\n")
 r2.bold = True
 r2.font.name = 'Consolas'
-r2.font.size = Pt(10)
+r2.font.size = Pt(9.5)
 r3 = p2.add_run("Kriteria Terpenuhi: Net MTTR ≤ Batas Resolusi Kontrak PKS")
-r3.font.size = Pt(8.5)
+r3.font.size = Pt(8)
 r3.font.color.rgb = RGBColor(0x47, 0x55, 0x69)
 
 doc.add_paragraph().paragraph_format.space_after = Pt(6)
 
 # Matriks PKS
-p_sub_pks = doc.add_paragraph()
-p_sub_pks.paragraph_format.space_before = Pt(8)
-p_sub_pks.paragraph_format.space_after = Pt(4)
-r_pks = p_sub_pks.add_run("A. Matriks Standar Kontrak Tingkat Layanan (PKS)")
-r_pks.bold = True
-r_pks.font.size = Pt(10.5)
+p_pks_h = doc.add_paragraph()
+p_pks_h.paragraph_format.space_before = Pt(6)
+p_pks_h.paragraph_format.space_after = Pt(4)
+r_pks_h = p_pks_h.add_run("A. Matriks Standar Kontrak Tingkat Layanan (PKS)")
+r_pks_h.bold = True
+r_pks_h.font.size = Pt(10)
 
 t_pks = doc.add_table(rows=1, cols=4)
 t_pks.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr_cells = t_pks.rows[0].cells
-hdr_cells[0].text = "Tingkatan Kontrak"
-hdr_cells[1].text = "Jadwal Jam Operasional"
-hdr_cells[2].text = "Target Waktu Respon"
-hdr_cells[3].text = "Target Resolusi Net MTTR"
-for cell in hdr_cells:
-    set_cell_shading(cell, "F1F5F9")
-    set_cell_margins(cell, top=100, bottom=100, left=120, right=120)
-    for p in cell.paragraphs:
-        p.alignment = WD_ALIGN_PARAGRAPH.CENTER if cell != hdr_cells[0] else WD_ALIGN_PARAGRAPH.LEFT
+set_table_borders(t_pks)
+
+hdr_p = t_pks.rows[0].cells
+hdr_p[0].text = "Tingkatan Kontrak"
+hdr_p[1].text = "Jadwal Jam Operasional"
+hdr_p[2].text = "Target Waktu Respon"
+hdr_p[3].text = "Target Resolusi Net MTTR"
+for c in hdr_p:
+    set_cell_shading(c, "F1F5F9")
+    set_cell_margins(c, top=80, bottom=80, left=100, right=100)
+    for p in c.paragraphs:
+        if c != hdr_p[0]:
+            p.alignment = WD_ALIGN_PARAGRAPH.CENTER
         for r in p.runs:
             r.bold = True
-            r.font.size = Pt(9)
+            r.font.size = Pt(8.5)
 
-pks_data = [
+pks_rows = [
     ("Platinum 24×7", "24 Jam × 7 Hari (Non-Stop)", "≤ 30 Menit", "≤ 4 Jam"),
     ("Gold 8×5", "Senin – Jumat (08:00 – 17:00 WIB)", "≤ 30 Menit", "≤ 8 Jam"),
     ("Silver 8×5", "Senin – Jumat (08:30 – 17:30 WIB)", "≤ 1 Jam", "≤ 12 Jam"),
     ("Pemerintah Tier-1", "Jam Kantor Dinas Pemerintah (8×5)", "≤ 1 Jam", "≤ 12 Jam")
 ]
 
-for row_idx, data in enumerate(pks_data):
+for idx, item in enumerate(pks_rows):
     row = t_pks.add_row()
-    for col_idx, text in enumerate(data):
-        cell = row.cells[col_idx]
-        cell.text = text
-        if row_idx % 2 == 1:
+    for c_idx, val in enumerate(item):
+        cell = row.cells[c_idx]
+        cell.text = val
+        if idx % 2 == 1:
             set_cell_shading(cell, "F8FAFC")
-        set_cell_margins(cell, top=70, bottom=70, left=100, right=100)
+        set_cell_margins(cell, top=55, bottom=55, left=90, right=90)
         for p in cell.paragraphs:
-            if col_idx >= 2:
+            if c_idx >= 2:
                 p.alignment = WD_ALIGN_PARAGRAPH.CENTER
             for r in p.runs:
-                r.font.size = Pt(9)
-                if col_idx == 0:
+                r.font.size = Pt(8.5)
+                if c_idx == 0:
                     r.bold = True
 
 doc.add_paragraph().paragraph_format.space_after = Pt(6)
 
 # Matriks Eskalasi
-p_sub_esk = doc.add_paragraph()
-p_sub_esk.paragraph_format.space_before = Pt(8)
-p_sub_esk.paragraph_format.space_after = Pt(4)
-r_esk = p_sub_esk.add_run("B. Matriks Ambang Batas Pemicu Eskalasi Otomatis (Node-Cron Service)")
-r_esk.bold = True
-r_esk.font.size = Pt(10.5)
+p_esk_h = doc.add_paragraph()
+p_esk_h.paragraph_format.space_before = Pt(6)
+p_esk_h.paragraph_format.space_after = Pt(4)
+r_esk_h = p_esk_h.add_run("B. Matriks Ambang Batas Pemicu Eskalasi Otomatis (Node-Cron Service)")
+r_esk_h.bold = True
+r_esk_h.font.size = Pt(10)
 
 t_esk = doc.add_table(rows=1, cols=4)
 t_esk.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr_cells = t_esk.rows[0].cells
-hdr_cells[0].text = "Tahap Eskalasi"
-hdr_cells[1].text = "Ambang Batas Waktu"
-hdr_cells[2].text = "Aksi Sistem Otomatis"
-hdr_cells[3].text = "Tujuan Notifikasi Surel"
-for cell in hdr_cells:
-    set_cell_shading(cell, "F1F5F9")
-    set_cell_margins(cell, top=100, bottom=100, left=120, right=120)
-    for p in cell.paragraphs:
+set_table_borders(t_esk)
+
+hdr_e = t_esk.rows[0].cells
+hdr_e[0].text = "Tahap Eskalasi"
+hdr_e[1].text = "Ambang Batas Waktu"
+hdr_e[2].text = "Aksi Sistem Otomatis"
+hdr_e[3].text = "Tujuan Notifikasi Surel"
+for c in hdr_e:
+    set_cell_shading(c, "F1F5F9")
+    set_cell_margins(c, top=80, bottom=80, left=100, right=100)
+    for p in c.paragraphs:
         for r in p.runs:
             r.bold = True
-            r.font.size = Pt(9)
+            r.font.size = Pt(8.5)
 
-esk_data = [
+esk_rows = [
     ("1. Peringatan Dini", "Durasi Mencapai 50% Target MTTR", "Kirim surel pengingat status pengerjaan", "Teknisi Penanggung Jawab & Lead CPIG"),
     ("2. Peringatan Kritis", "Durasi Mencapai 80% Target MTTR", "Kirim surel alert darurat (High Priority)", "Service Delivery Lead / Supervisor"),
     ("3. Pelanggaran SLA", "100% Target MTTR Terlampaui", "Ubah status menjadi Breached & catat audit log", "Manajemen Operasional Helpdesk")
 ]
 
-for row_idx, data in enumerate(esk_data):
+for idx, item in enumerate(esk_rows):
     row = t_esk.add_row()
-    for col_idx, text in enumerate(data):
-        cell = row.cells[col_idx]
-        cell.text = text
-        if row_idx % 2 == 1:
+    for c_idx, val in enumerate(item):
+        cell = row.cells[c_idx]
+        cell.text = val
+        if idx % 2 == 1:
             set_cell_shading(cell, "F8FAFC")
-        set_cell_margins(cell, top=70, bottom=70, left=100, right=100)
+        set_cell_margins(cell, top=55, bottom=55, left=90, right=90)
         for p in cell.paragraphs:
             for r in p.runs:
-                r.font.size = Pt(9)
-                if col_idx == 0:
+                r.font.size = Pt(8.5)
+                if c_idx == 0:
                     r.bold = True
 
 doc.add_paragraph().paragraph_format.space_after = Pt(6)
 
 # Skema Database
-p_sub_db = doc.add_paragraph()
-p_sub_db.paragraph_format.space_before = Pt(8)
-p_sub_db.paragraph_format.space_after = Pt(4)
-r_db = p_sub_db.add_run("C. Rincian Entitas Skema Basis Data (MySQL)")
-r_db.bold = True
-r_db.font.size = Pt(10.5)
+p_db_h = doc.add_paragraph()
+p_db_h.paragraph_format.space_before = Pt(6)
+p_db_h.paragraph_format.space_after = Pt(4)
+r_db_h = p_db_h.add_run("C. Rincian Entitas Skema Basis Data (MySQL)")
+r_db_h.bold = True
+r_db_h.font.size = Pt(10)
 
 t_db = doc.add_table(rows=1, cols=3)
 t_db.alignment = WD_TABLE_ALIGNMENT.CENTER
-hdr_cells = t_db.rows[0].cells
-hdr_cells[0].text = "Tabel Basis Data"
-hdr_cells[1].text = "Kolom Utama"
-hdr_cells[2].text = "Fungsi Penyimpanan"
-for cell in hdr_cells:
-    set_cell_shading(cell, "F1F5F9")
-    set_cell_margins(cell, top=100, bottom=100, left=120, right=120)
-    for p in cell.paragraphs:
+set_table_borders(t_db)
+
+hdr_d = t_db.rows[0].cells
+hdr_d[0].text = "Tabel Basis Data"
+hdr_d[1].text = "Kolom Utama"
+hdr_d[2].text = "Fungsi Penyimpanan"
+for c in hdr_d:
+    set_cell_shading(c, "F1F5F9")
+    set_cell_margins(c, top=80, bottom=80, left=100, right=100)
+    for p in c.paragraphs:
         for r in p.runs:
             r.bold = True
-            r.font.size = Pt(9)
+            r.font.size = Pt(8.5)
 
-db_data = [
+db_rows = [
     ("tickets", "id, ticket_number, customer_id, assigned_to, status, priority, sla_policy_id", "Menyimpan data tiket insiden dan relasi ke pelanggan serta teknisi penanggung jawab."),
     ("sla_pause_logs", "id, ticket_id, reason_type, vendor_case_id, paused_at, resumed_at, total_seconds", "Mencatat histori jeda waktu resmi (menunggu suku cadang vendor atau izin jadwal klien)."),
     ("ticket_milestones", "id, ticket_id, title, description, command_executed, created_by, created_at", "Rekam jejak kronologis langkah diagnosa teknis dan eksekusi perintah terminal oleh teknisi."),
@@ -452,21 +578,21 @@ db_data = [
     ("audit_event_logs", "id, ticket_id, user_id, action_type, old_value, new_value, timestamp", "Catatan jejak audit permanen untuk menjamin integritas data dan riwayat penanganan.")
 ]
 
-for row_idx, data in enumerate(db_data):
+for idx, item in enumerate(db_rows):
     row = t_db.add_row()
-    for col_idx, text in enumerate(data):
-        cell = row.cells[col_idx]
-        cell.text = text
-        if row_idx % 2 == 1:
+    for c_idx, val in enumerate(item):
+        cell = row.cells[c_idx]
+        cell.text = val
+        if idx % 2 == 1:
             set_cell_shading(cell, "F8FAFC")
-        set_cell_margins(cell, top=70, bottom=70, left=100, right=100)
+        set_cell_margins(cell, top=55, bottom=55, left=90, right=90)
         for p in cell.paragraphs:
             for r in p.runs:
-                r.font.size = Pt(9)
-                if col_idx == 0:
+                r.font.size = Pt(8.5)
+                if c_idx == 0:
                     r.bold = True
                     r.font.name = 'Consolas'
 
-docx_path = r"d:\Unpam\Semester 6\KP\Ticketing-helpdesk\Rancangan_Arsitektur_dan_Alur_Helpdesk_Ticketing.docx"
+# Save file
 doc.save(docx_path)
-print(f"Clean Word document generated successfully at: {docx_path}")
+print(f"Publication-grade Word document generated successfully at: {docx_path}")
