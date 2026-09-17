@@ -278,3 +278,26 @@ Dokumen ini mencatat seluruh aktivitas, keputusan arsitektur, dan riwayat pembar
 * **Hasil Pengujian & Verifikasi**:
   - Telah diverifikasi melalui browser subagent: tombol pada header Audit Logs kini tersisa **Ekspor CSV** dan **Ekspor JSON** secara rapi dan presisi tanpa tombol cetak.
   - Tangkapan layar tersimpan pada: [audit_logs_buttons.png](file:///C:/Users/wizfi/.gemini/antigravity-ide/brain/22dc162e-ae86-4ff2-8b23-14415e8d301f/audit_logs_buttons_1789295078747.png).
+
+---
+
+### [2026-09-17] - Tahap 1.18: Analisis Desain Prototype Figma ITSM Enterprise & Pengarsipan Media Aset
+* **Latar Belakang**:
+  - Pengguna membagikan tautan prototype Figma sistem Helpdesk GTT (`https://www.figma.com/design/InsNYRwz7PYJ3Ue4hXpSKs/Untitled?node-id=0-1`) untuk dianalisis, dikomparasikan dengan sistem saat ini, serta diarsipkan seluruh media desainnya ke dalam repositori proyek.
+* **Aktivitas yang Dilakukan**:
+  1. **Inspeksi & Ekstraksi Visual 8 Layar Utama Prototype Figma**:
+     - `01_operational_dashboard.png`: Operational Dashboard (Mission Control Console, Core Telemetry Uptime 99.98%, Dual Intake/Resolved Trend Chart, Active SLA Timers, On-Duty Roster).
+     - `02_ticket_detail.png`: Ticket Detail (Dual Live SLA Counters Response & Resolution, Technology Principal L3 OEM Integration, Diagnostic Timeline, Root Cause vs Resolution Strategy, Customer Dispatch Sync WhatsApp).
+     - `03_create_ticket.png`: Create Support Ticket (3-Step Guided Stepper, Live SLA Contract Badge, Rich Artifacts drag-and-drop, Principal Escalation switch).
+     - `04_reports_and_sla.png`: Reports & SLA Analytics (Matriks SLA per Mitra Klien, Incident Intake by Channel, Priority Breakdown, Engineer Workload Velocity Roster).
+     - `05_sla_configuration.png`: SLA Configuration (Contractual Threshold Matrix Platinum/Gold/Gov, Dual SLA Engine Logic, Automated Multi-stage Escalation Rules 50% & 80%).
+     - `06_ticket_list.png`: Ticket List (Dedicated Queue Monitor terpisah dari Dashboard, 4 KPI antrean, tab filter cepat SLA Near Breach, Waiting Principal, My Assigned).
+     - `07_customers.png`: Customer Master & Contracts (Direktori Akun Korporat, matriks MSA, jam operasional, penugasan supervisor).
+     - `08_knowledge_base.png`: Knowledge Base (Validated Engineering Runbooks ITIL, Reusability Rate 64%, Pending Approvals, Authoring Standards).
+  2. **Pengarsipan Media & Penyusunan Dokumen Komparasi**:
+     - Menyimpan ke-8 berkas tangkapan layar resolusi tinggi ke direktori:
+       - `docs/figma-analysis/screenshots/`
+       - `frontend/public/figma-reference/`
+     - Menyusun dokumen analisis komprehensif: [FIGMA_ANALYSIS_AND_COMPARISON.md](file:///d:/Unpam/Semester%206/KP/Ticketing-helpdesk/docs/figma-analysis/FIGMA_ANALYSIS_AND_COMPARISON.md).
+     - Merumuskan rekomendasi roadmap implementasi bertahap (Fase 1 s.d. 3) serta memastikan fitur-fitur unggulan sistem saat ini (Portal Tracking Publik Pelanggan anti-IDOR, Jejak Audit Keamanan, Smart Ingestion) tetap dipertahankan.
+
