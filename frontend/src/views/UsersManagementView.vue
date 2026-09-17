@@ -133,10 +133,8 @@
             <div>
               <label class="block font-semibold text-slate-700 mb-1">Peran (Role) *</label>
               <select v-model="newUser.roleCode" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white">
-                <option value="ENGINEER">Engineer (Teknisi)</option>
-                <option value="CPIG">CPIG (Helpdesk)</option>
-                <option value="MANAGEMENT">Management (Lead)</option>
-                <option value="ADMIN">System Administrator</option>
+                <option value="ADMIN">ADMIN / CPIG (Admin & Helpdesk Lead)</option>
+                <option value="ENGINEER">Support Engineer (Teknisi NOC)</option>
               </select>
             </div>
             <div>
@@ -179,10 +177,8 @@
             <div>
               <label class="block font-semibold text-slate-700 mb-1">Peran (Role) *</label>
               <select v-model="editUserForm.roleCode" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white">
-                <option value="ENGINEER">Engineer (Teknisi)</option>
-                <option value="CPIG">CPIG (Helpdesk)</option>
-                <option value="MANAGEMENT">Management (Lead)</option>
-                <option value="ADMIN">System Administrator</option>
+                <option value="ADMIN">ADMIN / CPIG (Admin & Helpdesk Lead)</option>
+                <option value="ENGINEER">Support Engineer (Teknisi NOC)</option>
               </select>
             </div>
             <div>
@@ -241,9 +237,8 @@ const editUserForm = ref({
 const getRoleBadgeClass = (role) => {
   switch (role) {
     case 'ADMIN': return 'bg-purple-50 text-purple-700 border border-purple-200';
-    case 'CPIG': return 'bg-blue-50 text-blue-700 border border-blue-200';
+    case 'CPIG': return 'bg-purple-50 text-purple-700 border border-purple-200';
     case 'ENGINEER': return 'bg-amber-50 text-amber-700 border border-amber-200';
-    case 'MANAGEMENT': return 'bg-slate-100 text-slate-700 border border-slate-200';
     default: return 'bg-slate-50 text-slate-600';
   }
 };

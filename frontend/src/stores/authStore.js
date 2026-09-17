@@ -43,8 +43,8 @@ function getStoredCurrentUser(users) {
     console.error('Failed to load current user from localStorage:', e);
   }
 
-  // Default fallback: Rina Anggraini (CPIG / Helpdesk)
-  return users.find(u => u.roleCode === 'CPIG') || users[1] || users[0];
+  // Default fallback: Ahmad Fauzi / Rina Anggraini (ADMIN / CPIG)
+  return users.find(u => u.roleCode === 'ADMIN') || users[0];
 }
 
 function saveCurrentAuthState(user) {
@@ -96,7 +96,7 @@ export const useAuthStore = defineStore('auth', {
 
       const newUser = {
         id: this.users.length + 1,
-        roleId: userData.roleCode === 'ADMIN' ? 1 : userData.roleCode === 'CPIG' ? 2 : userData.roleCode === 'ENGINEER' ? 3 : 4,
+        roleId: userData.roleCode === 'ADMIN' ? 1 : 2,
         roleCode: userData.roleCode,
         name: userData.name,
         email: userData.email,
@@ -108,14 +108,14 @@ export const useAuthStore = defineStore('auth', {
       this.users.push(newUser);
       saveUsersState(this.users);
 
-      if (ticketStore && ticketStore.addAuditLog) {
+      // Audit log if ticketStore is provided
+      if (ticketStore && typeof ticketStore.addAuditLog === 'function') {
         ticketStore.addAuditLog({
-          userName: actorUser.name,
-          role: actorUser.roleCode,
           action: 'USER_CREATED',
-          entityType: 'USER',
-          entityId: `USER-00${newUser.id}`,
-          description: `Mendaftarkan akun staf baru: ${newUser.name} (${newUser.roleCode})`
+          details: `Staf baru ${newUser.name} (${newUser.roleCode}) berhasil ditambahkan ke sistem`,
+          user: actorUser ? actorUser.name : 'System Admin',
+          role: actorUser ? actorUser.roleCode : 'ADMIN',
+          ipAddress: '127.0.0.1 (Local)'
         });
       }
 
@@ -131,7 +131,7 @@ export const useAuthStore = defineStore('auth', {
       user.name = updatedData.name;
       user.email = updatedData.email;
       user.roleCode = updatedData.roleCode;
-      user.roleId = updatedData.roleCode === 'ADMIN' ? 1 : updatedData.roleCode === 'CPIG' ? 2 : userData_roleCode_check(updatedData.roleCode);
+      user.roleId = updatedData.roleCode === 'ADMIN' ? 1 : 2;
       user.phone = updatedData.phone;
       if (typeof updatedData.isActive === 'boolean') {
         user.isActive = updatedData.isActive;

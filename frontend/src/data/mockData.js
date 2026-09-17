@@ -1,18 +1,35 @@
 // Mock Data for PT Global Transformasi Teknologi (Glotra Technology) Helpdesk Ticketing System
 
 export const ROLES = [
-  { id: 1, code: 'ADMIN', name: 'System Administrator', description: 'Full access to system, master data, user & audit logs' },
-  { id: 2, code: 'CPIG', name: 'CPIG / Helpdesk', description: 'First tier ticket triage, creation, SLA monitoring & assignment' },
-  { id: 3, code: 'ENGINEER', name: 'Support Engineer', description: 'Troubleshooting, milestone updates, root cause resolution' },
-  { id: 4, code: 'MANAGEMENT', name: 'Management / Lead', description: 'Executive dashboard, SLA analytics & performance reporting' }
+  { id: 1, code: 'ADMIN', name: 'ADMIN / CPIG', badge: 'Admin & Helpdesk', description: 'Kendali penuh tiket, triage laporan, penugasan teknisi, analitik SLA, dan konfigurasi master data' },
+  { id: 2, code: 'ENGINEER', name: 'Support Engineer', badge: 'Teknisi NOC', description: 'Pelaksana investigasi teknis, milestone pemulihan, pause SLA, dan resolusi tiket' }
 ];
 
 export const MOCK_USERS = [
-  { id: 1, roleId: 1, roleCode: 'ADMIN', name: 'Ahmad Fauzi', email: 'admin@glotratech.com', initials: 'AF', phone: '0811-9988-771', isActive: true },
-  { id: 2, roleId: 2, roleCode: 'CPIG', name: 'Rina Anggraini', email: 'rina.cpig@glotratech.com', initials: 'RA', phone: '0812-8877-662', isActive: true },
-  { id: 3, roleId: 3, roleCode: 'ENGINEER', name: 'Budi Santoso', email: 'budi.eng@glotratech.com', initials: 'BS', phone: '0813-7766-553', isActive: true },
-  { id: 4, roleId: 3, roleCode: 'ENGINEER', name: 'Dwi Prasetyo', email: 'dwi.eng@glotratech.com', initials: 'DP', phone: '0813-5544-332', isActive: true },
-  { id: 5, roleId: 4, roleCode: 'MANAGEMENT', name: 'Ir. Hendra Gunawan', email: 'hendra.head@glotratech.com', initials: 'HG', phone: '0811-3322-110', isActive: true }
+  { id: 1, roleId: 1, roleCode: 'ADMIN', name: 'Ahmad Fauzi', roleTitle: 'System Administrator', email: 'admin@glotratech.com', initials: 'AF', phone: '0811-9988-771', isActive: true },
+  { id: 2, roleId: 1, roleCode: 'ADMIN', name: 'Rina Anggraini', roleTitle: 'CPIG / Helpdesk Lead', email: 'rina.cpig@glotratech.com', initials: 'RA', phone: '0812-8877-662', isActive: true },
+  { id: 3, roleId: 2, roleCode: 'ENGINEER', name: 'Budi Santoso', roleTitle: 'Lead SysOps Engineer', email: 'budi.eng@glotratech.com', initials: 'BS', phone: '0813-7766-553', isActive: true },
+  { id: 4, roleId: 2, roleCode: 'ENGINEER', name: 'Dwi Prasetyo', roleTitle: 'Storage & Backup Specialist', email: 'dwi.eng@glotratech.com', initials: 'DP', phone: '0813-5544-332', isActive: true },
+  { id: 5, roleId: 1, roleCode: 'ADMIN', name: 'Ir. Hendra Gunawan', roleTitle: 'Service Operations Manager', email: 'hendra.head@glotratech.com', initials: 'HG', phone: '0811-3322-110', isActive: true }
+];
+
+export const CORE_TELEMETRY = {
+  nodeId: 'NODE-JKT-01A',
+  uptime: '99.98%',
+  engineMode: 'Dual Sync HA',
+  services: [
+    { name: 'TICKETING SYSTEM', status: 'Operational (99.9%)', state: 'operational' },
+    { name: 'EMAIL NOTIFICATION', status: 'Operational (Relay OK)', state: 'operational' },
+    { name: 'SLA ENGINE', status: 'Operational (Real-Time)', state: 'operational' },
+    { name: 'KNOWLEDGE BASE', status: 'Active (v2.8 Index)', state: 'operational' }
+  ]
+};
+
+export const ON_DUTY_ROSTER = [
+  { id: 1, name: 'Budi Santoso', role: 'Lead SysOps Engineer', initials: 'BS', activeCount: 6, status: 'Optimal Load', statusColor: 'emerald' },
+  { id: 2, name: 'Dwi Prasetyo', role: 'Storage & Backup Spec.', initials: 'DP', activeCount: 5, status: 'Ready', statusColor: 'blue' },
+  { id: 3, name: 'Rizky Pratama', role: 'Network Infrastructure', initials: 'RP', activeCount: 4, status: 'Ready', statusColor: 'blue' },
+  { id: 4, name: 'Hendra Kusuma', role: 'Virtualization Escalation', initials: 'HK', activeCount: 7, status: 'Heavy Load', statusColor: 'amber' }
 ];
 
 export const MOCK_CUSTOMERS = [

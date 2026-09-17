@@ -1,5 +1,6 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import DashboardView from '../views/DashboardView.vue';
+import TicketListView from '../views/TicketListView.vue';
 import CreateTicketView from '../views/CreateTicketView.vue';
 import TicketDetailView from '../views/TicketDetailView.vue';
 import KnowledgeBaseView from '../views/KnowledgeBaseView.vue';
@@ -15,37 +16,43 @@ const routes = [
     path: '/',
     name: 'Dashboard',
     component: DashboardView,
-    meta: { roles: ['ADMIN', 'CPIG', 'ENGINEER', 'MANAGEMENT'] }
+    meta: { roles: ['ADMIN', 'ENGINEER'] }
+  },
+  {
+    path: '/tickets',
+    name: 'TicketList',
+    component: TicketListView,
+    meta: { roles: ['ADMIN', 'ENGINEER'] }
   },
   {
     path: '/tickets/create',
     name: 'CreateTicket',
     component: CreateTicketView,
-    meta: { roles: ['ADMIN', 'CPIG'] } // Hanya CPIG dan Admin yang membuat tiket laporan
+    meta: { roles: ['ADMIN'] } // Khusus Admin / CPIG Helpdesk
   },
   {
     path: '/tickets/:id',
     name: 'TicketDetail',
     component: TicketDetailView,
-    meta: { roles: ['ADMIN', 'CPIG', 'ENGINEER', 'MANAGEMENT'] }
+    meta: { roles: ['ADMIN', 'ENGINEER'] }
   },
   {
     path: '/knowledge-base',
     name: 'KnowledgeBase',
     component: KnowledgeBaseView,
-    meta: { roles: ['ADMIN', 'CPIG', 'ENGINEER'] } // Khusus staf teknis dan operasional
+    meta: { roles: ['ADMIN', 'ENGINEER'] }
   },
   {
     path: '/audit-logs',
     name: 'AuditLogs',
     component: AuditLogView,
-    meta: { roles: ['ADMIN'] } // Khusus System Administrator saja
+    meta: { roles: ['ADMIN'] } // Khusus Admin / CPIG Lead
   },
   {
     path: '/reports',
     name: 'Reports',
     component: ReportsView,
-    meta: { roles: ['ADMIN'] } // Khusus Admin untuk ekspor laporan berkala
+    meta: { roles: ['ADMIN'] } // Khusus Admin / CPIG
   },
   {
     path: '/admin/users',
@@ -63,7 +70,7 @@ const routes = [
     path: '/track/:ticketNumber',
     name: 'CustomerTracking',
     component: CustomerTrackingView,
-    meta: { public: true } // Terbuka untuk customer dari link email tanpa login
+    meta: { public: true } // Terbuka untuk customer dari link email/WA tanpa login
   },
   {
     path: '/:pathMatch(.*)*',

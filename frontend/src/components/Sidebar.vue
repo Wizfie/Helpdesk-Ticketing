@@ -55,12 +55,14 @@
       <!-- Role Identifier Tag -->
       <div class="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg flex items-center justify-between text-xs">
         <span class="text-slate-500 font-semibold text-[11px]">Akses Menu:</span>
-        <span class="font-bold text-blue-700 font-mono text-[11px]">{{ authStore.currentUser.roleCode }}</span>
+        <span class="font-bold text-blue-700 font-mono text-[11px]">
+          {{ authStore.currentUser.roleCode === 'ADMIN' ? 'ADMIN / CPIG' : 'ENGINEER' }}
+        </span>
       </div>
 
       <!-- Navigation Links -->
       <nav class="space-y-1 text-xs">
-        <!-- 1. Dashboard (All Roles) -->
+        <!-- 1. Operational Dashboard (Mission Control) -->
         <router-link
           to="/"
           @click="uiStore.closeSidebar()"
@@ -71,7 +73,25 @@
             <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
             </svg>
-            <span>Dashboard Tiket</span>
+            <span>Mission Control</span>
+          </div>
+          <span class="bg-emerald-100 text-emerald-700 text-[10px] px-1.5 py-0.2 rounded font-mono font-bold">
+            Live
+          </span>
+        </router-link>
+
+        <!-- 2. Dedicated Ticket Queue (/tickets) -->
+        <router-link
+          to="/tickets"
+          @click="uiStore.closeSidebar()"
+          class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
+          :class="$route.path === '/tickets' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+        >
+          <div class="flex items-center space-x-2.5">
+            <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/tickets' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+            </svg>
+            <span>Antrean Tiket</span>
           </div>
           <span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
             {{ ticketStore.totalTickets }}

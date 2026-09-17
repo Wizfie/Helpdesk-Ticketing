@@ -96,9 +96,9 @@
           </div>
           
           <div class="flex items-center space-x-2">
-            <!-- Publish Button (Admin/Management only for Drafts) -->
+            <!-- Publish Button (Admin/CPIG only for Drafts) -->
             <button
-              v-if="item.status === 'DRAFT' && ['ADMIN', 'MANAGEMENT'].includes(authStore.currentUser.roleCode)"
+              v-if="item.status === 'DRAFT' && authStore.currentUser.roleCode === 'ADMIN'"
               @click="publishArticle(item.id)"
               class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold transition-colors"
             >

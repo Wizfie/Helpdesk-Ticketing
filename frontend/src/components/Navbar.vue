@@ -62,7 +62,7 @@
             ]"
             :title="role.description"
           >
-            {{ role.code }}
+            {{ role.name }}
           </button>
         </div>
 
@@ -74,7 +74,7 @@
             class="text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-blue-500"
           >
             <option v-for="role in authStore.roles" :key="role.id" :value="role.code">
-              {{ role.code }}
+              {{ role.name }}
             </option>
           </select>
         </div>
