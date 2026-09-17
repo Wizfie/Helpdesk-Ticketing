@@ -12,13 +12,13 @@ html_content = f"""<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Spesifikasi Teknis: Arsitektur Sistem & Alur Operasional Helpdesk - PT Global Transformasi Teknologi</title>
+  <title>Spesifikasi Arsitektur Sistem Full-Stack Helpdesk - PT Global Transformasi Teknologi</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap');
     
     @page {{
       size: A4 portrait;
-      margin: 15mm 16mm 16mm 16mm;
+      margin: 14mm 16mm 15mm 16mm;
       @bottom-right {{
         content: "Halaman " counter(page);
         font-size: 8pt;
@@ -42,7 +42,7 @@ html_content = f"""<!DOCTYPE html>
     body {{
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       color: #0f172a;
-      line-height: 1.45;
+      line-height: 1.42;
       font-size: 8.5pt;
       background: #ffffff;
       margin: 0;
@@ -56,7 +56,7 @@ html_content = f"""<!DOCTYPE html>
       justify-content: space-between;
       border-bottom: 2px solid #0f172a;
       padding-bottom: 8px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }}
 
     .logo-container {{
@@ -112,21 +112,21 @@ html_content = f"""<!DOCTYPE html>
       background: #f8fafc;
       border: 1px solid #cbd5e1;
       border-left: 4px solid #0f172a;
-      padding: 10px 14px;
+      padding: 8px 12px;
       border-radius: 4px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }}
 
     .title-block h2 {{
-      margin: 0 0 3px 0;
-      font-size: 11pt;
+      margin: 0 0 2px 0;
+      font-size: 10.5pt;
       font-weight: 800;
       color: #0f172a;
     }}
 
     .title-block p {{
       margin: 0;
-      font-size: 8pt;
+      font-size: 7.5pt;
       color: #475569;
     }}
 
@@ -134,12 +134,12 @@ html_content = f"""<!DOCTYPE html>
     .meta-table {{
       width: 100%;
       border-collapse: collapse;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       font-size: 7.5pt;
     }}
 
     .meta-table th, .meta-table td {{
-      padding: 4px 8px;
+      padding: 4px 7px;
       border: 1px solid #e2e8f0;
     }}
 
@@ -158,39 +158,39 @@ html_content = f"""<!DOCTYPE html>
 
     /* Headings */
     h2.section-title {{
-      font-size: 9.5pt;
+      font-size: 9pt;
       font-weight: 800;
       color: #0f172a;
       border-bottom: 1px solid #cbd5e1;
-      padding-bottom: 4px;
-      margin-top: 14px;
-      margin-bottom: 8px;
+      padding-bottom: 3px;
+      margin-top: 12px;
+      margin-bottom: 6px;
       text-transform: uppercase;
       letter-spacing: 0.3px;
     }}
 
     h3.sub-title {{
-      font-size: 8.5pt;
+      font-size: 8pt;
       font-weight: 700;
       color: #1e293b;
-      margin-top: 10px;
-      margin-bottom: 4px;
+      margin-top: 8px;
+      margin-bottom: 3px;
     }}
 
     p {{
-      margin: 0 0 6px 0;
+      margin: 0 0 5px 0;
       color: #334155;
       text-align: justify;
     }}
 
     ul, ol {{
-      margin: 3px 0 8px 0;
+      margin: 2px 0 6px 0;
       padding-left: 18px;
       color: #334155;
     }}
 
     li {{
-      margin-bottom: 3px;
+      margin-bottom: 2px;
     }}
 
     /* SVG Architecture Diagram Container */
@@ -198,9 +198,9 @@ html_content = f"""<!DOCTYPE html>
       width: 100%;
       background: #ffffff;
       border: 1px solid #cbd5e1;
-      border-radius: 6px;
-      padding: 10px;
-      margin: 8px 0 12px 0;
+      border-radius: 5px;
+      padding: 8px;
+      margin: 6px 0 10px 0;
       display: flex;
       justify-content: center;
     }}
@@ -215,7 +215,7 @@ html_content = f"""<!DOCTYPE html>
     table.data-table {{
       width: 100%;
       border-collapse: collapse;
-      margin: 8px 0 12px 0;
+      margin: 6px 0 10px 0;
       font-size: 7.5pt;
     }}
 
@@ -223,13 +223,13 @@ html_content = f"""<!DOCTYPE html>
       background: #f1f5f9;
       color: #0f172a;
       font-weight: 700;
-      padding: 5px 6px;
+      padding: 4px 6px;
       text-align: left;
       border: 1px solid #cbd5e1;
     }}
 
     table.data-table td {{
-      padding: 5px 6px;
+      padding: 4px 6px;
       border: 1px solid #e2e8f0;
       vertical-align: middle;
     }}
@@ -279,21 +279,21 @@ html_content = f"""<!DOCTYPE html>
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
-      margin: 8px 0 12px 0;
+      margin: 6px 0 10px 0;
     }}
 
     .formula-card {{
       background: #f8fafc;
       border: 1px solid #e2e8f0;
       border-left: 3px solid #0284c7;
-      padding: 8px 10px;
+      padding: 6px 9px;
       border-radius: 4px;
     }}
 
     .formula-title {{
       font-weight: 700;
       color: #0369a1;
-      font-size: 7.5pt;
+      font-size: 7pt;
       margin-bottom: 2px;
       text-transform: uppercase;
     }}
@@ -301,24 +301,24 @@ html_content = f"""<!DOCTYPE html>
     .formula-math {{
       font-family: 'JetBrains Mono', monospace;
       font-weight: 700;
-      font-size: 8.5pt;
+      font-size: 8pt;
       color: #0f172a;
-      margin: 4px 0;
+      margin: 2px 0;
     }}
 
     .formula-desc {{
       font-size: 7pt;
       color: #475569;
       margin: 0;
-      line-height: 1.35;
+      line-height: 1.3;
     }}
 
     /* Workflow Stage Cards */
     .flow-list {{
       display: flex;
       flex-direction: column;
-      gap: 5px;
-      margin: 8px 0 12px 0;
+      gap: 4px;
+      margin: 6px 0 10px 0;
     }}
 
     .flow-item {{
@@ -326,9 +326,9 @@ html_content = f"""<!DOCTYPE html>
       border: 1px solid #e2e8f0;
       border-left: 3px solid #3b82f6;
       border-radius: 4px;
-      padding: 6px 10px;
+      padding: 5px 8px;
       display: flex;
-      gap: 10px;
+      gap: 8px;
       align-items: flex-start;
     }}
 
@@ -336,9 +336,9 @@ html_content = f"""<!DOCTYPE html>
       background: #1e293b;
       color: #ffffff;
       font-weight: 800;
-      font-size: 7.5pt;
-      width: 18px;
-      height: 18px;
+      font-size: 7pt;
+      width: 17px;
+      height: 17px;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -348,49 +348,17 @@ html_content = f"""<!DOCTYPE html>
     }}
 
     .flow-content h5 {{
-      margin: 0 0 2px 0;
-      font-size: 8pt;
+      margin: 0 0 1px 0;
+      font-size: 7.5pt;
       font-weight: 700;
       color: #0f172a;
     }}
 
     .flow-content p {{
       margin: 0;
-      font-size: 7.5pt;
-      color: #475569;
-      line-height: 1.35;
-    }}
-
-    /* Signature Section */
-    .sign-table {{
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 25px;
-      page-break-inside: avoid;
-    }}
-
-    .sign-table td {{
-      width: 33.33%;
-      text-align: center;
-      vertical-align: top;
-      padding: 0 8px;
-      font-size: 8pt;
-    }}
-
-    .sign-space {{
-      height: 48px;
-    }}
-
-    .sign-name {{
-      font-weight: 700;
-      color: #0f172a;
-      text-decoration: underline;
-    }}
-
-    .sign-role {{
       font-size: 7pt;
-      color: #64748b;
-      margin-top: 2px;
+      color: #475569;
+      line-height: 1.3;
     }}
 
     .page-break {{
@@ -417,8 +385,8 @@ html_content = f"""<!DOCTYPE html>
 
   <!-- TITLE BLOCK -->
   <div class="title-block">
-    <h2>SPESIFIKASI ARSITEKTUR SISTEM & ALUR OPERASIONAL HELPDESK</h2>
-    <p>Dokumen Teknis Struktur Multi-Tier, Matriks Hak Akses (RBAC), Siklus Hidup Penanganan Tiket, dan Logika Mesin SLA</p>
+    <h2>SPESIFIKASI ARSITEKTUR SISTEM FULL-STACK HELPDESK</h2>
+    <p>Spesifikasi Teknis Integrasi Vue.js, Express.js REST API, MySQL Database, dan Layanan Notifikasi Email SMTP</p>
   </div>
 
   <!-- METADATA TABLE -->
@@ -432,146 +400,167 @@ html_content = f"""<!DOCTYPE html>
     <tr>
       <th>Klasifikasi</th>
       <td>Internal Teknis - Terbatas</td>
-      <th>Versi Rilis</th>
-      <td>v2.4 Enterprise Architecture</td>
+      <th>Tech Stack</th>
+      <td>Vue 3 (Vite + Pinia) | Express.js (Node.js) | MySQL | SMTP Relay</td>
     </tr>
     <tr>
-      <th>Tanggal Efektif</th>
+      <th>Tanggal Rilis</th>
       <td>18 September 2026</td>
-      <th>Lingkup Infrastruktur</th>
-      <td>Server, Storage SAN, Jaringan Enterprise, Virtualisasi & Database</td>
+      <th>Target Lingkup</th>
+      <td>Sistem Helpdesk Ticketing Enterprise (Multi-Client)</td>
     </tr>
   </table>
 
   <!-- BAB I -->
-  <h2 class="section-title">BAB I: RINGKASAN SISTEM</h2>
+  <h2 class="section-title">BAB I: RINGKASAN SISTEM & TEKNOLOGI</h2>
   <p>
-    Sistem Helpdesk Ticketing PT Global Transformasi Teknologi dirancang untuk mengelola dan memantau penanganan insiden infrastruktur IT pada 6 klien enterprise (BCA, PT Astra Honda Motor, Siloam Hospitals Group, Diskominfo Jawa Barat, Telkomsel Enterprise, dan Bank Mandiri).
+    Sistem Helpdesk Ticketing PT Global Transformasi Teknologi dirancang sebagai aplikasi full-stack terintegrasi untuk mengelola insiden infrastruktur teknologi informasi pada 6 mitra korporat skala besar (BCA, PT Astra Honda Motor, Siloam Hospitals Group, Diskominfo Jawa Barat, Telkomsel Enterprise, dan Bank Mandiri).
   </p>
   <p>
-    Sistem mengotomatisasi penegakan kontrak tingkat layanan (<em>Service Level Agreement / SLA</em>), pencatatan rekam jejak diagnostik, koordinasi eskalasi teknis, dan standardisasi prosedur perbaikan ke dalam pustaka operasional terverifikasi.
+    <strong>Komposisi Teknologi (Tech Stack):</strong>
   </p>
+  <ul>
+    <li><strong>Frontend Client (Vue.js 3)</strong>: Single Page Application (SPA) berbasis Vue 3, Vite, Pinia state management, dan Vue Router untuk konsol Admin, konsol Teknisi, dan Portal Pelacakan Klien.</li>
+    <li><strong>Backend REST API (Express.js / Node.js)</strong>: Menyediakan endpoint API modular, otentikasi JWT, middleware otorisasi RBAC, pengatur logika SLA ganda, dan penjadwal cron berkala (<em>node-cron</em>).</li>
+    <li><strong>Basis Data Relasional (MySQL)</strong>: Menyimpan data entitas tiket, milestone diagnosa, histori perubahan status, master data SLA dan pelanggan dengan integritas relasi referensial (InnoDB ACID).</li>
+    <li><strong>Layanan Notifikasi Email (SMTP Relay)</strong>: Mengirimkan surat elektronik resmi korporat untuk notifikasi penerimaan tiket, eskalasi insiden, dan pembaruan teknis ke pihak klien.</li>
+  </ul>
 
   <!-- BAB II -->
-  <h2 class="section-title">BAB II: DIAGRAM ARSITEKTUR SISTEM</h2>
+  <h2 class="section-title">BAB II: DIAGRAM ARSITEKTUR SISTEM FULL-STACK</h2>
   <p>
-    Sistem menerapkan arsitektur 4 lapisan modular yang memisahkan antara antarmuka pengguna, pemrosesan logika bisnis, integrasi layanan eksternal, dan manajemen persistensi data:
+    Arsitektur sistem dibangun secara berlapis (<em>multi-tier</em>) yang memisahkan lapisan presentasi antarmuka, pemrosesan logika bisnis, integrasi layanan eksternal, dan lapisan basis data:
   </p>
 
   <!-- SVG VECTOR ARCHITECTURE DIAGRAM -->
   <div class="arch-svg-container">
-    <svg viewBox="0 0 680 270" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Background Grid / Bounds -->
-      <rect width="680" height="270" rx="6" fill="#f8fafc" stroke="#e2e8f0" stroke-width="1"/>
+    <svg viewBox="0 0 680 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background Bounds -->
+      <rect width="680" height="260" rx="6" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
 
-      <!-- LAYER 1: LAPISAN ANTARMUKA -->
-      <rect x="15" y="12" width="650" height="52" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
-      <rect x="15" y="12" width="160" height="18" rx="3" fill="#1e293b"/>
-      <text x="22" y="24" fill="#ffffff" font-family="Inter, sans-serif" font-size="8.5" font-weight="700">1. LAPISAN ANTARMUKA PENGGUNA</text>
+      <!-- LAYER 1: CLIENT TIER (VUE.JS 3) -->
+      <rect x="15" y="10" width="650" height="48" rx="4" fill="#ffffff" stroke="#2563eb" stroke-width="1.2"/>
+      <rect x="15" y="10" width="165" height="17" rx="3" fill="#2563eb"/>
+      <text x="22" y="22" fill="#ffffff" font-family="Inter, sans-serif" font-size="8" font-weight="700">1. CLIENT TIER (VUE 3 SPA)</text>
       
-      <!-- L1 Sub-boxes -->
-      <rect x="25" y="34" width="195" height="24" rx="3" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
-      <text x="35" y="49" fill="#1e40af" font-family="Inter, sans-serif" font-size="7.5" font-weight="600">Konsol Admin / CPIG (Full Control)</text>
+      <rect x="25" y="30" width="195" height="22" rx="3" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+      <text x="35" y="44" fill="#1e40af" font-family="Inter, sans-serif" font-size="7" font-weight="600">Konsol Admin / CPIG (Management)</text>
       
-      <rect x="240" y="34" width="200" height="24" rx="3" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
-      <text x="250" y="49" fill="#166534" font-family="Inter, sans-serif" font-size="7.5" font-weight="600">Konsol Teknisi (Diagnosa & MTTR)</text>
+      <rect x="240" y="30" width="200" height="22" rx="3" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+      <text x="250" y="44" fill="#166534" font-family="Inter, sans-serif" font-size="7" font-weight="600">Konsol Teknisi (Workspace Diagnosa)</text>
       
-      <rect x="460" y="34" width="195" height="24" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="475" y="49" fill="#334155" font-family="Inter, sans-serif" font-size="7.5" font-weight="600">Portal Klien (Tokenized URL Track)</text>
+      <rect x="460" y="30" width="195" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="475" y="44" fill="#334155" font-family="Inter, sans-serif" font-size="7" font-weight="600">Portal Klien (Tokenized URL Track)</text>
 
-      <!-- Connectors 1 to 2 -->
-      <path d="M122 64 L122 75 M340 64 L340 75 M557 64 L557 75" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 2"/>
+      <!-- Arrow 1 to 2 (HTTPS / REST API) -->
+      <path d="M340 58 L340 70" stroke="#0f172a" stroke-width="1.5" marker-end="url(#arrow)"/>
+      <text x="350" y="66" fill="#64748b" font-family="JetBrains Mono, monospace" font-size="6.5">HTTPS / JSON REST API</text>
 
-      <!-- LAYER 2: LOGIKA BISNIS & MESIN SLA -->
-      <rect x="15" y="75" width="650" height="64" rx="4" fill="#ffffff" stroke="#2563eb" stroke-width="1.2"/>
-      <rect x="15" y="75" width="170" height="18" rx="3" fill="#2563eb"/>
-      <text x="22" y="87" fill="#ffffff" font-family="Inter, sans-serif" font-size="8.5" font-weight="700">2. LOGIKA BISNIS & MESIN SLA</text>
+      <!-- LAYER 2: API & BACKEND TIER (EXPRESS.JS) -->
+      <rect x="15" y="70" width="650" height="74" rx="4" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
+      <rect x="15" y="70" width="185" height="17" rx="3" fill="#0f172a"/>
+      <text x="22" y="82" fill="#ffffff" font-family="Inter, sans-serif" font-size="8" font-weight="700">2. BACKEND API (EXPRESS.JS)</text>
 
-      <!-- L2 Sub-boxes -->
-      <rect x="25" y="99" width="120" height="32" rx="3" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="33" y="112" fill="#0f172a" font-family="Inter, sans-serif" font-size="7" font-weight="700">RBAC Guard</text>
-      <text x="33" y="123" fill="#64748b" font-family="Inter, sans-serif" font-size="6.5">Route & Action Shield</text>
+      <rect x="25" y="91" width="115" height="46" rx="3" fill="#f1f5f9" stroke="#cbd5e1" stroke-width="1"/>
+      <text x="31" y="104" fill="#0f172a" font-family="Inter, sans-serif" font-size="6.5" font-weight="700">API Gateway</text>
+      <text x="31" y="115" fill="#475569" font-family="Inter, sans-serif" font-size="6">JWT Auth Middleware</text>
+      <text x="31" y="125" fill="#475569" font-family="Inter, sans-serif" font-size="6">RBAC Role Shield</text>
 
-      <rect x="155" y="99" width="150" height="32" rx="3" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
-      <text x="163" y="112" fill="#1d4ed8" font-family="Inter, sans-serif" font-size="7" font-weight="700">Dual-SLA Calculator</text>
-      <text x="163" y="123" fill="#3b82f6" font-family="Inter, sans-serif" font-size="6.5">Response & Net MTTR</text>
+      <rect x="148" y="91" width="125" height="46" rx="3" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+      <text x="154" y="104" fill="#1e40af" font-family="Inter, sans-serif" font-size="6.5" font-weight="700">Dual-SLA Engine</text>
+      <text x="154" y="115" fill="#2563eb" font-family="Inter, sans-serif" font-size="6">First Touch SLA Calc</text>
+      <text x="154" y="125" fill="#2563eb" font-family="Inter, sans-serif" font-size="6">Net MTTR Resolution</text>
 
-      <rect x="315" y="99" width="140" height="32" rx="3" fill="#eff6ff" stroke="#93c5fd" stroke-width="1"/>
-      <text x="323" y="112" fill="#1d4ed8" font-family="Inter, sans-serif" font-size="7" font-weight="700">SLA Pause Engine</text>
-      <text x="323" y="123" fill="#3b82f6" font-family="Inter, sans-serif" font-size="6.5">Vendor & Cust Hold</text>
+      <rect x="281" y="91" width="120" height="46" rx="3" fill="#eff6ff" stroke="#bfdbfe" stroke-width="1"/>
+      <text x="287" y="104" fill="#1e40af" font-family="Inter, sans-serif" font-size="6.5" font-weight="700">Pause & Hold Handler</text>
+      <text x="287" y="115" fill="#2563eb" font-family="Inter, sans-serif" font-size="6">Pending Vendor / Cust</text>
+      <text x="287" y="125" fill="#2563eb" font-family="Inter, sans-serif" font-size="6">Timer State Lock</text>
 
-      <rect x="465" y="99" width="95" height="32" rx="3" fill="#fff7ed" stroke="#fdba74" stroke-width="1"/>
-      <text x="472" y="112" fill="#c2410c" font-family="Inter, sans-serif" font-size="7" font-weight="700">Auto Escalation</text>
-      <text x="472" y="123" fill="#ea580c" font-family="Inter, sans-serif" font-size="6.5">50% / 80% / 100%</text>
+      <rect x="409" y="91" width="120" height="46" rx="3" fill="#fff7ed" stroke="#fed7aa" stroke-width="1"/>
+      <text x="415" y="104" fill="#c2410c" font-family="Inter, sans-serif" font-size="6.5" font-weight="700">Node-Cron Scheduler</text>
+      <text x="415" y="115" fill="#ea580c" font-family="Inter, sans-serif" font-size="6">Interval 1 Menit Polling</text>
+      <text x="415" y="125" fill="#ea580c" font-family="Inter, sans-serif" font-size="6">Eskalasi 50%/80%/100%</text>
 
-      <rect x="570" y="99" width="85" height="32" rx="3" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1"/>
-      <text x="576" y="112" fill="#6d28d9" font-family="Inter, sans-serif" font-size="7" font-weight="700">KCS Runbook</text>
-      <text x="576" y="123" fill="#8b5cf6" font-family="Inter, sans-serif" font-size="6.5">Approved SOPs</text>
+      <rect x="537" y="91" width="118" height="46" rx="3" fill="#f5f3ff" stroke="#ddd6fe" stroke-width="1"/>
+      <text x="543" y="104" fill="#6d28d9" font-family="Inter, sans-serif" font-size="6.5" font-weight="700">KCS Knowledge Base</text>
+      <text x="543" y="115" fill="#7c3aed" font-family="Inter, sans-serif" font-size="6">Review & Approval SOP</text>
+      <text x="543" y="125" fill="#7c3aed" font-family="Inter, sans-serif" font-size="6">CLI Runbook Catalog</text>
 
-      <!-- Connectors 2 to 3 -->
-      <path d="M230 139 L230 150 M450 139 L450 150" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 2"/>
+      <!-- Arrows from Backend down -->
+      <path d="M210 144 L210 160" stroke="#0f172a" stroke-width="1.5"/>
+      <path d="M470 144 L470 160" stroke="#0f172a" stroke-width="1.5"/>
 
-      <!-- LAYER 3: INTEGRASI & KOMUNIKASI -->
-      <rect x="15" y="150" width="650" height="48" rx="4" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2"/>
-      <rect x="15" y="150" width="160" height="17" rx="3" fill="#475569"/>
-      <text x="22" y="162" fill="#ffffff" font-family="Inter, sans-serif" font-size="8" font-weight="700">3. INTEGRASI & KOMUNIKASI</text>
+      <!-- LAYER 3: PERSISTENCE & SERVICES (MYSQL & SMTP) -->
+      <!-- Left Box: MySQL Database -->
+      <rect x="15" y="160" width="385" height="90" rx="4" fill="#ffffff" stroke="#059669" stroke-width="1.2"/>
+      <rect x="15" y="160" width="190" height="17" rx="3" fill="#059669"/>
+      <text x="22" y="172" fill="#ffffff" font-family="Inter, sans-serif" font-size="8" font-weight="700">3A. DATABASE TIER (MYSQL RELASIONAL)</text>
+      
+      <g transform="translate(25, 184)">
+        <rect x="0" y="0" width="112" height="56" rx="3" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+        <text x="6" y="12" fill="#166534" font-family="Inter, sans-serif" font-size="6.5" font-weight="700">Entitas Tiket & SLA</text>
+        <text x="6" y="23" fill="#475569" font-family="JetBrains Mono, monospace" font-size="5.5">• tickets</text>
+        <text x="6" y="33" fill="#475569" font-family="JetBrains Mono, monospace" font-size="5.5">• sla_policies</text>
+        <text x="6" y="43" fill="#475569" font-family="JetBrains Mono, monospace" font-size="5.5">• sla_pause_logs</text>
 
-      <rect x="25" y="171" width="195" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="35" y="185" fill="#334155" font-family="Inter, sans-serif" font-size="7" font-weight="600">SMTP Relay (Notifikasi Email Resmi)</text>
+        <rect x="122" y="0" width="115" height="56" rx="3" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+        <text x="128" y="12" fill="#166534" font-family="Inter, sans-serif" font-size="6.5" font-weight="700">Diagnosa & Knowledge</text>
+        <text x="128" y="23" fill="#475569" font-family="JetBrains Mono, monospace" font-size="5.5">• ticket_milestones</text>
+        <text x="128" y="33" fill="#475569" font-family="JetBrains Mono, monospace" font-size="5.5">• knowledge_base</text>
+        <text x="128" y="43" fill="#475569" font-family="JetBrains Mono, monospace" font-size="5.5">• kb_approvals</text>
 
-      <rect x="240" y="171" width="200" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="250" y="185" fill="#334155" font-family="Inter, sans-serif" font-size="7" font-weight="600">Jembatan OEM L3 (HPE / Cisco / VMware)</text>
+        <rect x="247" y="0" width="118" height="56" rx="3" fill="#f0fdf4" stroke="#bbf7d0" stroke-width="1"/>
+        <text x="253" y="12" fill="#166534" font-family="Inter, sans-serif" font-size="6.5" font-weight="700">Akun & Jejak Audit</text>
+        <text x="253" y="23" fill="#475569" font-family="JetBrains Mono, monospace" font-size="5.5">• users & roles</text>
+        <text x="253" y="33" fill="#475569" font-family="JetBrains Mono, monospace" font-size="5.5">• customers & pic</text>
+        <text x="253" y="43" fill="#475569" font-family="JetBrains Mono, monospace" font-size="5.5">• audit_event_logs</text>
+      </g>
 
-      <rect x="460" y="171" width="195" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="470" y="185" fill="#334155" font-family="Inter, sans-serif" font-size="7" font-weight="600">Pencatat Jejak Audit (Event Log)</text>
+      <!-- Right Box: External Communications (SMTP Relay) -->
+      <rect x="410" y="160" width="255" height="90" rx="4" fill="#ffffff" stroke="#64748b" stroke-width="1.2"/>
+      <rect x="410" y="160" width="175" height="17" rx="3" fill="#475569"/>
+      <text x="417" y="172" fill="#ffffff" font-family="Inter, sans-serif" font-size="8" font-weight="700">3B. NOTIFIKASI EMAIL (SMTP)</text>
 
-      <!-- Connectors 3 to 4 -->
-      <path d="M340 198 L340 209" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 2"/>
+      <g transform="translate(420, 184)">
+        <rect x="0" y="0" width="235" height="26" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="8" y="12" fill="#0f172a" font-family="Inter, sans-serif" font-size="6.5" font-weight="700">SMTP Relay Service (Nodemailer)</text>
+        <text x="8" y="21" fill="#475569" font-family="Inter, sans-serif" font-size="6">helpdesk@glotratech.com (Notifikasi Resmi)</text>
 
-      <!-- LAYER 4: DATA & PERSISTENSI -->
-      <rect x="15" y="209" width="650" height="48" rx="4" fill="#ffffff" stroke="#0f172a" stroke-width="1.2"/>
-      <rect x="15" y="209" width="150" height="17" rx="3" fill="#0f172a"/>
-      <text x="22" y="221" fill="#ffffff" font-family="Inter, sans-serif" font-size="8" font-weight="700">4. DATA & PERSISTENSI</text>
-
-      <rect x="25" y="230" width="195" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="35" y="244" fill="#334155" font-family="Inter, sans-serif" font-size="7" font-weight="600">Pinia Reactive Store & Local Cache</text>
-
-      <rect x="240" y="230" width="200" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="250" y="244" fill="#334155" font-family="Inter, sans-serif" font-size="7" font-weight="600">Skema Migrasi Mandiri (v2.4 Engine)</text>
-
-      <rect x="460" y="230" width="195" height="22" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
-      <text x="470" y="244" fill="#334155" font-family="Inter, sans-serif" font-size="7" font-weight="600">Kesiapan REST API / Basis Data Pusat</text>
+        <rect x="0" y="30" width="235" height="26" rx="3" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+        <text x="8" y="42" fill="#0f172a" font-family="Inter, sans-serif" font-size="6.5" font-weight="700">Jembatan Dukungan OEM L3</text>
+        <text x="8" y="51" fill="#475569" font-family="Inter, sans-serif" font-size="6">Referensi Kasus Principal (HPE / Cisco TAC)</text>
+      </g>
     </svg>
   </div>
 
   <table class="data-table">
     <thead>
       <tr>
-        <th style="width: 25%;">Komponen Arsitektur</th>
-        <th style="width: 35%;">Deskripsi Teknis</th>
-        <th style="width: 40%;">Implementasi pada Sistem Helpdesk</th>
+        <th style="width: 25%;">Lapisan Arsitektur</th>
+        <th style="width: 35%;">Spesifikasi Teknologi</th>
+        <th style="width: 40%;">Tanggung Jawab Operasional</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td><strong>Lapisan Antarmuka</strong></td>
-        <td>Aplikasi SPA responsif dengan pemisahan tampilan berdasarkan profil kerja pengguna.</td>
-        <td>Dashboard metrik SLA, ruang kerja diagnosa tiket teknisi, serta portal status publik via URL terenkripsi token.</td>
+        <td><strong>1. Frontend Tier</strong></td>
+        <td>Vue 3, Vite, Pinia, Vue Router, Tailwind CSS</td>
+        <td>Konsol operasional Admin/CPIG, lembar kerja teknisi, dan portal pelacakan status pelanggan berbasis tokenized URL.</td>
       </tr>
       <tr>
-        <td><strong>Mesin Logika Bisnis</strong></td>
-        <td>Pemrosesan state terpusat, validasi alur tiket, kalkulasi otomatis SLA, dan penanganan pause.</td>
-        <td>Pinia stores, RBAC Route Guard, Dual SLA Engine, timer countdown berkala, dan evaluasi threshold eskalasi.</td>
+        <td><strong>2. Backend API Tier</strong></td>
+        <td>Express.js (Node.js), JWT, Node-Cron, Nodemailer</td>
+        <td>Penyedia REST API endpoint, validasi hak akses RBAC, kalkulasi SLA di server, penanganan jeda SLA, dan cron scheduler.</td>
       </tr>
       <tr>
-        <td><strong>Integrasi Layanan</strong></td>
-        <td>Saluran komunikasi resmi dan pencatatan riwayat operasional yang dapat diaudit.</td>
-        <td>Relai surel (SMTP) untuk notifikasi penugasan/update ke klien, referensi nomor kasus vendor L3, dan audit log.</td>
+        <td><strong>3. Database Tier</strong></td>
+        <td>MySQL (InnoDB Engine, ACID Transaksi)</td>
+        <td>Penyimpanan permanen tiket, riwayat status, audit trail, relasi pelanggan & PKS, serta pustaka knowledge base.</td>
       </tr>
       <tr>
-        <td><strong>Persistensi Data</strong></td>
-        <td>Manajemen state lokal dan sinkronisasi struktur data runtime.</td>
-        <td>Penyimpanan reaktif dengan migrasi skema data otomatis (v2.4) untuk menjaga konsistensi state penanganan tiket.</td>
+        <td><strong>4. Integrasi Surel</strong></td>
+        <td>Corporate SMTP Relay Server</td>
+        <td>Pengiriman otomatis surat konfirmasi tiket, pemberitahuan penugasan teknisi, dan peringatan eskalasi bertingkat.</td>
       </tr>
     </tbody>
   </table>
@@ -581,7 +570,7 @@ html_content = f"""<!DOCTYPE html>
   <!-- BAB III -->
   <h2 class="section-title">BAB III: MATRIKS AKSES BERBASIS PERAN (RBAC)</h2>
   <p>
-    Sistem membatasi wewenang operasional antara peran <strong>ADMIN / CPIG</strong> dan <strong>SUPPORT ENGINEER</strong> untuk menjaga tata kelola insiden, integritas data, dan pemisahan fungsi penugasan dengan fungsi eksekusi perbaikan:
+    Sistem menerapkan pembatasan hak akses tegas antara peran <strong>ADMIN / CPIG</strong> dan <strong>SUPPORT ENGINEER</strong> untuk memisahkan wewenang tata kelola dengan tindakan eksekusi perbaikan teknis:
   </p>
 
   <table class="data-table">
@@ -666,7 +655,7 @@ html_content = f"""<!DOCTYPE html>
   <!-- BAB IV -->
   <h2 class="section-title">BAB IV: ALUR OPERASIONAL SIKLUS HIDUP TIKET</h2>
   <p>
-    Setiap insiden ditangani melalui 6 tahap operasional terstandarisasi untuk menjamin kecepatan pemulihan layanan:
+    Setiap tiket insiden ditangani melalui 6 tahap standar operasional dari penerimaan hingga penutupan resmi:
   </p>
 
   <div class="flow-list">
@@ -674,7 +663,7 @@ html_content = f"""<!DOCTYPE html>
       <div class="flow-num">1</div>
       <div class="flow-content">
         <h5>Pencatatan Insiden & Penguncian Batas Waktu SLA</h5>
-        <p>Laporan insiden dicatat oleh Helpdesk/CPIG. Sistem mengunci target waktu respon dan target resolusi secara otomatis sesuai klausul kontrak PKS klien (Platinum, Gold, Silver, atau Pemerintah). Tautan pelacakan dan notifikasi email dibuat secara otomatis.</p>
+        <p>Laporan insiden dicatat di sistem Express.js oleh Admin/CPIG. Sistem mengunci target respon dan resolusi secara otomatis dari tabel MySQL sesuai kontrak pelanggan. Email notifikasi dan link token dikirim ke pihak terkait via SMTP.</p>
       </div>
     </div>
 
@@ -682,7 +671,7 @@ html_content = f"""<!DOCTYPE html>
       <div class="flow-num">2</div>
       <div class="flow-content">
         <h5>Respon Awal Teknisi (Response SLA Handshake)</h5>
-        <p>Teknisi bertugas mengonfirmasi penanganan dengan mengubah status tiket menjadi IN_PROGRESS. Tindakan ini menghentikan perhitungan <em>Response SLA</em> dan mencatat timestamp respon awal di dalam audit trail.</p>
+        <p>Teknisi mengubah status tiket menjadi IN_PROGRESS. Endpoint API menghentikan timer waktu respon awal (<em>First Touch SLA</em>) dan menyimpan timestamp ke database MySQL.</p>
       </div>
     </div>
 
@@ -690,7 +679,7 @@ html_content = f"""<!DOCTYPE html>
       <div class="flow-num">3</div>
       <div class="flow-content">
         <h5>Investigasi Diagnostik & Pencatatan Milestone</h5>
-        <p>Teknisi melakukan penelusuran masalah, pengujian teknis, dan perbaikan perangkat. Setiap tindakan teknis, sintaks perintah CLI, dan bukti tangkapan layar dicatat secara kronologis pada log milestone.</p>
+        <p>Teknisi melakukan isolasi gangguan. Setiap langkah teknis, catatan observasi, dan riwayat perintah CLI dicatat ke tabel <code>ticket_milestones</code> pada basis data.</p>
       </div>
     </div>
 
@@ -698,7 +687,7 @@ html_content = f"""<!DOCTYPE html>
       <div class="flow-num">4</div>
       <div class="flow-content">
         <h5>Penahanan Jam SLA Resmi (SLA Clock Pause)</h5>
-        <p>Bila perbaikan tertunda akibat menunggu suku cadang vendor principal (<em>Pending Vendor</em>) atau menunggu izin jendela pemeliharaan dari pelanggan (<em>Pending Customer</em>), teknisi mengaktifkan status Pause dengan melampirkan nomor kasus vendor. Timer resolusi SLA dibekukan sementara.</p>
+        <p>Jika perbaikan terhenti akibat menunggu komponen vendor atau jadwal pemeliharaan klien, teknisi mengaktifkan Pause dengan nomor kasus vendor. Backend membekukan penghitungan durasi resolusi.</p>
       </div>
     </div>
 
@@ -706,7 +695,7 @@ html_content = f"""<!DOCTYPE html>
       <div class="flow-num">5</div>
       <div class="flow-content">
         <h5>Penyelesaian Masalah & Analisis Akar Masalah (RCA)</h5>
-        <p>Setelah perangkat normal, teknisi mengisi formulir penyelesaian yang mencakup penyebab gangguan (<em>Root Cause</em>), langkah perbaikan (<em>Resolution</em>), dan rekomendasi pencegahan. Jam hitung resolusi SLA resmi dihentikan permanen.</p>
+        <p>Setelah sistem normal, teknisi mengisi formulir penyelesaian (Akar Masalah, Tindakan Korektif, dan Rekomendasi). Tiket diubah ke status RESOLVED dan waktu resolusi bersih (Net MTTR) dikunci.</p>
       </div>
     </div>
 
@@ -714,7 +703,7 @@ html_content = f"""<!DOCTYPE html>
       <div class="flow-num">6</div>
       <div class="flow-content">
         <h5>Standardisasi Prosedur (Knowledge Base Runbook)</h5>
-        <p>Solusi teknis yang efektif diajukan oleh teknisi ke modul Knowledge Base. Setelah diverifikasi dan disetujui oleh Administrator/Lead, prosedur tersebut dipublikasikan menjadi SOP resmi untuk penanganan insiden sejenis.</p>
+        <p>Prosedur teknis yang berhasil diajukan ke antrean persetujuan Knowledge Base. Setelah disetujui Administrator, artikel diterbitkan sebagai SOP referensi pada sistem.</p>
       </div>
     </div>
   </div>
@@ -724,7 +713,7 @@ html_content = f"""<!DOCTYPE html>
   <!-- BAB V -->
   <h2 class="section-title">BAB V: LOGIKA PERHITUNGAN SLA & ESKALASI</h2>
   <p>
-    Kepatuhan tingkat layanan dihitung menggunakan parameter SLA Ganda (*Dual SLA Engine*) yang memisahkan waktu respon awal dan waktu resolusi bersih:
+    Sistem mengevaluasi dua dimensi kepatuhan layanan secara independen pada backend Express.js:
   </p>
 
   <div class="formula-grid">
@@ -733,7 +722,7 @@ html_content = f"""<!DOCTYPE html>
       <div class="formula-math">&Delta;T_respon = T_respon - T_dibuat</div>
       <p class="formula-desc">
         Durasi dari pembuatan tiket hingga status diubah menjadi IN_PROGRESS oleh teknisi.<br/>
-        <strong>Kepatuhan:</strong> &Delta;T_respon &le; Target Respon Kontrak.
+        <strong>Kepatuhan:</strong> &Delta;T_respon &le; Target Respon Kontrak PKS.
       </p>
     </div>
 
@@ -741,8 +730,8 @@ html_content = f"""<!DOCTYPE html>
       <div class="formula-title">2. WAKTU RESOLUSI BERSIH (NET MTTR SLA)</div>
       <div class="formula-math">Net MTTR = (T_selesai - T_dibuat) - &Sigma; T_pause</div>
       <p class="formula-desc">
-        Total durasi penanganan dikurangi seluruh akumulasi waktu penahanan resmi (&Sigma; T_pause).<br/>
-        <strong>Kepatuhan:</strong> Net MTTR &le; Target Resolusi Kontrak.
+        Total durasi penanganan dikurangi seluruh akumulasi durasi penahanan resmi (&Sigma; T_pause).<br/>
+        <strong>Kepatuhan:</strong> Net MTTR &le; Target Resolusi Kontrak PKS.
       </p>
     </div>
   </div>
@@ -785,7 +774,10 @@ html_content = f"""<!DOCTYPE html>
     </tbody>
   </table>
 
-  <h3 class="sub-title">2. Ambang Batas Pemicu Eskalasi Otomatis</h3>
+  <h3 class="sub-title">2. Mekanisme Pemicu Eskalasi Otomatis (Node-Cron Service)</h3>
+  <p>
+    Layanan background scheduler di Express.js mengevaluasi persentase sisa waktu SLA setiap interval 1 menit secara terotomasi:
+  </p>
   <table class="data-table">
     <thead>
       <tr>
@@ -799,49 +791,70 @@ html_content = f"""<!DOCTYPE html>
       <tr>
         <td><strong>Tahap 1: Peringatan</strong></td>
         <td>50% dari Target MTTR</td>
-        <td>Kirim email pengingat status pengerjaan tiket</td>
+        <td>Kirim email pengingat status pengerjaan via SMTP</td>
         <td>Teknisi Bertugas & Lead SysOps</td>
       </tr>
       <tr>
         <td><strong>Tahap 2: Kritis</strong></td>
         <td>80% dari Target MTTR</td>
-        <td>Kirim email prioritas tinggi & siagakan eskalasi principal L3</td>
+        <td>Kirim email alert prioritas tinggi via SMTP</td>
         <td>Service Operations Manager</td>
       </tr>
       <tr>
         <td><strong>Tahap 3: Pelanggaran</strong></td>
         <td>100% Target MTTR Terlampaui</td>
-        <td>Tandai status Breached, catat ke audit log, dan jadwalkan evaluasi</td>
+        <td>Tandai status Breached di database & catat audit log</td>
         <td>Manajemen & Komite Operasional</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- BAB VI: PENGESAHAN DOKUMEN -->
-  <h2 class="section-title" style="margin-top: 20px;">BAB VI: LEMBAR PENGESAHAN DOKUMEN</h2>
-  <p>Dokumen spesifikasi teknis arsitektur sistem dan alur operasional helpdesk ini dinyatakan sah sebagai acuan teknis operasional:</p>
+  <!-- BAB VI -->
+  <h2 class="section-title">BAB VI: SKEMA BASIS DATA RELASIONAL (MYSQL SCHEMA)</h2>
+  <p>
+    Penyimpanan data pada MySQL menerapkan normalisasi relasional dengan engine InnoDB untuk mendukung transaksi ACID:
+  </p>
 
-  <table class="sign-table">
-    <tr>
-      <td>
-        Disusun Oleh,<br/>
-        <div class="sign-space"></div>
-        <div class="sign-name">Rina Anggraini</div>
-        <div class="sign-role">Lead Helpdesk & CPIG Operations</div>
-      </td>
-      <td>
-        Ditinjau Oleh,<br/>
-        <div class="sign-space"></div>
-        <div class="sign-name">Ir. Hendra Gunawan</div>
-        <div class="sign-role">Service Operations Manager</div>
-      </td>
-      <td>
-        Disahkan Oleh,<br/>
-        <div class="sign-space"></div>
-        <div class="sign-name">Ahmad Fauzi</div>
-        <div class="sign-role">Head of IT & Infrastructure</div>
-      </td>
-    </tr>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th style="width: 25%;">Nama Tabel</th>
+        <th style="width: 35%;">Atribut Kunci Utama</th>
+        <th style="width: 40%;">Deskripsi & Relasi Data</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>tickets</code></td>
+        <td>id, ticket_number, customer_id, assigned_to, status, priority, sla_policy_id</td>
+        <td>Menyimpan entitas tiket utama, status alur kerja, dan foreign key ke pelanggan serta teknisi penanggung jawab.</td>
+      </tr>
+      <tr>
+        <td><code>sla_policies</code></td>
+        <td>id, tier_name, response_time_minutes, resolution_time_minutes, operating_hours</td>
+        <td>Katalog master SLA kontraktual yang mengatur batas waktu respon dan resolusi sesuai tingkatan PKS.</td>
+      </tr>
+      <tr>
+        <td><code>sla_pause_logs</code></td>
+        <td>id, ticket_id, reason_type, vendor_case_id, paused_at, resumed_at, total_paused_seconds</td>
+        <td>Merekam histori pembekuan waktu SLA resmi saat menunggu suku cadang principal vendor atau verifikasi klien.</td>
+      </tr>
+      <tr>
+        <td><code>ticket_milestones</code></td>
+        <td>id, ticket_id, title, description, command_executed, created_by, created_at</td>
+        <td>Catatan kronologis langkah perbaikan teknis dan cuplikan eksekusi perintah terminal selama penanganan.</td>
+      </tr>
+      <tr>
+        <td><code>knowledge_base</code></td>
+        <td>id, kb_number, title, category, target_vendor, runbook_steps, status, approved_by</td>
+        <td>Repositori artikel panduan teknis (Runbook SOP) yang telah diverifikasi untuk penggunaan berulang.</td>
+      </tr>
+      <tr>
+        <td><code>audit_event_logs</code></td>
+        <td>id, ticket_id, user_id, action_type, old_value, new_value, timestamp</td>
+        <td>Rekam jejak audit tidak terhapus (immutable) untuk kepatuhan tata kelola standar ISO/IEC 20000.</td>
+      </tr>
+    </tbody>
   </table>
 
 </body>
