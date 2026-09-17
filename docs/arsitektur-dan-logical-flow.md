@@ -1,4 +1,4 @@
-# SPESIFIKASI TEKNIS: ARSITEKTUR SISTEM DAN ALUR LOGIKA OPERASIONAL
+# SPESIFIKASI TEKNIS: ARSITEKTUR SISTEM & ALUR OPERASIONAL HELPDESK
 ## SISTEM HELPDESK TICKETING ENTERPRISE
 ### PT GLOBAL TRANSFORMASI TEKNOLOGI
 
@@ -7,213 +7,163 @@
 | Parameter Dokumen | Keterangan |
 |---|---|
 | **Nomor Dokumen** | GTT-SPEC-ARCH-2026-01 |
-| **Klasifikasi** | Internal Confidential & Enforceable Technical Standard |
-| **Kepatuhan Standar** | ITIL v4 Service Operation & ISO/IEC 20000 |
-| **Versi Sistem** | 2.4 Enterprise Architecture Release |
-| **Tanggal Efektif** | September 2026 |
+| **Klasifikasi** | Internal Teknis - Terbatas |
+| **Standar Rujukan** | ITIL v4 Service Operation & ISO/IEC 20000 |
+| **Versi Rilis** | v2.4 Enterprise Architecture |
+| **Tanggal Efektif** | 18 September 2026 |
+| **Lingkup Infrastruktur** | Server, Storage SAN, Jaringan Enterprise, Virtualisasi & Database |
 
 ---
 
-## BAB I: PENDAHULUAN DAN IKHTISAR SISTEM
+## BAB I: RINGKASAN SISTEM
 
-Sistem Helpdesk Ticketing PT Global Transformasi Teknologi (GTT) merupakan platform tata kelola penanganan insiden infrastruktur pusat data (*data center*) multi-vendor yang mencakup server fisik, jaringan pita lebar, media penyimpanan terpusat (*Storage Area Network*), kluster virtualisasi, dan basis data transaksi perbankan maupun instansi publik.
+Sistem Helpdesk Ticketing PT Global Transformasi Teknologi dirancang untuk mengelola dan memantau penanganan insiden infrastruktur IT pada 6 klien enterprise:
+1. **PT Bank Central Asia, Tbk (BCA)** - Tier Platinum 24×7
+2. **PT Astra Honda Motor (AHM)** - Tier Platinum 24×7
+3. **Siloam Hospitals Group** - Tier Gold 8×5
+4. **Diskominfo Pemerintah Provinsi Jawa Barat** - Tier Pemerintah Tier-1 (8×5)
+5. **PT Telekomunikasi Selular (Telkomsel)** - Tier Platinum 24×7
+6. **PT Bank Mandiri (Persero), Tbk** - Tier Platinum 24×7
 
-### Pilar Kunci Arsitektur:
-1. **Kalkulasi Kontraktual SLA Otomatis**: Penentuan batas waktu respon awal (*First Touch*) dan penyelesaian insiden (*Net MTTR*) dikalkulasi otomatis oleh sistem berdasarkan tingkatan kontrak Perjanjian Kerja Sama (PKS) klien, tanpa bergantung pada penentuan manual operator.
-2. **Mesin Penahanan Jam Layanan Resmi (*SLA Clock Pause*)**: Mendukung penangguhan perhitungan durasi layanan saat teknisi menunggu pengiriman suku cadang principal vendor (*Pending Vendor*) atau verifikasi pengujian oleh pengguna (*Pending Customer*).
-3. **Pemisahan Peran Tegas (*Role-Based Access Control*)**: Pemisahan tugas dan wewenang yang mutlak antara **Administrator / CPIG** (fungsi *helpdesk*, penugasan, master data, hubungan pelanggan) dan **Teknisi Dukungan / Support Engineer** (analisis teknis, rekam jejak diagnosa, analisis akar masalah, dan pemulihan sistem).
-4. **Relai Pengiriman Surat Elektronik Korporat**: Seluruh peringatan insiden, penugasan teknisi, dan eskalasi terkirim otomatis melalui protokol relai surat elektronik resmi perusahaan guna menjamin keabsahan rekam audit hukum.
-5. **Katalog Prosedur Standar Terintegrasi (*ITIL Runbook Catalog*)**: Solusi dari penanganan tiket nyata dapat diajukan secara terstruktur menjadi dokumen panduan teknis terverifikasi untuk digunakan berulang pada insiden serupa.
+Sistem mengotomatisasi penegakan kontrak tingkat layanan (*Service Level Agreement / SLA*), pencatatan rekam jejak diagnostik, koordinasi eskalasi teknis, dan standardisasi prosedur perbaikan ke dalam pustaka operasional terverifikasi.
 
 ---
 
-## BAB II: ARSITEKTUR SISTEM MULTI-LAPIS
+## BAB II: DIAGRAM ARSITEKTUR SISTEM
 
-Arsitektur aplikasi mengadopsi model multi-lapis (*multi-tier architecture*) terdistribusi yang memisahkan lapisan antarmuka, logika pemrosesan, integrasi eksternal, dan penyimpanan data:
+Sistem menerapkan arsitektur 4 lapisan modular yang memisahkan antara antarmuka pengguna, pemrosesan logika bisnis, integrasi layanan eksternal, dan manajemen persistensi data:
 
-```
-+-----------------------------------------------------------------------------------+
-|                        1. LAPISAN PENGGUNA & ANTARMUKA                            |
-|  +---------------------------+  +---------------------------+  +---------------+  |
-|  | Konsol Administrator/CPIG |  | Konsol Teknisi Dukungan   |  | Portal Klien  |  |
-|  | (Ikhtisar, SLA, Kontrak)  |  | (Diagnosa, Log, Resolusi) |  | (Token Publik)|  |
-|  +---------------------------+  +---------------------------+  +---------------+  |
-+-----------------------------------------+-----------------------------------------+
-                                          |
-+-----------------------------------------v-----------------------------------------+
-|                    2. LAPISAN MESIN APLIKASI & LOGIKA BISNIS                      |
-|  +-----------------------------------------------------------------------------+  |
-|  | Pelindung Navigasi Peran (RBAC Route Guard) & Manajemen State Terpusat      |  |
-|  +-----------------------------------------------------------------------------+  |
-|  | • Mesin Kalkulasi Batas Waktu SLA Ganda (Response SLA & Resolution SLA)     |  |
-|  | • Mesin Pemantauan & Pemicu Eskalasi Bertingkat 3 Tahap                      |  |
-|  | • Pengolah Asupan Cepat & Klasifikasi Kategori Masalah Terintegrasi          |  |
-|  | • Repositori Dokumen Solusi Standar & Prosedur Operasional (ITIL Runbooks) |  |
-|  +-----------------------------------------------------------------------------+  |
-+-----------------------------------------+-----------------------------------------+
-                                          |
-+-----------------------------------------v-----------------------------------------+
-|                  3. LAPISAN INTEGRASI & KOMUNIKASI EKSTERNAL                      |
-|  +-----------------------+  +----------------------------+  +------------------+  |
-|  | Relai Surat Elektronik|  | Jembatan OEM Principal L3  |  | Pencatat Rekam   |  |
-|  | (SMTP Dispatch Relay) |  | (HPE, Cisco TAC, VMware SR)|  | Jejak Audit ISO  |  |
-|  +-----------------------+  +----------------------------+  +------------------+  |
-+-----------------------------------------+-----------------------------------------+
-                                          |
-+-----------------------------------------v-----------------------------------------+
-|                       4. LAPISAN PENYIMPANAN & PERSISTENSI                        |
-|  +---------------------------------------+  +----------------------------------+  |
-|  | Penyimpanan Lokal Peramban (Cache HA) |  | Kesiapan Layanan Mikro Basis     |  |
-|  | Skema Migrasi Mandiri Versi 2.4       |  | Data Transaksional Terpusat      |  |
-|  +---------------------------------------+  +----------------------------------+  |
-+-----------------------------------------------------------------------------------+
+```mermaid
+graph TB
+    subgraph L1 ["1. LAPISAN ANTARMUKA PENGGUNA (User Interface)"]
+        UI_Admin["Konsol Admin / CPIG<br/>(Full Control, Monitoring & Tata Kelola)"]
+        UI_Tech["Konsol Staf Teknisi<br/>(Diagnosa, Milestone & Net MTTR)"]
+        UI_Client["Portal Klien Mandiri<br/>(Tokenized Public URL Tracking)"]
+    end
+
+    subgraph L2 ["2. LOGIKA BISNIS & MESIN SLA (Business Logic)"]
+        RBAC["RBAC Route & Action Shield"]
+        SLA_Calc["Dual-SLA Calculator<br/>(First Touch & Net MTTR)"]
+        SLA_Pause["SLA Clock Pause Engine<br/>(Vendor & Customer Hold)"]
+        Escalation["Automated Escalation Triggers<br/>(50% / 80% / 100%)"]
+        KCS["KCS Knowledge Base Runbook<br/>(Approved Technical SOP)"]
+    end
+
+    subgraph L3 ["3. INTEGRASI & KOMUNIKASI (External Services)"]
+        SMTP["SMTP Relay (Notifikasi Email Resmi)"]
+        OEM["Jembatan OEM L3 (HPE / Cisco TAC / VMware)"]
+        Audit["Pencatat Jejak Audit (Immutable Event Log)"]
+    end
+
+    subgraph L4 ["4. DATA & PERSISTENSI (Data Persistence)"]
+        Store["Pinia Reactive Store & Local Cache"]
+        Migration["Skema Migrasi Mandiri (v2.4 Engine)"]
+        APILayer["Kesiapan REST API / Basis Data Terpusat"]
+    end
+
+    L1 --> L2
+    L2 --> L3
+    L2 --> L4
 ```
 
-### Penjelasan Rincian Lapis Sistem:
-1. **Lapisan Antarmuka Pengguna (*Presentation Tier*)**:
-   - Menggunakan kerangka kerja berbasis komponen web (*Single Page Application*) yang responsif dengan waktu muat cepat dan tampilan telemetri visual terpadu.
-2. **Lapisan Logika Aplikasi (*Application Tier*)**:
-   - Menjalankan *state machine* tiket insiden (*OPEN -> ASSIGNED -> IN_PROGRESS -> PENDING_VENDOR / PENDING_CUSTOMER -> RESOLVED -> CLOSED*).
-   - Menghitung waktu mundur kepatuhan kontrak layanan secara *real-time*.
-3. **Lapisan Integrasi Eksternal (*Integration Tier*)**:
-   - Menangani pengiriman pesan surat elektronik formal ke alamat pelanggan dan teknisi.
-   - Menghubungkan nomor insiden lokal dengan ID kasus dukungan principal global (HPE Case, Cisco TAC, VMware SR).
-4. **Lapisan Persistensi (*Data Tier*)**:
-   - Memastikan integritas data tetap bertahan terhadap muat ulang peramban (*page reload*) dan menyediakan fungsi ekspor laporan standar RFC-4180 / PDF.
+### Rincian Tanggung Jawab Komponen
+
+| Komponen Arsitektur | Deskripsi Teknis | Implementasi pada Sistem Helpdesk |
+|---|---|---|
+| **Lapisan Antarmuka** | Aplikasi SPA responsif dengan pemisahan tampilan berdasarkan profil kerja. | Dashboard metrik SLA, ruang kerja diagnosa tiket teknisi, serta portal status publik via URL token. |
+| **Mesin Logika Bisnis** | Pemrosesan state terpusat, validasi alur tiket, kalkulasi otomatis SLA, dan penanganan pause. | Pinia stores, RBAC Route Guard, Dual SLA Engine, timer countdown berkala, dan evaluasi threshold eskalasi. |
+| **Integrasi Layanan** | Saluran komunikasi resmi dan pencatatan riwayat operasional yang dapat diaudit. | Relai surel (SMTP) untuk notifikasi penugasan/update ke klien, referensi nomor kasus vendor L3, dan audit log. |
+| **Persistensi Data** | Manajemen state lokal dan sinkronisasi struktur data runtime. | Penyimpanan reaktif dengan migrasi skema data otomatis (v2.4) untuk menjaga konsistensi state penanganan tiket. |
 
 ---
 
-## BAB III: MATRIKS WEWENANG DAN HAK AKSES PERAN (RBAC)
+## BAB III: MATRIKS AKSES BERBASIS PERAN (RBAC)
 
-Sistem memberlakukan pembagian hak akses berdasarkan prinsip pembatasan wewenang minimum (*Least Privilege*):
+Sistem membatasi wewenang operasional antara peran **ADMIN / CPIG** dan **SUPPORT ENGINEER** untuk menjaga tata kelola insiden, integritas data, dan pemisahan fungsi penugasan dengan fungsi eksekusi perbaikan:
 
-| Modul / Fungsi Operasional | Administrator / CPIG | Teknisi Dukungan (Engineer) | Pelanggan / Klien (Token) |
+| Modul / Tindakan Operasional | ADMIN / CPIG | SUPPORT ENGINEER | PORTAL KLIEN |
 |---|:---:|:---:|:---:|
-| **Pusat Kendali Operasional (`/dashboard`)** | Pantauan Penuh & Seluruh Staf | Pantauan Beban Tugas Pribadi | Akses Ditolak |
-| **Penerbitan Tiket Baru (`/tickets/create`)** | Akses Penuh (Manual & Cepat) | Input Insiden Baru | Akses Ditolak |
-| **Penugasan & Alokasi Ulang Teknisi** | **Kontrol Penuh** | Hanya Baca (*Read-Only*) | Akses Ditolak |
-| **Penyalinan Tautan Pelacakan Pelanggan** | **Khusus Administrator** | Disembunyikan | Akses Ditolak |
-| **Pratinjau Surat Elektronik Notifikasi** | **Khusus Administrator** | Disembunyikan | Akses Ditolak |
-| **Saklar Sinkronisasi Surel Klien** | **Bisa Mengubah (ON/OFF)** | Indikator Status (*Read-Only*) | Akses Ditolak |
-| **Pencatatan Rekam Jejak Diagnosa** | Dapat Menambahkan | **Pelaksana Utama** | Akses Ditolak |
-| **Pengajuan / Lanjutan Penahanan SLA** | Validasi Penahanan | **Pelaksana Utama** | Akses Ditolak |
-| **Penyelesaian & Formulir Analisis Akar Masalah** | Verifikasi Akhir | **Pelaksana Utama** | Akses Ditolak |
-| **Konfigurasi Matriks Kontrak SLA (`/admin/sla-configuration`)** | **Akses Penuh (Tambah/Ubah)** | Akses Ditolak (Kode 403) | Akses Ditolak |
-| **Direktori Akun Klien & PIC (`/admin/customers`)** | **Akses Penuh (Kelola)** | Akses Ditolak (Kode 403) | Akses Ditolak |
-| **Manajemen Daftar Staf (`/admin/users`)** | **Akses Penuh (Kelola)** | Akses Ditolak (Kode 403) | Akses Ditolak |
-| **Laporan Eksekutif SLA & Audit (`/reports`)** | **Akses Penuh (Cetak/Ekspor)** | Akses Ditolak (Kode 403) | Akses Ditolak |
-| **Pustaka Panduan Solusi (`/knowledge-base`)** | Validasi & Publikasi Resmi | Pengajuan Draft & Membaca | Baca Solusi Terkait |
-| **Portal Pelacakan Status Mandiri (`/track/...`)** | Mode Pemantauan | Mode Pemantauan | **Akses Mandiri Khusus** |
+| Monitoring Dashboard SLA & Antrean Global | **Akses Penuh** | Pantauan Personal | Ditolak |
+| Pembuatan Tiket Baru & Pemilihan Preset | **Akses Penuh** | Input Lapangan | Ditolak |
+| Penugasan & Alokasi Ulang Staf Teknisi | **Kontrol Penuh** | Hanya Baca | Ditolak |
+| **Salin Tautan Pelacakan Klien (Tokenized URL)** | **Akses Khusus** | Disembunyikan | Ditolak |
+| **Pratinjau & Pengiriman Surel Notifikasi** | **Akses Khusus** | Disembunyikan | Ditolak |
+| Pencatatan Milestone & Command Execution Log | Bisa Menambah | **Pelaksana Utama** | Ditolak |
+| Pengajuan & Pencabutan Penahanan SLA (Pause) | Validasi / Cabut | **Pelaksana Utama** | Ditolak |
+| Pengisian Analisis Akar Masalah (RCA) & Resolusi | Verifikasi | **Pelaksana Utama** | Ditolak |
+| Konfigurasi Matriks SLA & Master Data Pelanggan | **Akses Penuh** | Ditolak (403) | Ditolak |
+| Laporan SLA Eksekutif & Ekspor Laporan | **Akses Penuh** | Ditolak (403) | Ditolak |
+| Pustaka Runbook Pengetahuan (Knowledge Base) | Persetujuan SOP | Ajukan & Membaca | Hanya Baca |
 
 ---
 
-## BAB IV: ALUR LOGIKA OPERASIONAL PENANGANAN INSIDEN
+## BAB IV: ALUR OPERASIONAL SIKLUS HIDUP TIKET
 
-Alur penanganan insiden mengikuti tujuh tahapan standar siklus hidup layanan:
+Setiap insiden ditangani melalui 6 tahap operasional terstandarisasi:
 
-### 1. Tahap Penerimaan Insiden (*Incident Intake & SLA Binding*)
-- Laporan diterima melalui surel pengaduan, portal bantuan, atau saluran siaga.
-- Operator Helpdesk/CPIG mencatat tiket ke sistem dengan memilih entitas klien dan tingkat keparahan (*Severity*).
-- Mesin SLA secara langsung mengunci target waktu respon dan target resolusi berdasarkan klausul kontrak klien yang berlaku.
-- Sistem menerbitkan Nomor Tiket resmi dan tautan pelacakan terenkripsi.
-- Surat elektronik notifikasi penugasan terkirim otomatis ke teknisi yang dialokasikan, dan surat konfirmasi penerimaan terkirim ke alamat surel penanggung jawab klien.
+```mermaid
+flowchart TD
+    S1["1. Penerimaan Insiden & Kunci Batas SLA (Auto Contract Matching)"] --> S2["2. Respon Awal Teknisi (First Touch SLA Stop)"]
+    S2 --> S3["3. Investigasi Diagnostik & Pencatatan Milestone / CLI Log"]
+    S3 --> Cond{"Kendala Part / Izin?"}
+    Cond -- Ya --o S4["4. SLA Clock Pause (Pending Vendor / Customer Hold)"]
+    S4 --> S3
+    Cond -- Tidak --> S5["5. Penyelesaian Insiden & Pengisian RCA (Net MTTR Stop)"]
+    S5 --> S6["6. Pengajuan & Standardisasi SOP (Knowledge Base Runbook)"]
+    S6 --> S7(["7. Verifikasi Klien & Penutupan Tiket (Closed)"])
+```
 
-### 2. Tahap Respon Awal (*First Touch SLA Acknowledgement*)
-- Teknisi yang bertugas membuka tiket dan mengubah status menjadi **IN_PROGRESS**.
-- Jam hitung *Response SLA* seketika dihentikan. Sistem mencatat bahwa respon awal telah terpenuhi (*SLA Response Met*).
-- Riwayat respon awal tercatat di dalam rekam jejak audit (*audit log*).
-
-### 3. Tahap Investigasi dan Diagnosa Lapangan (*Technical Milestone Tracking*)
-- Teknisi melakukan pemeriksaan perangkat keras, analisis berkas log (*log trace*), dan pengujian jaringan.
-- Setiap temuan dicatatkan ke dalam *Diagnostic & Troubleshooting Timeline* dengan menyertakan perintah terminal (*CLI sequence*), status pengujian, dan berkas lampiran pendukung.
-- Jika fitur sinkronisasi surel aktif, pembaruan langkah penanganan akan terkirim sebagai pemberitahuan berkala ke pihak pelanggan.
-
-### 4. Tahap Penahanan Waktu Resmi (*SLA Clock Pause*)
-- Apabila perbaikan membutuhkan suku cadang pengganti dari vendor (*Pending Vendor*) atau memerlukan jendela pemeliharaan dari pelanggan (*Pending Customer*), teknisi mengajukan *Request SLA Clock Pause*.
-- Jam hitung resolusi dibekukan (*Freeze*). Durasi selama status penahanan tidak dihitung sebagai keterlambatan penyedia layanan.
-- Begitu suku cadang tiba atau izin pemeliharaan diberikan, teknisi menekan tombol *Lanjutkan SLA*, dan perhitungan waktu resolusi bersih (*Net MTTR*) dilanjutkan kembali secara mulus.
-
-### 5. Tahap Penyelesaian Insiden dan Analisis Akar Masalah (*Resolution & Root Cause Analysis*)
-- Setelah sistem kembali normal, teknisi mengisi formulir formal:
-  - **Akar Masalah Teknis (*Root Cause Analysis*)**: Penyebab dasar timbulnya kerusakan.
-  - **Strategi Pemulihan (*Resolution Strategy*)**: Langkah korektif yang berhasil menormalkan sistem.
-  - **Rekomendasi Preventif (*Preventive Recommendation*)**: Saran perbaikan arsitektur atau konfigurasi guna mencegah insiden terulang.
-- Tiket dinyatakan selesai (**RESOLVED**), dan jam hitung resolusi resmi dihentikan permanen.
-
-### 6. Tahap Daur Ulang Pengetahuan (*Knowledge-Centered Service*)
-- Teknisi menandai opsi *Propose for Knowledge Base*.
-- Rincian penanganan, sintaksis perintah CLI, dan verifikasi perbaikan masuk ke dalam antrean persetujuan supervisor (*Approvals Queue*).
-- Administrator/Lead memvalidasi kelayakan prosedur tersebut sebelum menerbitkannya sebagai dokumen *Validated Engineering Runbook* (dengan kode referensi unik seperti KB-8821).
-
-### 7. Tahap Konfirmasi dan Penutupan Tiket (*Closure Verification*)
-- Pelanggan meninjau laporan perbaikan melalui portal pelacakan mandiri.
-- Tiket dinyatakan ditutup permanen (**CLOSED**) melalui konfirmasi pelanggan atau melalui penutupan otomatis sistem setelah masa tenggang 3×24 jam tanpa keluhan lanjutan.
+### Rincian 6 Tahap Operasional:
+1. **Pencatatan Insiden & Penguncian Batas Waktu SLA**: Laporan insiden dicatat oleh Helpdesk/CPIG. Sistem mengunci target waktu respon dan target resolusi secara otomatis sesuai klausul kontrak PKS klien (Platinum, Gold, Silver, atau Pemerintah). Tautan pelacakan dan notifikasi email dibuat secara otomatis.
+2. **Respon Awal Teknisi (Response SLA Handshake)**: Teknisi bertugas mengonfirmasi penanganan dengan mengubah status tiket menjadi `IN_PROGRESS`. Tindakan ini menghentikan perhitungan *Response SLA* dan mencatat timestamp respon awal di dalam audit trail.
+3. **Investigasi Diagnostik & Pencatatan Milestone**: Teknisi melakukan penelusuran masalah, pengujian teknis, dan perbaikan perangkat. Setiap tindakan teknis, sintaks perintah CLI, dan bukti tangkapan layar dicatat secara kronologis pada log milestone.
+4. **Penahanan Jam SLA Resmi (SLA Clock Pause)**: Bila perbaikan tertunda akibat menunggu suku cadang vendor principal (*Pending Vendor*) atau menunggu izin jendela pemeliharaan dari pelanggan (*Pending Customer*), teknisi mengaktifkan status Pause dengan melampirkan nomor kasus vendor. Timer resolusi SLA dibekukan sementara.
+5. **Penyelesaian Masalah & Analisis Akar Masalah (RCA)**: Setelah perangkat normal, teknisi mengisi formulir penyelesaian yang mencakup penyebab gangguan (*Root Cause*), langkah perbaikan (*Resolution*), dan rekomendasi pencegahan. Jam hitung resolusi SLA resmi dihentikan permanen.
+6. **Standardisasi Prosedur (Knowledge Base Runbook)**: Solusi teknis yang efektif diajukan oleh teknisi ke modul Knowledge Base. Setelah diverifikasi dan disetujui oleh Administrator/Lead, prosedur tersebut dipublikasikan menjadi SOP resmi untuk penanganan insiden sejenis.
 
 ---
 
-## BAB V: FORMULA PERHITUNGAN MESIN SLA GANDA (DUAL SLA ENGINE)
+## BAB V: LOGIKA PERHITUNGAN SLA & ESKALASI
 
-Untuk memastikan akurasi audit kinerja layanan, sistem memisahkan dua parameter SLA secara independen:
+### 1. Formula Dual SLA Engine
 
-### 1. Formula Waktu Respon Awal (*Response SLA*)
-Mengukur selang waktu sejak pencatatan tiket ($T_{\text{dibuat}}$) hingga adanya tindakan konfirmasi pertama oleh staf teknis ($T_{\text{respon}}$):
+#### A. Waktu Respon Awal (*First Touch SLA*)
 $$\Delta T_{\text{respon}} = T_{\text{respon}} - T_{\text{dibuat}}$$
+- **Kepatuhan:** $\Delta T_{\text{respon}} \le \text{Target Respon Kontrak}$
 
-**Kriteria Kepatuhan**:
-$$\Delta T_{\text{respon}} \le \text{Batas Target Respon Kontrak}$$
-
-### 2. Formula Waktu Resolusi Bersih (*Net MTTR Resolution SLA*)
-Mengukur total waktu penanganan sejak insiden tercatat ($T_{\text{selesai}} - T_{\text{dibuat}}$) dengan mengurangkan seluruh akumulasi waktu penahanan resmi ($\sum T_{\text{tahan}}$):
-$$\text{Net MTTR} = (T_{\text{selesai}} - T_{\text{dibuat}}) - \sum T_{\text{tahan}}$$
-
-**Kriteria Kepatuhan**:
-$$\text{Net MTTR} \le \text{Batas Target Resolusi Kontrak}$$
+#### B. Waktu Resolusi Bersih (*Net MTTR SLA*)
+$$\text{Net MTTR} = (T_{\text{selesai}} - T_{\text{dibuat}}) - \sum T_{\text{pause}}$$
+- **Kepatuhan:** $\text{Net MTTR} \le \text{Target Resolusi Kontrak}$
 
 ---
 
-## BAB VI: MATRIKS KONTRAK DAN ESKALASI OTOMATIS
+### 2. Matriks Standar Kontrak Layanan (PKS)
 
-### 1. Matriks Batas Waktu Berdasarkan Tingkat Kontrak PKS
-| Tingkat Kontrak | Jam Operasional Layanan | Target Respon Awal | Target Resolusi Maksimal | Kompensasi / Konsekuensi |
-|---|---|:---:|:---:|---|
-| **Platinum 24×7** | 24 Jam × 7 Hari Non-Stop | $\le$ 30 Menit | $\le$ 4 Jam | *Penalty Credit* 5% / jam keterlambatan |
-| **Gold 8×5** | Senin – Jumat (08:00 – 17:00 WIB) | $\le$ 30 Menit | $\le$ 8 Jam | *Penalty Credit* 3% / jam keterlambatan |
-| **Silver 8×5** | Senin – Jumat (08:30 – 17:30 WIB) | $\le$ 1 Jam | $\le$ 12 Jam | Potongan biaya pemeliharaan berkala |
-| **Pemerintah Tier-1** | Jam Dinas Resmi Pemerintah Daerah | $\le$ 1 Jam | $\le$ 12 Jam | Berita Acara Evaluasi Kinerja BPKP |
-
-### 2. Mekanisme Eskalasi Bertingkat 3 Tahap (*Automated Escalation Triggers*)
-Sistem secara otomatis mengevaluasi persentase berjalannya waktu resolusi terhadap target kontrak:
-- **Tingkat 1 (Peringatan Awal - 50% Waktu Berjalan)**:
-  - Mengirimkan surat elektronik pengingat (*reminder*) ke teknisi yang bertugas dan Lead SysOps agar segera memvalidasi progres penanganan.
-- **Tingkat 2 (Peringatan Kritis - 80% Waktu Berjalan)**:
-  - Mengirimkan surat elektronik siaga darurat (*high priority alert*) ke Manajer Operasional Layanan (*Service Operations Manager*) dan menyiagakan jalur komunikasi principal vendor level 3.
-- **Tingkat 3 (Pelanggaran Kontrak - 100% Waktu Berjalan Tanpa Resolusi)**:
-  - Sistem secara otomatis menandai tiket berstatus *SLA Breached*.
-  - Peristiwa pelanggaran dicatatkan secara permanen ke dalam rekam audit (*audit trail*), notifikasi diteruskan ke Direksi, dan mewajibkan investigasi formal (*RCA Defense Meeting*).
+| Tingkat Kontrak | Cakupan Waktu Layanan | Target Respon | Target Resolusi MTTR |
+|---|---|:---:|:---:|
+| **Platinum 24×7** | 24 Jam × 7 Hari Non-Stop | $\le$ 30 Menit | $\le$ 4 Jam |
+| **Gold 8×5** | Senin – Jumat (08:00 – 17:00 WIB) | $\le$ 30 Menit | $\le$ 8 Jam |
+| **Silver 8×5** | Senin – Jumat (08:30 – 17:30 WIB) | $\le$ 1 Jam | $\le$ 12 Jam |
+| **Pemerintah Tier-1** | Jam Kerja Kantor Dinas Pemerintah | $\le$ 1 Jam | $\le$ 12 Jam |
 
 ---
 
-## BAB VII: PENGESAHAN DOKUMEN SPESIFIKASI TEKNIS
+### 3. Ambang Batas Pemicu Eskalasi Otomatis
 
-Dokumen spesifikasi arsitektur dan alur logika sistem ini telah ditinjau dan disahkan sebagai acuan operasional resmi pada PT Global Transformasi Teknologi:
+| Tahapan Eskalasi | Ambang Batas Waktu | Tindakan Sistem Otomatis | Penerima Notifikasi |
+|---|---|---|---|
+| **Tahap 1: Peringatan** | 50% dari Target MTTR | Kirim email pengingat status pengerjaan tiket | Teknisi Bertugas & Lead SysOps |
+| **Tahap 2: Kritis** | 80% dari Target MTTR | Kirim email prioritas tinggi & siagakan eskalasi principal L3 | Service Operations Manager |
+| **Tahap 3: Pelanggaran** | 100% Target MTTR Terlampaui | Tandai status Breached, catat ke audit log, jadwalkan evaluasi | Manajemen & Komite Operasional |
 
-<br/><br/>
-<table style="width: 100%; border: none; text-align: center; font-size: 10pt;">
-  <tr>
-    <td style="width: 33%; border: none;">
-      Disusun Oleh,<br/><br/><br/><br/>
-      <strong>Rina Anggraini</strong><br/>
-      Lead Helpdesk & CPIG Operations
-    </td>
-    <td style="width: 33%; border: none;">
-      Ditinjau Oleh,<br/><br/><br/><br/>
-      <strong>Ir. Hendra Gunawan</strong><br/>
-      Service Operations Manager
-    </td>
-    <td style="width: 33%; border: none;">
-      Disahkan Oleh,<br/><br/><br/><br/>
-      <strong>Ahmad Fauzi</strong><br/>
-      Head of IT & Infrastructure
-    </td>
-  </tr>
-</table>
+---
+
+## BAB VI: LEMBAR PENGESAHAN DOKUMEN
+
+Dokumen spesifikasi teknis arsitektur sistem dan alur operasional helpdesk ini dinyatakan sah sebagai acuan teknis operasional PT Global Transformasi Teknologi:
+
+<br/>
+
+| Disusun Oleh, | Ditinjau Oleh, | Disahkan Oleh, |
+|:---:|:---:|:---:|
+| <br/><br/><br/>**Rina Anggraini**<br/>Lead Helpdesk & CPIG Operations | <br/><br/><br/>**Ir. Hendra Gunawan**<br/>Service Operations Manager | <br/><br/><br/>**Ahmad Fauzi**<br/>Head of IT & Infrastructure |
