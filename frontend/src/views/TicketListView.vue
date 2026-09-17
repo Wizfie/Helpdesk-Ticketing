@@ -179,7 +179,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Cari No. Tiket, Judul, Klien... [Ctrl+K]"
+            placeholder="Cari No. Tiket, Judul, Klien..."
             class="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
           <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
