@@ -203,7 +203,7 @@
             {{ ticket.description }}
           </div>
           <div class="text-[11px] text-slate-500 italic">
-            Direct communication established with Dimas Setiawan (IT Ops Lead, PT Astra Honda Motor) via corporate WhatsApp Support Channel (+62 811-9928-1102).
+            Direct communication established with {{ getPic(ticket.customerId, ticket.customerPicId).name || 'Dimas Setiawan' }} via corporate Email Support Channel (helpdesk@glotratech.com).
           </div>
         </div>
 
@@ -385,7 +385,7 @@
               </div>
               <div class="flex justify-between">
                 <span class="text-slate-400">Support Channel:</span>
-                <span class="font-bold text-emerald-600">WhatsApp VIP Group</span>
+                <span class="font-bold text-blue-600">Enterprise Email Support</span>
               </div>
             </div>
           </div>
@@ -393,18 +393,15 @@
 
         <!-- 2. System Properties (Figma Spec) -->
         <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
-          <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-            <h4 class="font-black text-slate-900 text-xs uppercase tracking-wider">System Properties</h4>
-          </div>
-
-          <div class="space-y-2 text-xs font-mono">
+          <h4 class="font-black text-slate-900 text-xs uppercase tracking-wider">System Properties</h4>
+          <div class="space-y-2 text-xs">
             <div class="flex justify-between">
               <span class="text-slate-400">Category:</span>
-              <span class="font-bold text-slate-800">{{ getCategory(ticket.categoryId).name }}</span>
+              <span class="font-bold text-slate-800">{{ getCategory(ticket.categoryId).name || 'Server & Infrastructure' }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-slate-400">Subcategory:</span>
-              <span class="font-bold text-slate-800">HPE 3PAR / FC Datastore</span>
+              <span class="font-bold text-slate-800 font-mono">HPE 3PAR / FC Datastore</span>
             </div>
             <div class="flex justify-between">
               <span class="text-slate-400">Impact Scope:</span>
@@ -416,7 +413,7 @@
             </div>
             <div class="flex justify-between">
               <span class="text-slate-400">Incident Source:</span>
-              <span class="font-bold text-slate-800">WhatsApp Dispatcher</span>
+              <span class="font-bold text-slate-800">Email Relay Dispatcher</span>
             </div>
           </div>
         </div>
@@ -428,43 +425,42 @@
             <button
               v-if="authStore.currentUser.roleCode === 'ADMIN' && ticket.status !== 'CLOSED'"
               @click="showAssignModal = true"
-              class="text-blue-600 hover:text-blue-800 text-[11px] font-bold underline"
+              class="text-[11px] font-bold text-blue-600 hover:text-blue-800"
             >
               Reassign
             </button>
           </div>
 
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center font-mono shadow-sm">
-              {{ ticket.assignedToId ? getEngineerName(ticket.assignedToId).slice(0, 2).toUpperCase() : 'NA' }}
+          <div v-if="ticket.assignedToId" class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
+              {{ getEngineerInitials(ticket.assignedToId) }}
             </div>
             <div>
-              <div class="font-black text-slate-900 text-xs">
-                {{ ticket.assignedToId ? getEngineerName(ticket.assignedToId) : 'Belum Ditugaskan' }}
-              </div>
-              <div class="text-[10px] text-slate-400 font-mono">Senior Storage &amp; Infrastructure Engineer</div>
+              <div class="font-bold text-slate-900 text-xs">{{ getEngineerName(ticket.assignedToId) }}</div>
+              <div class="text-[11px] text-slate-500">Senior Storage &amp; Infrastructure Engineer</div>
             </div>
           </div>
+          <div v-else class="text-xs text-amber-700 font-bold bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+            Tiket belum dialokasikan ke teknisi
+          </div>
 
-          <div class="pt-2 border-t border-slate-100 text-[11px] font-mono text-slate-500 space-y-1">
+          <div class="pt-2 border-t border-slate-100 text-[11px] space-y-1 text-slate-500">
             <div class="flex justify-between">
               <span>Supervisor:</span>
-              <strong class="text-slate-800">Denny Wicaksono</strong>
+              <span class="font-medium text-slate-700">Denny Wicaksono</span>
             </div>
             <div class="flex justify-between">
               <span>Shift:</span>
-              <strong class="text-slate-800">Morning Tier-2 (08:00 - 17:00 WIB)</strong>
+              <span class="font-medium text-slate-700 font-mono">Morning Tier-2 (08:00 - 17:00 WIB)</span>
             </div>
           </div>
         </div>
 
-        <!-- 4. Workflow Actions (Figma Spec) -->
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3.5">
-          <h4 class="font-black text-slate-900 text-xs uppercase tracking-wider border-b border-slate-100 pb-2">
-            Workflow Actions
-          </h4>
+        <!-- 4. Workflow Actions Box -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+          <h4 class="font-black text-slate-900 text-xs uppercase tracking-wider">Workflow Actions</h4>
 
-          <!-- Propose for Knowledge Base Toggle -->
+          <!-- Propose for Knowledge Base -->
           <div class="flex items-center justify-between">
             <div>
               <span class="font-bold text-slate-800 text-xs block">Propose for Knowledge Base</span>
@@ -482,20 +478,20 @@
             </button>
           </div>
 
-          <!-- Customer Dispatch Sync Toggle -->
+          <!-- Customer Email Dispatch Sync Toggle -->
           <div class="flex items-center justify-between pt-2 border-t border-slate-100">
             <div>
-              <span class="font-bold text-slate-800 text-xs block">Customer Dispatch Sync</span>
-              <span class="text-[10px] text-slate-400 block">Forward milestone steps to WhatsApp</span>
+              <span class="font-bold text-slate-800 text-xs block">Customer Email Dispatch Sync</span>
+              <span class="text-[10px] text-slate-400 block">Kirim notifikasi update via Email</span>
             </div>
             <button
-              @click="ticketStore.toggleWhatsAppSync(ticket.id)"
+              @click="ticketStore.toggleEmailSync(ticket.id)"
               class="w-10 h-6 flex items-center rounded-full p-1 transition-colors duration-200 focus:outline-none"
-              :class="ticket.isWhatsAppSync ? 'bg-emerald-600' : 'bg-slate-200'"
+              :class="(ticket.isEmailSync ?? ticket.isWhatsAppSync) ? 'bg-blue-600' : 'bg-slate-200'"
             >
               <div
                 class="bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200"
-                :class="ticket.isWhatsAppSync ? 'translate-x-4' : 'translate-x-0'"
+                :class="(ticket.isEmailSync ?? ticket.isWhatsAppSync) ? 'translate-x-4' : 'translate-x-0'"
               ></div>
             </button>
           </div>

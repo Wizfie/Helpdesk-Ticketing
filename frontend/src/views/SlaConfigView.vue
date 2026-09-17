@@ -64,7 +64,7 @@
         <div>
           <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">ESCALATION TRIGGERS</span>
           <span class="text-2xl font-black text-slate-900 font-mono mt-0.5 block">3-Stage Active</span>
-          <span class="text-[11px] text-purple-600 font-medium">WhatsApp Pager &amp; L3 Bridge siaga</span>
+          <span class="text-[11px] text-purple-600 font-medium">Email Dispatch &amp; L3 Bridge siaga</span>
         </div>
         <div class="w-10 h-10 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center font-bold text-sm">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -246,7 +246,7 @@
                 <span class="text-[10px] font-mono text-amber-700 font-bold">INFO LEVEL</span>
               </div>
               <p class="text-[11px] text-slate-600 mt-0.5">
-                Mengirimkan notifikasi pengingat via WhatsApp ke Teknisi Penanggung Jawab dan Lead SysOps.
+                Mengirimkan notifikasi pengingat via Email Relay ke Teknisi Penanggung Jawab dan Lead SysOps.
               </p>
             </div>
           </div>
@@ -262,7 +262,7 @@
                 <span class="text-[10px] font-mono text-rose-700 font-bold">URGENT ALERT</span>
               </div>
               <p class="text-[11px] text-rose-800 mt-0.5">
-                Membunyikan Pager Alert, eskalasi otomatis ke Service Operations Manager, dan aktivasi L3 Principal Bridge.
+                Mengirimkan Email Alert Prioritas Tinggi, eskalasi otomatis ke Service Operations Manager, dan aktivasi L3 Principal Bridge.
               </p>
             </div>
           </div>

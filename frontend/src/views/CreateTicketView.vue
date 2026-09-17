@@ -358,26 +358,26 @@
               </p>
             </div>
 
-            <!-- WhatsApp Instant Notification Toggle -->
+            <!-- Email Instant Notification Toggle (SMTP Relay) -->
             <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50/60">
               <div class="flex items-center space-x-2.5">
                 <input 
-                  id="waSyncToggle"
-                  v-model="form.isWhatsAppSync"
+                  id="emailSyncToggle"
+                  v-model="form.isEmailSync"
                   type="checkbox" 
-                  class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500"
+                  class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
                 />
                 <div>
-                  <label for="waSyncToggle" class="font-bold text-slate-800 cursor-pointer">
-                    Kirim Notifikasi WhatsApp Alert Langsung ke Teknisi Bertugas
+                  <label for="emailSyncToggle" class="font-bold text-slate-800 cursor-pointer">
+                    Kirim Notifikasi Email Alert Langsung ke Teknisi Bertugas (SMTP Relay)
                   </label>
                   <p class="text-[11px] text-slate-500">
-                    Sistem akan mengirimkan dispatch payload via WhatsApp Gateway segera setelah tiket diterbitkan.
+                    Sistem akan mengirimkan dispatch payload email notifikasi resmi segera setelah tiket diterbitkan.
                   </p>
                 </div>
               </div>
-              <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">
-                WHATSAPP READY
+              <span class="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
+                EMAIL DISPATCH READY
               </span>
             </div>
 
@@ -729,7 +729,7 @@ const form = ref({
   description: '',
   rawMessage: '',
   assignedToId: '',
-  isWhatsAppSync: true,
+  isEmailSync: true,
   principalVendor: 'Cisco TAC Global',
   principalCaseId: '',
   principalSpecialist: ''

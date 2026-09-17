@@ -135,7 +135,8 @@ export const useTicketStore = defineStore('tickets', {
         cluster: ticketData.cluster || 'PROD-CL01',
         environment: ticketData.environment || 'PROD-DC-01',
         impactScope: ticketData.impactScope || 'Standard Operational',
-        isWhatsAppSync: !!ticketData.isWhatsAppSync,
+        isEmailSync: ticketData.isEmailSync !== undefined ? !!ticketData.isEmailSync : (ticketData.isWhatsAppSync !== undefined ? !!ticketData.isWhatsAppSync : true),
+        isWhatsAppSync: false,
         isProposeKb: false,
         principalVendor: ticketData.principalVendor || ticketData.principalName || null,
         principalCaseId: ticketData.principalCaseId || null,
@@ -435,12 +436,16 @@ export const useTicketStore = defineStore('tickets', {
       saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
     },
 
-    toggleWhatsAppSync(ticketId) {
+    toggleEmailSync(ticketId) {
       const ticket = this.tickets.find(t => t.id === Number(ticketId));
       if (ticket) {
-        ticket.isWhatsAppSync = !ticket.isWhatsAppSync;
+        ticket.isEmailSync = ticket.isEmailSync !== undefined ? !ticket.isEmailSync : false;
         saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
       }
+    },
+
+    toggleWhatsAppSync(ticketId) {
+      this.toggleEmailSync(ticketId);
     },
 
     toggleProposeKb(ticketId) {
