@@ -9,9 +9,10 @@ from docx.enum.table import WD_TABLE_ALIGNMENT, WD_ALIGN_VERTICAL
 from docx.oxml import OxmlElement, parse_xml
 from docx.oxml.ns import nsdecls, qn
 
-base_dir = r"d:\Unpam\Semester 6\KP\Ticketing-helpdesk"
-html_path = os.path.join(base_dir, "Spesifikasi_Teknis_Arsitektur_dan_Alur_Logika_Helpdesk_GTT.html")
-docx_path = os.path.join(base_dir, "Rancangan_Arsitektur_dan_Alur_Helpdesk_Ticketing.docx")
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+docs_dir = os.path.join(base_dir, "docs")
+html_path = os.path.join(docs_dir, "Spesifikasi_Teknis_Arsitektur_dan_Alur_Logika_Helpdesk_GTT.html")
+docx_path = os.path.join(docs_dir, "Rancangan_Arsitektur_dan_Alur_Helpdesk_Ticketing.docx")
 edge_path = r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
 if not os.path.exists(edge_path):
     edge_path = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
@@ -23,14 +24,14 @@ with open(html_path, "r", encoding="utf-8") as f:
 svgs = re.findall(r"(<svg.*?</svg>)", html_content, re.DOTALL)
 print(f"Total SVGs found in HTML: {len(svgs)}")
 
-arch_png = os.path.join(base_dir, "diagram_arsitektur.png")
-flow_png = os.path.join(base_dir, "diagram_flowchart.png")
+arch_png = os.path.join(docs_dir, "diagram_arsitektur.png")
+flow_png = os.path.join(docs_dir, "diagram_flowchart.png")
 
 for i, svg in enumerate(svgs[:2]):
     tag = "arsitektur" if i == 0 else "flowchart"
     target_png = arch_png if i == 0 else flow_png
-    temp_html = os.path.join(base_dir, f"temp_{tag}.html")
-    temp_screenshot = os.path.join(base_dir, f"temp_{tag}.png")
+    temp_html = os.path.join(docs_dir, f"temp_{tag}.html")
+    temp_screenshot = os.path.join(docs_dir, f"temp_{tag}.png")
 
     page_markup = f"""<!DOCTYPE html>
 <html>

@@ -688,8 +688,10 @@ html_content = """<!DOCTYPE html>
 </html>
 """
 
-html_file = r"d:\Unpam\Semester 6\KP\Ticketing-helpdesk\Spesifikasi_Teknis_Arsitektur_dan_Alur_Logika_Helpdesk_GTT.html"
-pdf_file = r"d:\Unpam\Semester 6\KP\Ticketing-helpdesk\Spesifikasi_Teknis_Arsitektur_dan_Alur_Logika_Helpdesk_GTT.pdf"
+base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+docs_dir = os.path.join(base_dir, "docs")
+html_file = os.path.join(docs_dir, "Spesifikasi_Teknis_Arsitektur_dan_Alur_Logika_Helpdesk_GTT.html")
+pdf_file = os.path.join(docs_dir, "Spesifikasi_Teknis_Arsitektur_dan_Alur_Logika_Helpdesk_GTT.pdf")
 
 with open(html_file, "w", encoding="utf-8") as f:
     f.write(html_content)
