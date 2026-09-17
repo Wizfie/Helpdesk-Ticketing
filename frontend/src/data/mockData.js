@@ -39,6 +39,11 @@ export const MOCK_CUSTOMERS = [
     code: 'BCA',
     industry: 'Perbankan / Finansial',
     serviceContract: 'PKS Layanan Managed Service 24x7',
+    contractSla: 'SLA-PLATINUM-2026',
+    slaTier: '24x7 PLATINUM MISSION CRITICAL',
+    slaCoverage: 'First Touch: 30m • Resolusi: 4h',
+    cluster: 'CKR-PROD-01',
+    environment: 'PROD-DC-01',
     address: 'Menara BCA Lt. 28, Jl. M.H. Thamrin No. 1, Jakarta Pusat',
     isActive: true,
     pics: [
@@ -52,6 +57,11 @@ export const MOCK_CUSTOMERS = [
     code: 'DISKOMINFO',
     industry: 'Pemerintahan / Publik',
     serviceContract: 'PKS Pemeliharaan Jaringan & Data Center 24x7',
+    contractSla: 'SLA-GOLD-2026',
+    slaTier: '24x7 GOLD PUBLIC SECTOR',
+    slaCoverage: 'First Touch: 1h • Resolusi: 8h',
+    cluster: 'BTN-KP3B-01',
+    environment: 'PROD-DC-BANTEN',
     address: 'Kawasan Pusat Pemerintahan Provinsi Banten (KP3B), Serang',
     isActive: true,
     pics: [
@@ -64,6 +74,11 @@ export const MOCK_CUSTOMERS = [
     code: 'SILOAM',
     industry: 'Kesehatan / Rumah Sakit',
     serviceContract: 'PKS Dukungan Aplikasi & Server 24x7',
+    contractSla: 'SLA-PLATINUM-2026',
+    slaTier: '24x7 HEALTHCARE CRITICAL',
+    slaCoverage: 'First Touch: 30m • Resolusi: 4h',
+    cluster: 'SLM-HOSP-02',
+    environment: 'PROD-HEALTH-01',
     address: 'Jl. Siloam No. 6, Lippo Karawaci, Tangerang',
     isActive: true,
     pics: [
@@ -76,6 +91,11 @@ export const MOCK_CUSTOMERS = [
     code: 'ASTRA',
     industry: 'Otomotif & Korporasi',
     serviceContract: 'PKS Managed IT Support 24x7',
+    contractSla: 'SLA-SILVER-2026',
+    slaTier: '8x5 SILVER ENTERPRISE',
+    slaCoverage: 'First Touch: 2h • Resolusi: 12h',
+    cluster: 'AST-HQ-01',
+    environment: 'PROD-CORP-01',
     address: 'Menara Astra, Jl. Jend. Sudirman Kav. 5-6, Jakarta',
     isActive: true,
     pics: [
@@ -142,14 +162,29 @@ export const INITIAL_TICKETS = [
     channel: 'WHATSAPP',
     title: 'Server Core Transaction BCA Cabang Thamrin Unreachable',
     rawMessage: 'Pagi tim GTT, mohon bantuannya server core transaction di cabang Thamrin tiba2 offline tidak bisa diakses sama sekali sejak 15 menit lalu, antrean teller terhambat urgent ya!',
-    description: 'Server transaksi utama offline. Ping RTO, port 443 & 22 tidak merespon dari network internal.',
+    description: 'Customer reported that VMware datastore became inaccessible following scheduled SAN controller firmware health checks on enterprise storage matrix. Multiple production VMs unready.',
     status: 'IN_PROGRESS',
     trackingToken: 'sec_bca_9912a7f8',
     createdById: 2,
     assignedToId: 3,
-    principalName: 'Cisco Systems Indonesia',
-    principalCaseId: 'CSCO-2026-99120',
     
+    // Enterprise Contract & Architecture Scope (Figma Spec)
+    contractSla: 'SLA-PLATINUM-2026',
+    contractTier: '24x7 PLATINUM MISSION CRITICAL',
+    cluster: 'CKR-PROD-01',
+    environment: 'PROD-DC-01',
+    impactScope: 'Critical Workloads (Core Banking Offline)',
+    isWhatsAppSync: true,
+    isProposeKb: true,
+
+    // Technology Principal Integration (L3 OEM Support - Figma Spec)
+    principalVendor: 'Hewlett Packard Enterprise Global Support Desk',
+    principalCaseId: 'HPE-2026-004821',
+    principalSpecialist: 'Marcus Vance (HPE Storage L3)',
+    principalBridgeStatus: 'Connected via HPE InfoSight API',
+    principalLatestUpdate: 'HPE Support analyzed controller B core dump logs; transient PCIe bus assertion detected on Node 1 midplane bus interface. Recommended NVRAM battery status verification and selective cache invalidation prior to re-enabling automatic failback.',
+    principalUpdateTimestamp: '11:38 WIB',
+
     createdAt: '2026-09-13T03:15:00.000Z',
     updatedAt: '2026-09-13T04:30:00.000Z',
     responseDeadline: '2026-09-13T03:45:00.000Z',
@@ -164,10 +199,11 @@ export const INITIAL_TICKETS = [
     isSlaResponseBreached: false,
     isSlaResolutionBreached: false,
     
-    rootCause: '',
-    actionTaken: '',
-    resolutionNotes: '',
-    recommendation: '',
+    rootCause: 'Transient PCIe interconnect bus stall between Controller Node 0 and Node 1 triggered sudden failover while sync threshold sat at 88%, resulting in host path timeout prior to full NVRAM mirroring reconciliation.',
+    resolutionStrategy: 'Rebalance FC host paths across Fabric 1, clear stalled cache unmap operations via HPE CLI command line, and trigger targeted rescan on ESXi host storage adapters to re-mount production datastore.',
+    actionTaken: 'Analisis core dump controller B, rebalance path FC fabric 1, dan koordinasi dengan HPE Enterprise Support.',
+    resolutionNotes: 'Datastore LUN berhasil dimount ulang dan VM production operational kembali.',
+    recommendation: 'Upgrade firmware controller ke patch SP4 stabil dan jadwalkan maintenance window penggantian riser PCIe.',
     
     attachments: [
       {

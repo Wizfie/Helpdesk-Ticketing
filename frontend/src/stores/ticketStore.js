@@ -115,8 +115,21 @@ export const useTicketStore = defineStore('tickets', {
         trackingToken: 'sec_' + Math.random().toString(36).substring(2, 10),
         createdById: actorUser.id,
         assignedToId: ticketData.assignedToId ? Number(ticketData.assignedToId) : null,
-        principalName: ticketData.principalName || null,
+        
+        // Enterprise ITSM fields (Figma Spec)
+        contractSla: ticketData.contractSla || 'SLA-GOLD-2026',
+        contractTier: ticketData.contractTier || '8x5 GOLD ENTERPRISE',
+        cluster: ticketData.cluster || 'PROD-CL01',
+        environment: ticketData.environment || 'PROD-DC-01',
+        impactScope: ticketData.impactScope || 'Standard Operational',
+        isWhatsAppSync: !!ticketData.isWhatsAppSync,
+        isProposeKb: false,
+        principalVendor: ticketData.principalVendor || ticketData.principalName || null,
         principalCaseId: ticketData.principalCaseId || null,
+        principalSpecialist: ticketData.principalSpecialist || null,
+        principalBridgeStatus: ticketData.principalCaseId ? 'Connected via OEM API Bridge' : null,
+        principalLatestUpdate: ticketData.principalCaseId ? 'Case successfully registered with Principal Support Desk' : null,
+        principalUpdateTimestamp: ticketData.principalCaseId ? 'Just now' : null,
 
         createdAt: nowUtc,
         updatedAt: nowUtc,
@@ -132,7 +145,8 @@ export const useTicketStore = defineStore('tickets', {
         isSlaResponseBreached: false,
         isSlaResolutionBreached: false,
 
-        rootCause: '',
+        rootCause: ticketData.rootCause || '',
+        resolutionStrategy: ticketData.resolutionStrategy || '',
         actionTaken: '',
         resolutionNotes: '',
         recommendation: '',
@@ -372,17 +386,18 @@ export const useTicketStore = defineStore('tickets', {
       });
     },
 
-    resolveTicket(ticketId, { rootCause, actionTaken, resolutionNotes, recommendation }, actorUser) {
+    resolveTicket(ticketId, { rootCause, resolutionStrategy, actionTaken, resolutionNotes, recommendation }, actorUser) {
       const ticket = this.tickets.find(t => t.id === ticketId);
       if (!ticket) return;
 
       const nowUtc = new Date().toISOString();
       ticket.status = 'RESOLVED';
       ticket.resolvedAt = nowUtc; // SLA Resolution Timer STOPS here!
-      ticket.rootCause = rootCause;
-      ticket.actionTaken = actionTaken;
-      ticket.resolutionNotes = resolutionNotes;
-      ticket.recommendation = recommendation;
+      if (rootCause) ticket.rootCause = rootCause;
+      if (resolutionStrategy) ticket.resolutionStrategy = resolutionStrategy;
+      ticket.actionTaken = actionTaken || '';
+      ticket.resolutionNotes = resolutionNotes || '';
+      ticket.recommendation = recommendation || '';
       ticket.updatedAt = nowUtc;
 
       ticket.milestones.push({
@@ -404,6 +419,32 @@ export const useTicketStore = defineStore('tickets', {
         entityId: ticket.ticketNumber,
         description: `Tiket berstatus RESOLVED oleh ${actorUser.name}. Resolution SLA tuntas.`
       });
+      saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
+    },
+
+    toggleWhatsAppSync(ticketId) {
+      const ticket = this.tickets.find(t => t.id === Number(ticketId));
+      if (ticket) {
+        ticket.isWhatsAppSync = !ticket.isWhatsAppSync;
+        saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
+      }
+    },
+
+    toggleProposeKb(ticketId) {
+      const ticket = this.tickets.find(t => t.id === Number(ticketId));
+      if (ticket) {
+        ticket.isProposeKb = !ticket.isProposeKb;
+        saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
+      }
+    },
+
+    updateRootCause(ticketId, { rootCause, resolutionStrategy }) {
+      const ticket = this.tickets.find(t => t.id === Number(ticketId));
+      if (ticket) {
+        if (rootCause !== undefined) ticket.rootCause = rootCause;
+        if (resolutionStrategy !== undefined) ticket.resolutionStrategy = resolutionStrategy;
+        saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
+      }
     },
 
     closeTicket(ticketId, reason, actorUser) {
