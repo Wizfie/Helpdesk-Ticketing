@@ -1,27 +1,5 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between border-b border-slate-200 pb-3">
-      <div>
-        <h3 class="font-bold text-slate-800 text-base flex items-center space-x-2">
-          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
-          </svg>
-          <span>Alur Penanganan Bertahap (Tracking Milestones)</span>
-          <span class="text-xs font-normal text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">Model Resi Ekspedisi</span>
-        </h3>
-        <p class="text-xs text-slate-500 mt-0.5">Seluruh pembaruan dicatat kronologis dengan timestamp standar UTC+0</p>
-      </div>
-
-      <!-- Add Milestone Button (Visible to Engineers / CPIG / Admin) -->
-      <button
-        v-if="canAddMilestone && ticket.status !== 'CLOSED'"
-        @click="showAddModal = true"
-        class="inline-flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition-all"
-      >
-        <span>+ Update Checkpoint</span>
-      </button>
-    </div>
-
     <!-- Stepper Timeline List -->
     <div class="relative pl-6 space-y-8 before:absolute before:left-2.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
       <div 
@@ -88,77 +66,6 @@
       </div>
     </div>
 
-    <!-- Modal Form: Add Milestone Checkpoint -->
-    <div v-if="showAddModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
-      <div class="bg-white rounded-xl shadow-xl border border-slate-200 w-full max-w-lg overflow-hidden">
-        <div class="bg-slate-50 px-5 py-3.5 border-b border-slate-200 flex items-center justify-between">
-          <div>
-            <h4 class="font-bold text-slate-900 text-sm">Tambah Checkpoint Pengerjaan</h4>
-            <p class="text-xs text-slate-500">Mencatat tahapan troubleshooting bertahap</p>
-          </div>
-          <button @click="showAddModal = false" class="text-slate-400 hover:text-slate-600 text-lg">&times;</button>
-        </div>
-
-        <form @submit.prevent="submitMilestone" class="p-5 space-y-4 text-xs">
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">Judul Tahapan / Checkpoint *</label>
-            <input 
-              v-model="newStep.stepName" 
-              type="text" 
-              required
-              placeholder="Contoh: Penggantian Optic SFP / Reboot Switch / Isolasi Port"
-              class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-xs"
-            />
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">Catatan Tindakan / Temuan Lapangan *</label>
-            <textarea 
-              v-model="newStep.notes" 
-              rows="3" 
-              required
-              placeholder="Jelaskan tindakan teknis yang dilakukan, nilai dBm, hasil command line, atau respon pengujian..."
-              class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-xs"
-            ></textarea>
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">Status Progres Setelah Tindakan Ini</label>
-            <select v-model="newStep.nextStatus" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs bg-white">
-              <option value="IN_PROGRESS">Tetap Dalam Pengerjaan (IN_PROGRESS)</option>
-              <option value="PENDING_VENDOR">Tahan SLA (Menunggu Pihak Ketiga / Vendor)</option>
-              <option value="PENDING_CUSTOMER">Tahan SLA (Menunggu Respon Customer)</option>
-            </select>
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">Unggah Bukti / Screenshot (Opsional)</label>
-            <input 
-              @change="handleFileUpload" 
-              type="file" 
-              class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-            />
-          </div>
-
-          <div class="pt-3 border-t border-slate-200 flex items-center justify-end space-x-2">
-            <button 
-              type="button" 
-              @click="showAddModal = false" 
-              class="px-3.5 py-2 border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-100 font-medium"
-            >
-              Batal
-            </button>
-            <button 
-              type="submit" 
-              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-sm"
-            >
-              Simpan Checkpoint
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
     <!-- Modal: Proof File Lightbox / Viewer -->
     <AttachmentPreviewModal 
       v-if="activePreviewFile" 
@@ -186,15 +93,7 @@ const props = defineProps({
 const authStore = useAuthStore();
 const ticketStore = useTicketStore();
 
-const showAddModal = ref(false);
 const activePreviewFile = ref(null);
-
-const newStep = ref({
-  stepName: '',
-  notes: '',
-  nextStatus: 'IN_PROGRESS',
-  proofFile: null
-});
 
 const sampleLogContent = `[2026-09-13 03:35:12 UTC] CONSOLE KVM SESSION OPENED by Engineer: Budi Santoso
 [2026-09-13 03:35:18 UTC] Interface TenGigabitEthernet1/0/10 link status: DOWN (carrier lost)
@@ -206,15 +105,6 @@ const sampleLogContent = `[2026-09-13 03:35:12 UTC] CONSOLE KVM SESSION OPENED b
   - Optical Tx Power: -2.1 dBm [NORMAL]
   - SFP Model: SFP-10G-LR Cisco Systems
   - Fault: Optic transceiver diode degradation. Hardware replacement required.`;
-
-const canAddMilestone = computed(() => {
-  const role = authStore.currentUser.roleCode;
-  if (['ADMIN', 'CPIG'].includes(role)) return true;
-  if (role === 'ENGINEER') {
-    return props.ticket.assignedToId === authStore.currentUser.id;
-  }
-  return false;
-});
 
 const formatTime = (utcTime) => formatUtcToLocal(utcTime);
 
@@ -257,28 +147,5 @@ const getImagePreviewSrc = (fileName) => {
     return '/mock-attachments/ping-http200-proof.svg';
   }
   return '/gtt-logo.png';
-};
-
-const handleFileUpload = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    newStep.value.proofFile = file.name;
-  }
-};
-
-const submitMilestone = () => {
-  ticketStore.addProgressMilestone(
-    props.ticket.id, 
-    {
-      stepName: newStep.value.stepName,
-      notes: newStep.value.notes,
-      proofFile: newStep.value.proofFile,
-      nextStatus: newStep.value.nextStatus
-    },
-    authStore.currentUser
-  );
-
-  newStep.value = { stepName: '', notes: '', nextStatus: 'IN_PROGRESS', proofFile: null };
-  showAddModal.value = false;
 };
 </script>

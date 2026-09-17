@@ -75,18 +75,6 @@
           <span>Email Notif</span>
         </button>
 
-        <!-- Add Milestone Step -->
-        <button
-          v-if="canEngineerAct && ticket.status !== 'CLOSED'"
-          @click="openMilestoneModal"
-          class="inline-flex items-center space-x-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-2xs transition-all"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-          </svg>
-          <span>+ Add Step</span>
-        </button>
-
         <!-- SLA Pause / Resume Button -->
         <button
           v-if="ticket.isPaused && canEngineerAct"
@@ -813,11 +801,14 @@ const openMilestoneModal = () => {
 
 const submitMilestone = () => {
   if (!ticket.value) return;
-  ticketStore.addMilestone(
+  ticketStore.addProgressMilestone(
     ticket.value.id,
-    newMilestone.value.stepName,
-    newMilestone.value.notes,
-    newMilestone.value.proofFile,
+    {
+      stepName: newMilestone.value.stepName,
+      notes: newMilestone.value.notes,
+      proofFile: newMilestone.value.proofFile || null,
+      nextStatus: 'IN_PROGRESS'
+    },
     authStore.currentUser
   );
   showMilestoneModal.value = false;
