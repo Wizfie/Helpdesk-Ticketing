@@ -52,10 +52,11 @@
 
       <!-- Action Buttons -->
       <div class="flex flex-wrap items-center gap-2 text-xs">
-        <!-- Customer Tracking Link Button -->
+        <!-- Customer Tracking Link Button (ADMIN / CPIG Only) -->
         <button
+          v-if="authStore.currentUser.roleCode === 'ADMIN'"
           @click="handleCopyLink"
-          class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-all"
+          class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-all cursor-pointer"
           title="Salin tautan pelacakan publik customer bertoken"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -64,10 +65,12 @@
           <span>{{ copiedLink ? 'Tersalin!' : 'Bagikan Link Customer' }}</span>
         </button>
 
-        <!-- Email Notification Preview -->
+        <!-- Email Notification Preview (ADMIN / CPIG Only) -->
         <button
+          v-if="authStore.currentUser.roleCode === 'ADMIN'"
           @click="showEmailPreviewModal = true"
-          class="inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-all"
+          class="inline-flex items-center space-x-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-all cursor-pointer"
+          title="Pratinjau format surat notifikasi email customer"
         >
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
@@ -484,16 +487,28 @@
               <span class="font-bold text-slate-800 text-xs block">Customer Email Dispatch Sync</span>
               <span class="text-[10px] text-slate-400 block">Kirim notifikasi update via Email</span>
             </div>
+            <!-- Admin toggle -->
             <button
+              v-if="authStore.currentUser.roleCode === 'ADMIN'"
               @click="ticketStore.toggleEmailSync(ticket.id)"
-              class="w-10 h-6 flex items-center rounded-full p-1 transition-colors duration-200 focus:outline-none"
+              class="w-10 h-6 flex items-center rounded-full p-1 transition-colors duration-200 focus:outline-none cursor-pointer"
               :class="(ticket.isEmailSync ?? ticket.isWhatsAppSync) ? 'bg-blue-600' : 'bg-slate-200'"
+              title="Aktifkan/nonaktifkan forward email otomatis ke PIC customer"
             >
               <div
                 class="bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-200"
                 :class="(ticket.isEmailSync ?? ticket.isWhatsAppSync) ? 'translate-x-4' : 'translate-x-0'"
               ></div>
             </button>
+            <!-- Engineer read-only badge -->
+            <span
+              v-else
+              class="text-[10px] font-mono font-bold px-2 py-0.5 rounded"
+              :class="(ticket.isEmailSync ?? ticket.isWhatsAppSync) ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-slate-100 text-slate-500'"
+              :title="(ticket.isEmailSync ?? ticket.isWhatsAppSync) ? 'Milestone terkirim otomatis ke email pelanggan' : 'Hanya catatan internal NOC'"
+            >
+              {{ (ticket.isEmailSync ?? ticket.isWhatsAppSync) ? 'DISPATCH ON' : 'INTERNAL' }}
+            </span>
           </div>
 
           <!-- Pause / Resolve Buttons in Sidebar -->
