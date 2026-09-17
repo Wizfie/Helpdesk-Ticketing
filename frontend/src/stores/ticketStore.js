@@ -5,7 +5,8 @@ import {
   MOCK_CATEGORIES, 
   QUICK_PRESETS, 
   MOCK_AUDIT_LOGS, 
-  MOCK_KNOWLEDGE_BASE 
+  MOCK_KNOWLEDGE_BASE,
+  MOCK_PENDING_KB_APPROVALS
 } from '../data/mockData';
 
 const STORAGE_KEYS = {
@@ -51,7 +52,15 @@ export const useTicketStore = defineStore('tickets', {
     categories: loadStoredData(STORAGE_KEYS.CATEGORIES, MOCK_CATEGORIES),
     quickPresets: JSON.parse(JSON.stringify(QUICK_PRESETS)),
     auditLogs: loadStoredData(STORAGE_KEYS.AUDIT_LOGS, MOCK_AUDIT_LOGS),
-    knowledgeBase: loadStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, MOCK_KNOWLEDGE_BASE),
+    knowledgeBase: (() => {
+      const stored = loadStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, MOCK_KNOWLEDGE_BASE);
+      if (!stored || stored.length < 5 || !stored[0].kbCode) {
+        saveStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, MOCK_KNOWLEDGE_BASE);
+        return JSON.parse(JSON.stringify(MOCK_KNOWLEDGE_BASE));
+      }
+      return stored;
+    })(),
+    pendingKbApprovals: JSON.parse(JSON.stringify(MOCK_PENDING_KB_APPROVALS)),
     selectedTicketId: Number(loadStoredData(STORAGE_KEYS.SELECTED_TICKET_ID, 1)) || 1
   }),
 
@@ -535,6 +544,7 @@ export const useTicketStore = defineStore('tickets', {
       if (!article) return;
 
       article.status = 'PUBLISHED';
+      saveStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, this.knowledgeBase);
       this.addAuditLog({
         userName: actorUser.name,
         role: actorUser.roleCode,
@@ -543,6 +553,83 @@ export const useTicketStore = defineStore('tickets', {
         entityId: String(article.id),
         description: `Mempublikasikan artikel Knowledge Base: ${article.title}`
       });
+    },
+
+    approvePendingApproval(pendingId, actorUser) {
+      const idx = this.pendingKbApprovals.findIndex(p => p.id === pendingId);
+      if (idx === -1) return;
+      const item = this.pendingKbApprovals[idx];
+      const codeNum = Math.floor(1000 + Math.random() * 9000);
+      const newKb = {
+        id: codeNum,
+        kbCode: `KB-${codeNum}`,
+        title: item.title,
+        category: item.category.split('&')[0].trim(),
+        categoryGroup: item.category,
+        technologyPrincipal: item.category,
+        author: item.author,
+        approver: `${actorUser.name} (${actorUser.roleCode === 'ADMIN' ? 'Supervisor' : 'Lead'})`,
+        status: 'PUBLISHED',
+        updatedAt: 'Just now',
+        ticketsReferencedCount: 1,
+        source: `Dari Tiket ${item.sourceTicket} (${item.customer})`,
+        symptom: item.summary,
+        rootCause: 'Investigasi formal pasca insiden tervalidasi.',
+        prerequisites: 'Akses root / admin pada subsystem.',
+        cliSnippet: `# Prosedur diverifikasi dari ${item.sourceTicket}\n# Eksekusi diagnostik baseline\nshow system status`,
+        verificationSteps: 'Verifikasi stabilitas koneksi & log bebas dari trigger error alert.',
+        rollbackProcedure: 'Rollback perubahan konfigurasi jika service degraded.',
+        recommendation: 'Jadwalkan review pencegahan preventif berkala.',
+        createdAt: new Date().toISOString()
+      };
+      this.knowledgeBase.unshift(newKb);
+      this.pendingKbApprovals.splice(idx, 1);
+      saveStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, this.knowledgeBase);
+      this.addAuditLog({
+        userName: actorUser.name,
+        role: actorUser.roleCode,
+        action: 'KB_APPROVED',
+        entityType: 'KNOWLEDGE_BASE',
+        entityId: newKb.kbCode,
+        description: `Menyetujui dan mempublikasikan runbook Knowledge Base: ${newKb.title}`
+      });
+    },
+
+    proposeNewArticle(data, actorUser) {
+      const codeNum = Math.floor(1000 + Math.random() * 9000);
+      const newKb = {
+        id: codeNum,
+        kbCode: `KB-${codeNum}`,
+        title: data.title,
+        category: data.category || 'Storage',
+        categoryGroup: data.categoryGroup || 'SAN & Enterprise Storage',
+        technologyPrincipal: data.technologyPrincipal || 'Enterprise Multi-Vendor',
+        author: actorUser.name,
+        approver: `${actorUser.name} (${actorUser.roleCode === 'ADMIN' ? 'Supervisor' : 'Lead'})`,
+        status: 'PUBLISHED',
+        updatedAt: 'Just now',
+        ticketsReferencedCount: 0,
+        source: data.source || 'Standard Engineering SOP',
+        symptom: data.symptom,
+        rootCause: data.rootCause,
+        prerequisites: data.prerequisites || 'Standar izin teknisi L2/L3.',
+        cliSnippet: data.cliSnippet || '# Command snippet\nshow status',
+        verificationSteps: data.verificationSteps || 'Uji fungsionalitas sistem normal pasca perbaikan.',
+        rollbackProcedure: data.rollbackProcedure || 'Rollback ke state snapshot sebelumnya jika gagal.',
+        recommendation: data.recommendation || 'Dokumentasikan deviasi jika ditemukan.',
+        createdAt: new Date().toISOString()
+      };
+      this.knowledgeBase.unshift(newKb);
+      saveStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, this.knowledgeBase);
+      this.addAuditLog({
+        userName: actorUser.name,
+        role: actorUser.roleCode,
+        action: 'KB_CREATED',
+        entityType: 'KNOWLEDGE_BASE',
+        entityId: newKb.kbCode,
+        description: `Menerbitkan dokumen runbook Knowledge Base: ${newKb.title}`
+      });
+      return newKb;
     },
 
     addCustomer(customerData, actorUser) {
