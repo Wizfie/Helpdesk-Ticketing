@@ -9,6 +9,7 @@ import ReportsView from '../views/ReportsView.vue';
 import UsersManagementView from '../views/UsersManagementView.vue';
 import CustomersManagementView from '../views/CustomersManagementView.vue';
 import CustomerTrackingView from '../views/CustomerTrackingView.vue';
+import SlaConfigView from '../views/SlaConfigView.vue';
 import { useAuthStore } from '../stores/authStore';
 
 const routes = [
@@ -64,6 +65,12 @@ const routes = [
     path: '/admin/customers',
     name: 'CustomersManagement',
     component: CustomersManagementView,
+    meta: { roles: ['ADMIN'] } // Khusus Admin
+  },
+  {
+    path: '/admin/sla-configuration',
+    name: 'SlaConfiguration',
+    component: SlaConfigView,
     meta: { roles: ['ADMIN'] } // Khusus Admin
   },
   {
