@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6 max-w-7xl mx-auto pb-12">
+  <div class="space-y-6">
     <!-- Top Header Bar -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
       <div>
@@ -8,118 +8,146 @@
           <span>/</span>
           <span class="text-slate-800">Incident Intake</span>
         </div>
-        <h1 class="text-2xl font-black text-slate-900 tracking-tight flex items-center space-x-2.5">
-          <span>Pusat Registrasi Tiket Layanan</span>
-          <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800 border border-blue-200">
-            CPIG INGESTION CONSOLE
-          </span>
+        <h1 class="text-2xl font-black text-slate-900 tracking-tight">
+          Buat Tiket Layanan Baru
         </h1>
         <p class="text-xs text-slate-500 mt-1">
-          Registrasi dan routing tiket gangguan insiden customer dengan parameter SLA berbasis kontrak secara terstruktur.
+          Buat tiket gangguan atau permintaan layanan dengan parameter SLA berbasis kontrak secara terstruktur.
         </p>
       </div>
 
       <div class="flex items-center space-x-3">
         <router-link
           to="/tickets"
-          class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors shadow-xs flex items-center space-x-1.5"
+          class="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors shadow-xs flex items-center space-x-1.5"
         >
-          <span>&larr; Antrean Tiket</span>
+          <span>&larr; Kembali ke Daftar Tiket</span>
         </router-link>
       </div>
     </div>
 
-    <!-- Quick Issue Presets Toolbar -->
-    <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-        <div class="flex items-center space-x-2">
-          <span class="w-2 h-2 rounded-full bg-blue-600"></span>
-          <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Template Isu Cepat (Sekali Klik):</span>
-        </div>
-        <span class="text-[11px] text-slate-400">Otomatis mengisi Kategori, Severity, Judul & SLA Target</span>
-      </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-        <button
-          v-for="preset in ticketStore.quickPresets"
-          :key="preset.id"
-          type="button"
-          @click="applyPreset(preset)"
-          class="text-left p-3 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40 transition-all group bg-slate-50/50"
-        >
-          <div class="font-bold text-slate-800 text-xs group-hover:text-blue-600 truncate mb-1">{{ preset.title }}</div>
-          <div class="flex items-center justify-between text-[11px]">
-            <span class="font-bold text-rose-600" v-if="preset.severity === 'HIGH'">HIGH (30m)</span>
-            <span class="font-bold text-amber-600" v-else-if="preset.severity === 'MEDIUM'">MED (1h)</span>
-            <span class="font-bold text-sky-600" v-else>LOW (2h)</span>
-            <span class="text-slate-400 font-medium">Res: {{ preset.resolutionHours }}j</span>
-          </div>
-        </button>
-      </div>
-    </div>
-
-    <!-- Main Layout: Form (Left) & Operational Guidance / Smart Ingestion (Right) -->
+    <!-- Main Layout: Form (Left) & Knowledge Base Recommendations (Right) -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
       <!-- Left 8 Columns: 3-Step Guided Intake Form -->
       <form @submit.prevent="handleSubmitTicket" class="lg:col-span-8 space-y-6">
         
-        <!-- STEP 01: Basic Ticket Details -->
-        <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <!-- STEP 01: Informasi Tiket & Customer -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
           <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200 flex items-center justify-between">
             <div class="flex items-center space-x-3">
               <span class="w-7 h-7 rounded-lg bg-blue-600 text-white font-mono font-bold text-xs flex items-center justify-center shadow-xs">
                 01
               </span>
               <div>
-                <h2 class="text-sm font-bold text-slate-900">Rincian Dasar & Entitas Customer</h2>
-                <p class="text-[11px] text-slate-500">Pilih klien dan verifikasi cakupan kontrak SLA yang aktif</p>
+                <h2 class="text-sm font-bold text-slate-900">Informasi Tiket &amp; Customer</h2>
+                <p class="text-[11px] text-slate-500">Pilih jenis tiket, data customer, dan informasi awal insiden.</p>
               </div>
             </div>
-            <span v-if="formDraftSource" class="text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-1 rounded-full">
-              {{ formDraftSource }}
-            </span>
           </div>
 
           <div class="p-6 space-y-5 text-xs">
-            <!-- Customer Selector & Live SLA Contract Banner -->
-            <div class="space-y-2">
-              <label class="block font-bold text-slate-700">Customer / Perusahaan Klien *</label>
-              <select 
-                v-model="form.customerId" 
-                required 
-                @change="handleCustomerChange"
-                class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 font-semibold text-slate-800 text-xs"
-              >
-                <option value="" disabled>-- Pilih Entitas Customer --</option>
-                <option v-for="c in ticketStore.customers" :key="c.id" :value="c.id">
-                  {{ c.name }} ({{ c.code }}) - {{ c.serviceContract }}
-                </option>
-              </select>
+            <!-- Row 1: Jenis Tiket & Customer Selector -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Jenis Tiket *</label>
+                <select 
+                  v-model="form.ticketType" 
+                  required
+                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 font-semibold text-slate-800 text-xs"
+                >
+                  <option value="Incident (Gangguan)">Incident (Gangguan)</option>
+                  <option value="Service Request (Permintaan)">Service Request (Permintaan)</option>
+                  <option value="Problem (Investigasi RCA)">Problem (Investigasi RCA)</option>
+                  <option value="Maintenance / Perubahan">Maintenance / Perubahan</option>
+                </select>
+              </div>
 
-              <!-- Live Contract SLA Badge -->
-              <div v-if="selectedCustomer" class="p-3 rounded-lg bg-blue-50/70 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 mt-2">
-                <div class="flex items-center space-x-2">
-                  <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                  <span class="font-mono font-bold text-blue-900 text-[11px] uppercase tracking-wider">
-                    ACTIVE CONTRACT SLA: {{ selectedCustomer.contractSla || 'SLA-GOLD-2026' }}
-                  </span>
-                  <span class="bg-blue-200/80 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">
-                    {{ selectedCustomer.slaTier || '24x7 Mission Critical' }}
-                  </span>
-                </div>
-                <div class="text-[11px] font-medium text-blue-800">
-                  {{ selectedCustomer.slaCoverage || 'First Touch ≤ 30m • Resolusi ≤ 4h' }}
-                </div>
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Customer / Perusahaan Klien *</label>
+                <select 
+                  v-model="form.customerId" 
+                  required 
+                  @change="handleCustomerChange"
+                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 font-semibold text-slate-800 text-xs"
+                >
+                  <option value="" disabled>-- Pilih Entitas Customer --</option>
+                  <option v-for="c in ticketStore.customers" :key="c.id" :value="c.id">
+                    {{ c.name }} ({{ c.code }}){{ c.isActive === false ? ' [NONAKTIF]' : '' }} - {{ c.serviceContract }}
+                  </option>
+                </select>
               </div>
             </div>
 
-            <!-- PIC & Intake Channel -->
+            <!-- Inactive Customer Warning Banner -->
+            <div v-if="selectedCustomer && selectedCustomer.isActive === false" class="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 flex items-center space-x-2 text-xs">
+              <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+              <div class="leading-tight">
+                <span class="font-bold">Perhatian:</span> Akun mitra ini berstatus <strong class="underline">NONAKTIF</strong>. Pastikan verifikasi status kontrak ke tim sales/legal.
+              </div>
+            </div>
+
+            <!-- Live Contract SLA Badge -->
+            <div v-if="selectedCustomer" class="p-3 rounded-xl bg-blue-50/70 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                <span class="font-mono font-bold text-blue-900 text-[11px] uppercase tracking-wider">
+                  ACTIVE CONTRACT SLA: {{ selectedCustomer.contractSla || 'SLA-GOLD-2026' }}
+                </span>
+                <span class="bg-blue-200/80 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                  {{ selectedCustomer.slaTier || '24x7 Mission Critical' }}
+                </span>
+              </div>
+              <div class="text-[11px] font-medium text-blue-800">
+                {{ selectedCustomer.slaCoverage || 'First Touch ≤ 30m • Resolusi ≤ 4h' }}
+              </div>
+            </div>
+
+            <!-- Row 2: PIC Pelapor & Saluran Intake -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block font-bold text-slate-700 mb-1">PIC Pelapor (Kontak Klien) *</label>
+                <div class="flex items-center justify-between mb-1">
+                  <label class="font-bold text-slate-700">PIC Pelapor (Kontak Klien) *</label>
+                  <!-- Quick contact action icons -->
+                  <div v-if="selectedPic" class="flex items-center space-x-1.5">
+                    <a 
+                      v-if="selectedPic.phone" 
+                      :href="`tel:${selectedPic.phone}`" 
+                      title="Telepon PIC"
+                      class="p-1 rounded bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                      </svg>
+                    </a>
+                    <a 
+                      v-if="selectedPic.phone" 
+                      :href="`https://wa.me/${cleanPhoneForWa(selectedPic.phone)}`" 
+                      target="_blank"
+                      title="Chat WhatsApp PIC"
+                      class="p-1 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-600 transition-colors"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.299.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.174.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.043.073.043.419-.101.824z"/>
+                      </svg>
+                    </a>
+                    <a 
+                      v-if="selectedPic.email" 
+                      :href="`mailto:${selectedPic.email}`" 
+                      title="Kirim Email PIC"
+                      class="p-1 rounded bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                    >
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                      </svg>
+                    </a>
+                  </div>
+                </div>
                 <select 
                   v-model="form.customerPicId" 
                   required
-                  class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 text-xs"
                 >
                   <option value="" disabled>-- Pilih PIC Pelapor --</option>
                   <option v-for="p in availablePics" :key="p.id" :value="p.id">
@@ -130,7 +158,7 @@
 
               <div>
                 <label class="block font-bold text-slate-700 mb-1">Saluran Intake (Channel) *</label>
-                <select v-model="form.channel" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white">
+                <select v-model="form.channel" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs">
                   <option value="WHATSAPP">WhatsApp Support (Chat Helpdesk)</option>
                   <option value="EMAIL">Email Support (helpdesk@glotratech.com)</option>
                   <option value="PHONE">Telepon / Dedicated Hotline Call</option>
@@ -139,8 +167,28 @@
               </div>
             </div>
 
-            <!-- Category & Cluster/Environment -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Row 3: Waktu Kejadian, Kategori Masalah & Affected Service -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <!-- Waktu Kejadian / Incident Start (Date & Time) -->
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Waktu Kejadian / Incident Start *</label>
+                <div class="grid grid-cols-2 gap-2">
+                  <input
+                    v-model="form.incidentDate"
+                    type="date"
+                    required
+                    class="w-full px-2.5 py-2 border border-slate-200 rounded-xl bg-white text-slate-800 text-xs focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    v-model="form.incidentTime"
+                    type="time"
+                    required
+                    class="w-full px-2.5 py-2 border border-slate-200 rounded-xl bg-white text-slate-800 text-xs focus:ring-2 focus:ring-blue-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <!-- Kategori Masalah -->
               <div>
                 <div class="flex items-center justify-between mb-1">
                   <label class="font-bold text-slate-700">Kategori Masalah *</label>
@@ -156,7 +204,7 @@
                   v-model="form.categoryId" 
                   @change="onCategorySelectChange"
                   required 
-                  class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+                  class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 text-xs"
                 >
                   <option value="" disabled>-- Pilih Kategori Masalah --</option>
                   <option v-for="cat in ticketStore.categories" :key="cat.id" :value="cat.id">
@@ -171,15 +219,108 @@
                 </div>
               </div>
 
+              <!-- Affected Service / System -->
               <div>
-                <label class="block font-bold text-slate-700 mb-1">Cluster / Ruang Lingkup Sistem</label>
+                <label class="block font-bold text-slate-700 mb-1">Affected Service / System *</label>
+                <select 
+                  v-model="form.affectedService" 
+                  required
+                  class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 text-xs"
+                >
+                  <option value="VMware Infrastructure">VMware Infrastructure</option>
+                  <option value="Database Server (PostgreSQL / Oracle / MySQL)">Database Server</option>
+                  <option value="Network Core &amp; Switching (Cisco / Nexus)">Network Core &amp; Switching</option>
+                  <option value="Storage SAN &amp; Storage Controller">Storage SAN &amp; Controller</option>
+                  <option value="Backup &amp; Disaster Recovery (Rubrik / Veeam)">Backup &amp; Disaster Recovery</option>
+                  <option value="Web Portal &amp; Application Service">Web Portal &amp; Application</option>
+                  <option value="Operating System / Virtual Machine">OS &amp; Virtual Machine</option>
+                  <option value="Lainnya">Lainnya / General Infrastructure</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Row 4: Cluster/Device, Dampak Gangguan (Business Impact) & Related Ticket -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Cluster / Host / Device</label>
                 <input
                   v-model="form.cluster"
                   type="text"
-                  placeholder="Contoh: CKR-PROD-01, Rack A-04"
-                  class="w-full px-3 py-2 border border-slate-200 rounded-lg font-mono text-xs"
+                  placeholder="Contoh: PROD-CL01, Server IP, atau node"
+                  class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-500"
                 />
               </div>
+
+              <div>
+                <div class="flex items-center space-x-1 mb-1">
+                  <label class="font-bold text-slate-700">Dampak Gangguan (Business Impact) *</label>
+                  <span title="Dampak gangguan mempengaruhi penentuan eskalasi dan SLA" class="text-slate-400 cursor-help">ℹ</span>
+                </div>
+                <select 
+                  v-model="form.businessImpact" 
+                  required
+                  class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="Seluruh layanan tidak dapat digunakan">Seluruh layanan tidak dapat digunakan</option>
+                  <option value="Sebagian fungsionalitas utama terganggu">Sebagian fungsionalitas utama terganggu</option>
+                  <option value="Degradasi performa minor">Degradasi performa minor</option>
+                  <option value="Tidak berdampak langsung ke operasional bisnis">Tidak berdampak langsung</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Related Ticket (Jika ada)</label>
+                <input
+                  v-model="form.relatedTicket"
+                  type="text"
+                  placeholder="Contoh: TICK-20261004-0001"
+                  class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- STEP 02: Detail Insiden -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200 flex items-center space-x-3">
+            <span class="w-7 h-7 rounded-lg bg-blue-600 text-white font-mono font-bold text-xs flex items-center justify-center shadow-xs">
+              02
+            </span>
+            <div>
+              <h2 class="text-sm font-bold text-slate-900">Detail Insiden</h2>
+              <p class="text-[11px] text-slate-500">Jelaskan masalah secara detail dan lampirkan bukti pendukung.</p>
+            </div>
+          </div>
+
+          <div class="p-6 space-y-4 text-xs">
+            <!-- Ticket Title -->
+            <div>
+              <label class="block font-bold text-slate-700 mb-1">Judul Ringkasan Tiket *</label>
+              <input
+                v-model="form.title"
+                type="text"
+                required
+                placeholder="Contoh: Server Down / Service Unreachable"
+                class="w-full px-3 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 font-medium text-slate-800"
+              />
+            </div>
+
+            <!-- Description & Character Count -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <label class="font-bold text-slate-700">Deskripsi Teknis &amp; Gejala Gangguan *</label>
+                <span class="text-[10px] text-slate-400 font-mono">{{ form.description.length }}/2000</span>
+              </div>
+              <textarea
+                v-model="form.description"
+                rows="4"
+                required
+                maxlength="2000"
+                placeholder="Jelaskan pesan error yang muncul, log yang teramati, IP atau hostname perangkat, serta estimasi unit kerja yang terimbas..."
+                class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 text-xs leading-relaxed"
+              ></textarea>
             </div>
 
             <!-- Severity Cards (Clickable) -->
@@ -192,7 +333,7 @@
                   :class="form.severity === 'HIGH' ? 'border-rose-500 bg-rose-50/50 shadow-xs' : 'border-slate-200 bg-white hover:border-slate-300'"
                 >
                   <div class="flex items-center justify-between mb-1.5">
-                    <span class="font-bold text-rose-700">HIGH SEVERITY</span>
+                    <span class="font-bold text-rose-700">🔴 HIGH SEVERITY</span>
                     <span class="w-2.5 h-2.5 rounded-full bg-rose-500" :class="form.severity === 'HIGH' ? 'animate-ping' : ''"></span>
                   </div>
                   <p class="text-[11px] text-slate-600 leading-relaxed">Layanan inti mati total, transaksi utama nasabah berhenti.</p>
@@ -207,7 +348,7 @@
                   :class="form.severity === 'MEDIUM' ? 'border-amber-500 bg-amber-50/50 shadow-xs' : 'border-slate-200 bg-white hover:border-slate-300'"
                 >
                   <div class="flex items-center justify-between mb-1.5">
-                    <span class="font-bold text-amber-700">MEDIUM SEVERITY</span>
+                    <span class="font-bold text-amber-700">🟡 MEDIUM SEVERITY</span>
                     <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
                   </div>
                   <p class="text-[11px] text-slate-600 leading-relaxed">Kinerja terdegradasi / intermiten, redundansi masih aktif.</p>
@@ -222,7 +363,7 @@
                   :class="form.severity === 'LOW' ? 'border-sky-500 bg-sky-50/50 shadow-xs' : 'border-slate-200 bg-white hover:border-slate-300'"
                 >
                   <div class="flex items-center justify-between mb-1.5">
-                    <span class="font-bold text-sky-700">LOW SEVERITY</span>
+                    <span class="font-bold text-sky-700">🔵 LOW SEVERITY</span>
                     <span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span>
                   </div>
                   <p class="text-[11px] text-slate-600 leading-relaxed">Kendala minor, permohonan konfigurasi atau akun user.</p>
@@ -233,49 +374,9 @@
               </div>
             </div>
 
-          </div>
-        </div>
-
-        <!-- STEP 02: Detailed Incident Description & Artifacts -->
-        <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-          <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200 flex items-center space-x-3">
-            <span class="w-7 h-7 rounded-lg bg-blue-600 text-white font-mono font-bold text-xs flex items-center justify-center shadow-xs">
-              02
-            </span>
-            <div>
-              <h2 class="text-sm font-bold text-slate-900">Deskripsi Teknis Insiden & Berkas Diagnostik</h2>
-              <p class="text-[11px] text-slate-500">Paparkan kronologi, dampak terhadap operasional, dan lampiran bukti</p>
-            </div>
-          </div>
-
-          <div class="p-6 space-y-4 text-xs">
-            <!-- Ticket Title -->
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Judul Ringkasan Tiket *</label>
-              <input
-                v-model="form.title"
-                type="text"
-                required
-                placeholder="Contoh: Server Core Transaction BCA Cabang Thamrin Unreachable"
-                class="w-full px-3 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium text-slate-800"
-              />
-            </div>
-
-            <!-- Description & Diagnostic Narrative -->
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Deskripsi Teknis & Gejala Gangguan *</label>
-              <textarea
-                v-model="form.description"
-                rows="4"
-                required
-                placeholder="Jelaskan pesan error yang muncul, log yang teramati, IP atau hostname perangkat, serta estimasi unit kerja yang terimbas..."
-                class="w-full px-3.5 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-xs leading-relaxed"
-              ></textarea>
-            </div>
-
             <!-- Drag & Drop Upload Zone -->
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Lampiran Berkas Diagnostik & Tangkapan Layar</label>
+              <label class="block font-bold text-slate-700 mb-1">Lampiran Berkas Diagnostik &amp; Tangkapan Layar</label>
               <div 
                 class="border-2 border-dashed border-slate-200 rounded-xl p-5 text-center bg-slate-50/50 hover:bg-blue-50/30 hover:border-blue-300 transition-all cursor-pointer flex flex-col items-center justify-center"
                 @click="$refs.proofInput.click()"
@@ -296,7 +397,7 @@
                   Klik untuk unggah atau seret berkas ke area ini
                 </div>
                 <div class="text-[11px] text-slate-400 mt-0.5">
-                  Mendukung PNG, JPG, PDF, TXT, LOG, PCAP (Maksimal 25MB • Auto-Scanned Safe)
+                  Mendukung PNG, JPG, PDF, TXT, LOG, PCAP • Maksimal 25MB • Auto-Scanned Safe
                 </div>
               </div>
 
@@ -305,7 +406,7 @@
                 <div 
                   v-for="(f, idx) in uploadedFiles" 
                   :key="idx" 
-                  class="flex items-center justify-between p-2.5 rounded-lg border border-slate-200 bg-white shadow-2xs"
+                  class="flex items-center justify-between p-2.5 rounded-xl border border-slate-200 bg-white shadow-2xs"
                 >
                   <div class="flex items-center space-x-2">
                     <span class="p-1 rounded bg-emerald-100 text-emerald-700 font-bold text-[10px]">SCAN PASS</span>
@@ -324,18 +425,19 @@
                 </div>
               </div>
             </div>
+
           </div>
         </div>
 
-        <!-- STEP 03: Assignment & Technology Principal L3 -->
-        <div class="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+        <!-- STEP 03: Penugasan & Eskalasi -->
+        <div class="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
           <div class="bg-slate-50/80 px-6 py-4 border-b border-slate-200 flex items-center space-x-3">
             <span class="w-7 h-7 rounded-lg bg-blue-600 text-white font-mono font-bold text-xs flex items-center justify-center shadow-xs">
               03
             </span>
             <div>
-              <h2 class="text-sm font-bold text-slate-900">Penugasan Teknisi & Eskalasi Principal (L3 TAC)</h2>
-              <p class="text-[11px] text-slate-500">Tugaskan teknisi bertugas dan hubungkan tiket OEM bila membutuhkan eskalasi</p>
+              <h2 class="text-sm font-bold text-slate-900">Penugasan &amp; Eskalasi</h2>
+              <p class="text-[11px] text-slate-500">Tugaskan teknisi bertugas dan atur eskalasi jika diperlukan.</p>
             </div>
           </div>
 
@@ -343,7 +445,7 @@
             <!-- Engineer Assignee Selector -->
             <div>
               <label class="block font-bold text-slate-700 mb-1">Alokasi Penanganan Teknisi (Engineer On-Duty)</label>
-              <select v-model="form.assignedToId" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white text-xs">
+              <select v-model="form.assignedToId" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs">
                 <option value="">-- Biarkan Dalam Antrean Terbuka (Triage NOC) --</option>
                 <option 
                   v-for="eng in availableEngineers" 
@@ -358,18 +460,18 @@
               </p>
             </div>
 
-            <!-- Email Instant Notification Toggle (SMTP Relay) -->
-            <div class="flex items-center justify-between p-3 rounded-lg border border-slate-200 bg-slate-50/60">
+            <!-- Email Notification Toggle -->
+            <div class="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 bg-slate-50/60">
               <div class="flex items-center space-x-2.5">
                 <input 
                   id="emailSyncToggle"
                   v-model="form.isEmailSync"
                   type="checkbox" 
-                  class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                  class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
                 />
                 <div>
                   <label for="emailSyncToggle" class="font-bold text-slate-800 cursor-pointer">
-                    Kirim Notifikasi Email Alert Langsung ke Teknisi Bertugas (SMTP Relay)
+                    Kirim Notifikasi Email Alert ke Teknisi
                   </label>
                   <p class="text-[11px] text-slate-500">
                     Sistem akan mengirimkan dispatch payload email notifikasi resmi segera setelah tiket diterbitkan.
@@ -389,11 +491,11 @@
                     id="principalToggle"
                     v-model="isPrincipalEscalation"
                     type="checkbox" 
-                    class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+                    class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer"
                   />
                   <div>
                     <label for="principalToggle" class="font-bold text-slate-900 cursor-pointer flex items-center space-x-1.5">
-                      <span>Eskalasi ke Technology Principal / OEM Vendor (L3 TAC)</span>
+                      <span>Eskalasi ke Technology Principal / OEM Vendor</span>
                     </label>
                     <p class="text-[11px] text-slate-500">
                       Aktifkan bila insiden memerlukan dukungan langsung vendor (Cisco, Fortinet, Mikrotik, VMware, AWS).
@@ -405,15 +507,15 @@
                 </span>
               </div>
 
-              <!-- Principal Form Fields (Revealed when checked) -->
+              <!-- Principal Form Fields -->
               <div v-if="isPrincipalEscalation" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 animate-in fade-in duration-150">
                 <div>
                   <label class="block font-bold text-slate-700 mb-1">Vendor Principal *</label>
                   <select v-model="form.principalVendor" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white">
+                    <option value="VMware by Broadcom Enterprise">VMware by Broadcom Enterprise</option>
                     <option value="Cisco TAC Global">Cisco TAC Global</option>
                     <option value="Fortinet TAC Enterprise">Fortinet TAC Enterprise</option>
                     <option value="Mikrotik Certified Support">Mikrotik Certified Support</option>
-                    <option value="VMware by Broadcom Enterprise">VMware by Broadcom Enterprise</option>
                     <option value="AWS Premium Enterprise Support">AWS Premium Support</option>
                     <option value="Dell EMC Core Support">Dell EMC Core Support</option>
                   </select>
@@ -434,7 +536,7 @@
                   <input 
                     v-model="form.principalSpecialist"
                     type="text"
-                    placeholder="Contoh: Jonathan Reyes (Cisco L3 TAC)"
+                    placeholder="Contoh: Jonathan Reyes (L3 TAC)"
                     class="w-full px-3 py-2 border border-slate-200 rounded-lg"
                   />
                 </div>
@@ -445,19 +547,21 @@
             <div class="pt-4 border-t border-slate-200 flex items-center justify-between">
               <router-link 
                 to="/tickets" 
-                class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 font-medium"
+                class="px-5 py-2.5 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 font-semibold text-xs transition-colors"
               >
                 Batal
               </router-link>
 
               <button
                 type="submit"
-                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold shadow-md transition-all transform active:scale-95 flex items-center space-x-2"
+                :disabled="isSubmitting"
+                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center space-x-2"
               >
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                <span>Terbitkan & Jalankan SLA Tiket</span>
+                <span>{{ isSubmitting ? 'Menerbitkan...' : 'Terbitkan &amp; Jalankan SLA Tiket' }}</span>
               </button>
             </div>
 
@@ -465,11 +569,11 @@
         </div>
       </form>
 
-      <!-- Right 4 Columns: Operational Guidance & Smart Ingestion -->
+      <!-- Right 4 Columns: Operational SLA Governance & Knowledge Base Recommendation -->
       <div class="lg:col-span-4 space-y-6">
         
         <!-- SLA Realtime Governance Card -->
-        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-4">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center space-x-1.5">
               <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -481,7 +585,7 @@
           </div>
 
           <div class="space-y-3 text-xs">
-            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
               <div>
                 <span class="text-[10px] uppercase font-bold text-slate-500 block">Target First Touch</span>
                 <span class="font-bold text-slate-900 text-sm font-mono">+{{ targetFirstTouchHours }}</span>
@@ -491,7 +595,7 @@
               </span>
             </div>
 
-            <div class="flex items-center justify-between p-3 rounded-lg bg-slate-50 border border-slate-200">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
               <div>
                 <span class="text-[10px] uppercase font-bold text-slate-500 block">Target Resolusi Tuntas</span>
                 <span class="font-bold text-slate-900 text-sm font-mono">+{{ targetResolutionHours }}</span>
@@ -501,94 +605,152 @@
               </span>
             </div>
 
-            <div class="p-3 rounded-lg bg-amber-50/60 border border-amber-200 text-[11px] text-amber-900">
-              <strong>Ketentuan SLA:</strong> Penghitungan SLA berjalan secara presisi segera setelah tombol terbitkan ditekan. SLA dapat di-pause jika membutuhkan konfirmasi vendor/customer.
+            <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
+              <strong>Ketentuan SLA:</strong> Penghitungan SLA berjalan presisi segera setelah tiket diterbitkan. SLA dapat di-pause jika tiket berstatus *Waiting Customer* atau *Waiting Vendor*.
             </div>
           </div>
         </div>
 
-        <!-- Smart Ingestion Drawer / Extractor -->
-        <div class="bg-indigo-50/60 border border-indigo-200 rounded-xl p-5 shadow-xs space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-bold text-indigo-950 uppercase tracking-wider flex items-center space-x-1.5">
-              <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+        <!-- KNOWLEDGE BASE RECOMMENDATION CARD (Matching Image Specification) -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
               </svg>
-              <span>Smart Ingestion (Chat / Screenshot)</span>
-            </h3>
-            <span class="text-[10px] font-bold bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded">
-              OCR READY
+              <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                KNOWLEDGE BASE RECOMMENDATION
+              </h3>
+            </div>
+            <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full">
+              {{ recommendedKbs.length }} CASES FOUND
             </span>
           </div>
 
-          <p class="text-[11px] text-indigo-800 leading-relaxed">
-            Tempelkan pesan santai WhatsApp customer atau unggah tangkapan layar chat untuk diekstrak otomatis ke dalam draft formulir di samping.
+          <p class="text-[11px] text-slate-500 leading-relaxed">
+            Berdasarkan judul, kategori, dan deskripsi, ditemukan case yang mirip:
           </p>
 
           <div class="space-y-3">
-            <div>
-              <label class="block text-[11px] font-bold text-indigo-950 mb-1">Tempelkan Teks Chat WhatsApp:</label>
-              <textarea
-                v-model="rawChatInput"
-                rows="3"
-                placeholder="Contoh: halo mas server A cabang Thamrin tiba-tiba offline tidak bisa transaksi urgent tolong..."
-                class="w-full text-xs p-2.5 border border-indigo-200 rounded-lg bg-white focus:ring-2 focus:ring-indigo-500"
-              ></textarea>
-            </div>
-
-            <div>
-              <label class="block text-[11px] font-bold text-indigo-950 mb-1">Atau Pilih Screenshot Error:</label>
-              <div 
-                class="border border-indigo-200 rounded-lg p-2.5 bg-white text-center cursor-pointer hover:bg-indigo-50/50 transition-colors"
-                @click="$refs.screenshotInput.click()"
-              >
-                <input 
-                  ref="screenshotInput" 
-                  type="file" 
-                  accept="image/*" 
-                  class="hidden" 
-                  @change="handleScreenshotUpload" 
-                />
-                <span v-if="!uploadedScreenshotName" class="text-xs text-indigo-600 font-medium">
-                  Klik untuk pilih screenshot chat
-                </span>
-                <span v-else class="text-xs text-emerald-700 font-semibold truncate block">
-                  File: {{ uploadedScreenshotName }}
-                </span>
-              </div>
-            </div>
-
-            <button
-              type="button"
-              @click="simulateExtraction"
-              class="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-xs transition-colors flex items-center justify-center space-x-1.5"
+            <div 
+              v-for="kb in recommendedKbs" 
+              :key="kb.code"
+              class="p-3.5 rounded-xl border border-slate-200 hover:border-blue-300 hover:bg-blue-50/20 transition-all bg-slate-50/40 space-y-2"
             >
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-              </svg>
-              <span>Ekstrak ke Draf Formulir</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- Customer Support Direct Information -->
-        <div class="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3">
-          <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Customer Contact Direct</h4>
-          <div v-if="selectedCustomer" class="space-y-2 text-xs">
-            <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-100">
-              <span class="font-bold text-slate-800 block">{{ selectedCustomer.name }}</span>
-              <span class="text-[11px] text-slate-500 block">{{ selectedCustomer.address }}</span>
-            </div>
-            <div v-for="pic in availablePics" :key="pic.id" class="p-2 rounded-lg border border-slate-100 text-[11px] flex justify-between items-center">
-              <div>
-                <span class="font-bold text-slate-800">{{ pic.name }}</span>
-                <span class="text-slate-400 block">{{ pic.dept }}</span>
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <span class="font-bold text-slate-900 text-xs block leading-snug hover:text-blue-600 cursor-pointer" @click="viewKbDetail(kb)">
+                    {{ kb.code }}: {{ kb.title }}
+                  </span>
+                </div>
+                <span 
+                  class="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                  :class="kb.similarityScore >= 80 ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'"
+                >
+                  Similarity: {{ kb.similarityScore }}%
+                </span>
               </div>
-              <span class="font-mono text-slate-600">{{ pic.phone }}</span>
+
+              <p class="text-[11px] text-slate-600 leading-relaxed line-clamp-2">
+                {{ kb.excerpt }}
+              </p>
+
+              <div class="flex items-center justify-between pt-1">
+                <!-- Tags -->
+                <div class="flex flex-wrap gap-1">
+                  <span 
+                    v-for="tag in kb.tags" 
+                    :key="tag"
+                    class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded border border-slate-200 font-medium"
+                  >
+                    {{ tag }}
+                  </span>
+                </div>
+
+                <!-- Action Button -->
+                <button
+                  type="button"
+                  @click="viewKbDetail(kb)"
+                  class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-lg transition-colors shadow-2xs shrink-0"
+                >
+                  Lihat Detail
+                </button>
+              </div>
             </div>
+          </div>
+
+          <div class="pt-2 text-center border-t border-slate-100">
+            <router-link
+              to="/knowledge-base"
+              class="text-xs font-bold text-blue-600 hover:text-blue-800 inline-flex items-center space-x-1"
+            >
+              <span>Lihat Semua Hasil Pencarian di Knowledge Base</span>
+              <span>&rarr;</span>
+            </router-link>
           </div>
         </div>
 
+      </div>
+    </div>
+
+    <!-- Modal Detail Knowledge Base Recommendation -->
+    <div 
+      v-if="selectedKbDetail" 
+      class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+    >
+      <div class="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 max-h-[85vh] overflow-y-auto">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-mono font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200">
+              {{ selectedKbDetail.code }}
+            </span>
+            <span class="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+              Similarity {{ selectedKbDetail.similarityScore }}%
+            </span>
+          </div>
+          <button @click="selectedKbDetail = null" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <h3 class="text-sm font-bold text-slate-900">{{ selectedKbDetail.title }}</h3>
+          
+          <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+            <span class="font-bold text-slate-700 block text-[11px] uppercase tracking-wider">Gejala &amp; Ringkasan Kasus</span>
+            <p class="text-slate-600 leading-relaxed">{{ selectedKbDetail.excerpt }}</p>
+          </div>
+
+          <div class="p-3 bg-blue-50/50 border border-blue-200 rounded-xl space-y-1">
+            <span class="font-bold text-blue-900 block text-[11px] uppercase tracking-wider">Langkah Diagnostik Rekomendasi (SOP)</span>
+            <p class="text-blue-800 leading-relaxed font-mono whitespace-pre-line text-[11px]">{{ selectedKbDetail.solution }}</p>
+          </div>
+
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            <span 
+              v-for="t in selectedKbDetail.tags" 
+              :key="t"
+              class="text-[10px] bg-slate-100 text-slate-700 px-2 py-0.5 rounded border border-slate-200"
+            >
+              #{{ t }}
+            </span>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs">
+          <button
+            type="button"
+            @click="applyKbToDescription(selectedKbDetail)"
+            class="text-blue-600 hover:text-blue-800 font-bold"
+          >
+            + Sisipkan Solusi ke Deskripsi Tiket
+          </button>
+          <button
+            type="button"
+            @click="selectedKbDetail = null"
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl"
+          >
+            Tutup
+          </button>
+        </div>
       </div>
     </div>
 
@@ -628,7 +790,7 @@
               v-model="newCategoryForm.name"
               type="text"
               required
-              placeholder="Contoh: VoIP & SIP Trunk Telephony"
+              placeholder="Contoh: VoIP &amp; SIP Trunk Telephony"
               class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 text-xs"
               autofocus
             />
@@ -670,7 +832,7 @@
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path>
               </svg>
-              <span>Simpan & Pilih Kategori</span>
+              <span>Simpan &amp; Pilih Kategori</span>
             </button>
           </div>
         </form>
@@ -694,23 +856,38 @@
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import { useTicketStore } from '../stores/ticketStore';
+import { api } from '../services/api';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const ticketStore = useTicketStore();
 
-const rawChatInput = ref('');
-const uploadedScreenshotName = ref('');
-const formDraftSource = ref('');
 const showAddCategoryModal = ref(false);
 const categorySuccessToast = ref('');
 const previousCategoryId = ref(1);
 const isPrincipalEscalation = ref(false);
 const uploadedFiles = ref([]);
+const isSubmitting = ref(false);
+const selectedKbDetail = ref(null);
+
+const getTodayDate = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+const getNowTime = () => {
+  const d = new Date();
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  return `${hours}:${minutes}`;
+};
 
 const newCategoryForm = ref({
   name: '',
@@ -719,18 +896,24 @@ const newCategoryForm = ref({
 });
 
 const form = ref({
+  ticketType: 'Incident (Gangguan)',
   customerId: 1,
   customerPicId: 101,
   channel: 'WHATSAPP',
+  incidentDate: getTodayDate(),
+  incidentTime: getNowTime(),
   categoryId: 1,
-  severity: 'HIGH',
-  cluster: 'CKR-PROD-01',
-  title: '',
-  description: '',
+  affectedService: 'VMware Infrastructure',
+  cluster: 'PROD-CL01',
+  businessImpact: 'Seluruh layanan tidak dapat digunakan',
+  relatedTicket: '',
+  title: 'Server Down / Service Unreachable',
+  description: 'Server utama tidak merespon koneksi (RTO). Seluruh layanan transaksi pengguna terhenti total. VMware vCenter masih bisa diakses namun VM di cluster PROD-CL01 tidak dapat dihubungi. IP 10.10.10.25 tidak bisa ping.',
   rawMessage: '',
+  severity: 'HIGH',
   assignedToId: '',
   isEmailSync: true,
-  principalVendor: 'Cisco TAC Global',
+  principalVendor: 'VMware by Broadcom Enterprise',
   principalCaseId: '',
   principalSpecialist: ''
 });
@@ -743,6 +926,20 @@ const availablePics = computed(() => {
   return selectedCustomer.value ? selectedCustomer.value.pics : [];
 });
 
+const selectedPic = computed(() => {
+  if (!availablePics.value || availablePics.value.length === 0) return null;
+  return availablePics.value.find(p => p.id === Number(form.value.customerPicId)) || availablePics.value[0];
+});
+
+const cleanPhoneForWa = (phone) => {
+  if (!phone) return '';
+  let cleaned = phone.replace(/[^0-9]/g, '');
+  if (cleaned.startsWith('0')) {
+    cleaned = '62' + cleaned.slice(1);
+  }
+  return cleaned;
+};
+
 const selectedCategoryDesc = computed(() => {
   const cat = ticketStore.categories.find(c => c.id === Number(form.value.categoryId));
   return cat ? cat.desc : '';
@@ -752,8 +949,74 @@ const availableEngineers = computed(() => {
   return authStore.users.filter(u => u.roleCode === 'ENGINEER');
 });
 
+// Knowledge Base Recommendations matching exact cases from specification
+const defaultKbs = [
+  {
+    code: 'KB-00012',
+    title: 'Server Tidak Dapat Diakses (VMware)',
+    similarityScore: 92,
+    excerpt: 'Langkah-langkah pengecekan saat server VMware tidak dapat diakses atau status host disconnected dari vCenter Server cluster.',
+    solution: '1. Verifikasi connectivity vCenter ke ESXi host (ping IP management).\n2. Cek service hostd & vpxa via SSH: /etc/init.d/hostd status\n3. Restart hostd & vpxa jika service hang.\n4. Periksa datastore storage lock & SAN zoning status.',
+    tags: ['Server', 'VMware', 'Service Unreachable']
+  },
+  {
+    code: 'KB-00008',
+    title: 'Network Timeout ke Server',
+    similarityScore: 78,
+    excerpt: 'Troubleshooting koneksi jaringan, routing switch core, MTU mismatch, dan latency tinggi antar subnet VLAN produksi.',
+    solution: '1. Traceroute dari gateway klien ke server tujuan.\n2. Cek port-channel flapping pada switch Cisco/Nexus core.\n3. Verifikasi status firewall rule & NAT address table.',
+    tags: ['Network', 'Connectivity', 'Timeout']
+  },
+  {
+    code: 'KB-00005',
+    title: 'VM Tidak Merespon di Cluster',
+    similarityScore: 65,
+    excerpt: 'Panduan pengecekan status VM pada cluster vCenter saat freeze, high CPU lock, atau storage I/O latency spike.',
+    solution: '1. Buka VMware web console untuk mengecek kernel panic atau BSOD.\n2. Lakukan soft reset VM via vCenter action.\n3. Jika host tidak merespon, trigger vSphere HA failover ke host sehat.',
+    tags: ['VMware', 'Cluster', 'vCenter']
+  }
+];
+
+const recommendedKbs = computed(() => {
+  // If title or description mentions network, show network first
+  const query = (form.value.title + ' ' + form.value.description).toLowerCase();
+  if (query.includes('network') || query.includes('timeout') || query.includes('ping') || query.includes('cisco')) {
+    return [
+      defaultKbs[1], // KB-00008
+      defaultKbs[0], // KB-00012
+      defaultKbs[2]  // KB-00005
+    ];
+  }
+  return defaultKbs;
+});
+
+const viewKbDetail = (kb) => {
+  selectedKbDetail.value = kb;
+};
+
+const applyKbToDescription = (kb) => {
+  if (kb && kb.solution) {
+    form.value.description += `\n\n[Referensi Solusi ${kb.code}]:\n${kb.solution}`;
+  }
+  selectedKbDetail.value = null;
+};
+
+const formatHoursToHms = (hours) => {
+  const totalSecs = Math.round(Number(hours || 0) * 3600);
+  const h = Math.floor(totalSecs / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+};
+
 const targetFirstTouchHours = computed(() => {
   const contract = (selectedCustomer.value?.contractSla || '').toUpperCase();
+  const matched = (ticketStore.slaPolicies || []).find(p => p.tierCode === selectedCustomer.value?.contractSla || contract.includes(p.tierCode));
+  if (matched) {
+    if (form.value.severity === 'HIGH') return formatHoursToHms(matched.p1ResponseHours);
+    if (form.value.severity === 'LOW') return formatHoursToHms(matched.p3ResponseHours || matched.p4ResponseHours || 4);
+    return formatHoursToHms(matched.p2ResponseHours);
+  }
   if (contract.includes('PLATINUM')) {
     if (form.value.severity === 'HIGH') return '00:30:00';
     if (form.value.severity === 'MEDIUM') return '01:00:00';
@@ -772,6 +1035,12 @@ const targetFirstTouchHours = computed(() => {
 
 const targetResolutionHours = computed(() => {
   const contract = (selectedCustomer.value?.contractSla || '').toUpperCase();
+  const matched = (ticketStore.slaPolicies || []).find(p => p.tierCode === selectedCustomer.value?.contractSla || contract.includes(p.tierCode));
+  if (matched) {
+    if (form.value.severity === 'HIGH') return formatHoursToHms(matched.p1ResolutionHours);
+    if (form.value.severity === 'LOW') return formatHoursToHms(matched.p3ResolutionHours || matched.p4ResolutionHours || 24);
+    return formatHoursToHms(matched.p2ResolutionHours);
+  }
   if (contract.includes('PLATINUM')) {
     if (form.value.severity === 'HIGH') return '04:00:00';
     if (form.value.severity === 'MEDIUM') return '06:00:00';
@@ -801,14 +1070,6 @@ const handleCustomerChange = () => {
   }
 };
 
-const applyPreset = (preset) => {
-  form.value.categoryId = preset.categoryId;
-  form.value.severity = preset.severity;
-  form.value.title = preset.title;
-  form.value.description = preset.description;
-  formDraftSource.value = `Template: ${preset.title}`;
-};
-
 const handleFileUpload = (e) => {
   const file = e.target.files[0];
   if (file) {
@@ -822,40 +1083,6 @@ const handleFileUpload = (e) => {
 
 const removeFile = (index) => {
   uploadedFiles.value.splice(index, 1);
-};
-
-const handleScreenshotUpload = (e) => {
-  const file = e.target.files[0];
-  if (file) {
-    uploadedScreenshotName.value = file.name;
-    uploadedFiles.value.push({
-      id: 'shot-' + Date.now(),
-      name: file.name,
-      size: (file.size / 1024).toFixed(1) + ' KB'
-    });
-  }
-};
-
-const simulateExtraction = () => {
-  const text = rawChatInput.value || 'Pesan dari screenshot error: Server database transaksi down RTO';
-  
-  form.value.rawMessage = text;
-  form.value.title = 'Server Database & Core Service Unreachable';
-  form.value.categoryId = 1;
-  form.value.severity = 'HIGH';
-  form.value.description = `[Hasil Ekstraksi Pesan Kasual WhatsApp]: Terdeteksi kendala server unreachable atau offline.\nPesan Asli: "${text}"`;
-  formDraftSource.value = 'Ekstraksi Pintar WhatsApp OCR';
-
-  if (text.toLowerCase().includes('bca')) {
-    form.value.customerId = 1;
-    handleCustomerChange();
-  } else if (text.toLowerCase().includes('siloam')) {
-    form.value.customerId = 3;
-    handleCustomerChange();
-  } else if (text.toLowerCase().includes('banten') || text.toLowerCase().includes('diskominfo')) {
-    form.value.customerId = 2;
-    handleCustomerChange();
-  }
 };
 
 const openAddCategoryModal = () => {
@@ -901,27 +1128,47 @@ const handleSaveNewCategory = () => {
   }, 4000);
 };
 
-const handleSubmitTicket = () => {
-  const payload = {
-    ...form.value,
-    contractSla: selectedCustomer.value?.contractSla || 'SLA-GOLD-2026',
-    contractTier: selectedCustomer.value?.slaTier || '24x7 GOLD ENTERPRISE',
-    environment: selectedCustomer.value?.environment || 'PROD-DC-01',
-    principalVendor: isPrincipalEscalation.value ? form.value.principalVendor : null,
-    principalCaseId: isPrincipalEscalation.value ? form.value.principalCaseId : null,
-    principalSpecialist: isPrincipalEscalation.value ? form.value.principalSpecialist : null,
-    attachments: uploadedFiles.value.map(f => ({
-      id: f.id,
-      name: f.name,
-      originalName: f.name,
-      fileType: 'image/svg+xml',
-      size: f.size,
-      uploadedBy: authStore.currentUser?.name || 'CPIG Operator',
-      uploadedAt: new Date().toISOString()
-    }))
-  };
+const handleSubmitTicket = async () => {
+  isSubmitting.value = true;
+  try {
+    const payload = {
+      ...form.value,
+      contractSla: selectedCustomer.value?.contractSla || 'SLA-GOLD-2026',
+      contractTier: selectedCustomer.value?.slaTier || '24x7 GOLD ENTERPRISE',
+      environment: selectedCustomer.value?.environment || 'PROD-DC-01',
+      impactScope: form.value.businessImpact,
+      principalVendor: isPrincipalEscalation.value ? form.value.principalVendor : null,
+      principalCaseId: isPrincipalEscalation.value ? form.value.principalCaseId : null,
+      principalSpecialist: isPrincipalEscalation.value ? form.value.principalSpecialist : null,
+      attachments: uploadedFiles.value.map(f => ({
+        id: f.id,
+        name: f.name,
+        originalName: f.name,
+        fileType: 'image/svg+xml',
+        size: f.size,
+        uploadedBy: authStore.currentUser?.name || 'CPIG Operator',
+        uploadedAt: new Date().toISOString()
+      }))
+    };
 
-  const newTicket = ticketStore.createTicket(payload, authStore.currentUser);
-  router.push(`/tickets/${newTicket.id}`);
+    let apiTicket = null;
+    try {
+      const res = await api.createTicket(payload);
+      if (res && res.data) {
+        apiTicket = res.data;
+      }
+    } catch (err) {
+      console.warn('[CreateTicket] Gagal sync ke API backend, fallback store lokal:', err.message);
+    }
+
+    const newTicket = ticketStore.createTicket(payload, authStore.currentUser);
+    if (apiTicket && apiTicket.id) {
+      newTicket.id = apiTicket.id;
+      newTicket.ticketNumber = apiTicket.ticketNumber;
+    }
+    router.push(`/tickets/${newTicket.id}`);
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 </script>

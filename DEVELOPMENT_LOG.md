@@ -301,3 +301,348 @@ Dokumen ini mencatat seluruh aktivitas, keputusan arsitektur, dan riwayat pembar
      - Menyusun dokumen analisis komprehensif: [FIGMA_ANALYSIS_AND_COMPARISON.md](file:///d:/Unpam/Semester%206/KP/Ticketing-helpdesk/docs/figma-analysis/FIGMA_ANALYSIS_AND_COMPARISON.md).
      - Merumuskan rekomendasi roadmap implementasi bertahap (Fase 1 s.d. 3) serta memastikan fitur-fitur unggulan sistem saat ini (Portal Tracking Publik Pelanggan anti-IDOR, Jejak Audit Keamanan, Smart Ingestion) tetap dipertahankan.
 
+---
+
+### [2026-09-30] - Tahap 2.0: Review MoM Evaluasi Lapangan PT Glotra & Kesepakatan Arsitektur Backend (Express + Prisma + MySQL)
+* **Latar Belakang & Hasil Minutes of Meeting (MoM)**:
+  - Dilakukan sesi review komprehensif alur (*flow*), fitur, dashboard, SLA, dan kesiapan deployment sistem Helpdesk Ticketing bersama pihak PT Glotra.
+  - Dokumen MoM resmi tersusun pada [MOM_Review_Project_KP.md](file:///d:/Unpam/Semester%206/KP/Ticketing-helpdesk/docs/MOM_Review_Project_KP.md).
+  - **Poin-poin Perubahan Kunci**:
+    1. **Alur Eskalasi Diperluas**: Menyertakan entitas penanganan eskalasi ke **Project Manager (PM)**, **Mitra Rekanan (Partner)**, dan **Vendor Principal L3 TAC**.
+    2. **Penyederhanaan Role Support Engineer**: Tampilan khusus teknisi difokuskan pada: *Tiket Saya*, *Customer yang Ditangani*, *Progress Troubleshooting*, dan *Knowledge Base*.
+    3. **Fitur Countdown SLA Realtime**: Hitung mundur aktif dengan penanda *Near Breach Warning* (< 1 jam) dan *Breached Alert*.
+    4. **Standarisasi Alasan SLA Hold/Freeze**: Pembekuan waktu resolusi resmi untuk kasus *Suku Cadang Inden (Part Indent)*, *Menunggu Konfirmasi Customer*, dan *Dependensi Vendor/Partner*, dengan perpanjangan deadline otomatis saat di-*resume*.
+    5. **Redesain Dashboard Executive Summary**: Menyederhanakan tampilan beranda menjadi ringkasan KPI eksekutif (Total, Open, In Progress, Waiting/Hold, Solved, SLA Compliance) dan memindahkan grafik kompleks ke menu Laporan.
+    6. **Penyempurnaan Audit Log**: Menambahkan pencatatan riwayat login pengguna dan modifikasi konfigurasi kebijakan SLA.
+    7. **Knowledge Base Runbook PDF**: Dukungan unggah dan unduh berkas lampiran PDF SOP/Runbook penanganan kendala.
+* **Keputusan Arsitektur Backend & Database**:
+  - Backend dibangun menggunakan **Express.js** dengan **Prisma ORM** yang terhubung ke **MySQL 8.4 (via Laragon)**.
+  - Penyimpanan berkas lampiran tiket dan berkas PDF Knowledge Base dikonfigurasi fleksibel menggunakan **Environment Variable (`.env`)** (`UPLOAD_DIR`, `MAX_FILE_SIZE_MB`, `ALLOWED_MIME_TYPES`) dengan proteksi Multer (UUID hashing, filter MIME type, dan folder masuk `.gitignore`) agar aman secara lokal dan siap dideploy ke server VPS/Cloud Glotra di masa mendatang.
+* **Pembaruan Dokumen Acuan**:
+  - [docs/arsitektur-dan-logical-flow.md](file:///d:/Unpam/Semester%206/KP/Ticketing-helpdesk/docs/arsitektur-dan-logical-flow.md) diperbarui secara penuh mencakup diagram sequence eskalasi Vendor/Partner/PM, matriks RBAC baru, dan tata kelola konfigurasi penyimpanan berkas via `.env`.
+
+---
+
+### [2026-09-30] - Tahap 2.1: Implementasi Penuh Backend (Express ES Module + Prisma + MySQL) & Refaktorisasi Frontend (Vue 3 Composition API + shadcn Style)
+* **Teknologi & Standar Pemrograman**:
+  - **Backend**: Express.js dikonfigurasi murni berbasis **ES Module (`"type": "module"`)** dengan sintaks `import`/`export` di seluruh controller, routes, middleware, dan lib Prisma.
+  - **Frontend**: Seluruh komponen dan views mengadopsi standar **Vue 3 Composition API** (`<script setup>`, `ref`, `computed`, `onMounted`), tanpa Options API.
+  - **Desain UI**: Menerapkan gaya komponen **shadcn/ui** dengan palet korporat **Clean Blue & Slate** (`border-slate-200`, `rounded-xl`, badge status terdefinisi, minimalis functional icons). Seluruh elemen gradasi gelap bernuansa AI telah dibersihkan dan digantikan dengan kartu panel korporat profesional.
+* **Fitur Utama yang Selesai Diimplementasikan**:
+  1. **Database Relasional & Prisma 6 LTS**:
+     - Database `db_helpdesk_glotra` terpasang di MySQL 8.4 (Laragon) dengan relasi lengkap: Role, User, Customer, CustomerPic, Category, SlaPolicy, Ticket, SlaHoldLog, TicketMilestone, Attachment, KnowledgeBase, dan AuditLog.
+     - Database seed script berhasil memasukkan master data realistis dan sample tickets ITSM enterprise.
+  2. **REST API RESTful Terpadu (`backend/src/`)**:
+     - Endpoints: Auth (`/api/auth`), Tiket & Workflow (`/api/tickets`), Kebijakan SLA (`/api/sla`), Customer & PIC (`/api/customers`), Knowledge Base & Runbooks (`/api/kb`), dan Jejak Audit (`/api/audit-logs`).
+     - Tata kelola berkas Multer aman terkonfigurasi dinamis via `.env` (`UPLOAD_DIR`).
+  3. **Penyederhanaan Navigasi Support Engineer**:
+     - Menu khusus role Engineer disederhanakan menjadi: **Tiket Saya**, **Progres Operasional**, dan **Knowledge Base (SOP)**.
+  4. **Standarisasi 3 Preset Alasan Hold/Pause SLA**:
+     - Ditambahkan modal Hold SLA dengan 3 preset sesuai MoM: *Part Indent* (suku cadang/hardware), *Menunggu Customer* (konfirmasi/akses remote), dan *Dependensi Vendor/Partner/PM*.
+  5. **Alur Eskalasi Multi-Tier**:
+     - Ditambahkan modal Eskalasi Tiket yang mendukung transfer/eskalasi ke **Project Manager (PM)**, **Mitra Partner**, **Vendor Principal TAC (L3 OEM)**, dan **Internal Lead L2**.
+  6. **Knowledge Base dengan Unggah & Unduh PDF Runbook**:
+     - Formulir pengajuan SOP kini mendukung unggah berkas PDF asli, dan modal detail artikel menyediakan tombol unduh langsung (*Download PDF Runbook*) dari backend endpoint.
+  7. **Sinkronisasi Data Otomatis**:
+     - Pinia store (`ticketStore.js`) dilengkapi sinkronisasi awal `fetchInitialDataFromApi()` saat aplikasi dimuat (`App.vue`), dengan mekanisme *graceful fallback* ke penyimpanan lokal jika server offline.
+  8. **Registrasi Tiket & Sinkronisasi Jejak Audit**:
+     - `CreateTicketView.vue` terhubung langsung untuk merekam tiket ke endpoint `POST /api/tickets` MySQL.
+     - `AuditLogView.vue` memuat jejak audit realtime dari `GET /api/audit-logs`.
+  9. **Verifikasi Lingkungan Berjalan Aktif**:
+     - Backend daemon berjalan pada port 5000 (`http://localhost:5000/api/health`).
+     - Frontend Vite berjalan pada port 5173 (`http://localhost:5173/`).
+     - Build production Vite `npm run build` tervalidasi sukses (exit code 0).
+
+---
+
+### [2026-09-30] - Tahap 2.2: Pembersihan Jargon Teknis Backend & Eliminasi Tombol Redundan pada Dashboard
+* **Penyesuaian UI & Layout Kepadatan (High Density)**:
+  1. **Pembersihan Teks/Jargon Teknis**:
+     - Menghapus label teknis implementasi internal seperti `(Laragon MySQL)` dan tag berlebih dari tampilan antarmuka pengguna (`DashboardView.vue`). Digantikan dengan status operasional bersih dan elegan: `Sistem Operasional Aktif`.
+  2. **Eliminasi Tombol Redundan**:
+     - Menghapus tombol-tombol duplikat pada header ringkasan eksekutif (`Buka Antrean Tiket`, `+ Buat Tiket`, dan `Laporan Lengkap →`) karena aksi tersebut sudah terpusat dan tersedia secara permanen di Sidebar (termasuk tombol utama `+ Buat Tiket Baru` dan navigasi menu).
+     - Menghapus callout banner di bagian bawah dashboard (`Butuh Analitik Historis & Grafik Kinerja MTTR? Buka Modul Laporan`) untuk mengeliminasi ruang vertikal yang tidak perlu.
+  3. **Hasil Layout**:
+     - Tampilan Dashboard kini menjadi padat (*compact & high-density*), langsung memfokuskan pandangan pengguna pada 6 KPI metrik utama dan panel ganda: Antrean Insiden Berdampak Tinggi (kiri) bersanding sejajar dengan Hitung Mundur SLA Watch Real-Time (kanan) tanpa terdorong oleh elemen duplikat.
+
+---
+
+### [2026-09-30] - Tahap 2.3: Koreksi Nama Entitas (PT Glotra) & Audit Menyeluruh Elemen Redundan di Seluruh Halaman
+* **Koreksi Resmi Nama Entitas Perusahaan**:
+  - Memperbaiki seluruh penyebutan nama perusahaan menjadi **PT Glotra** (bukan *Glotrak*) di seluruh modul:
+    - Frontend API service: `frontend/src/services/api.js`
+    - Backend Server & Health Check: `backend/src/server.js`, `backend/package.json`, `backend/.env`
+    - Prisma ORM & Seeding: `backend/prisma/schema.prisma`, `backend/prisma/seed.js`
+    - Dokumen Spesifikasi & Panduan: `docs/arsitektur-dan-logical-flow.md`, `docs/MOM_Review_Project_KP.md`, `TASK_LIST_IMPLEMENTASI.md`, `docs/TASK_LIST_IMPLEMENTASI.md`
+* **Audit & Eliminasi Elemen Redundan di Seluruh Halaman**:
+  1. **Halaman Antrean Tiket (`TicketListView.vue`)**:
+     - Menghapus tombol redundant `+ Buat Tiket Baru` dari header karena tombol utama sudah ada permanen di Sidebar.
+     - Menghapus telemetry berbau teknis `SLA Engine Active` dan menggantikannya dengan badge status standar `Sistem Operasional Aktif`.
+  2. **Halaman Knowledge Base (`KnowledgeBaseView.vue`)**:
+     - Mengganti teks `Systems Normal • SLA Engine Active` menjadi badge standar `Sistem Operasional Aktif`.
+  3. **Halaman Dashboard (`DashboardView.vue`)**:
+     - Telah dipadatkan tanpa tombol redundant atau banner callout yang membuang ruang vertikal.
+
+---
+
+### [2026-09-30] - Tahap 2.4: Eliminasi Badge Non-Notifikasi pada Sidebar Navigasi
+* **Pembersihan Badge Sidebar (`Sidebar.vue`)**:
+  - Menghapus seluruh badge dekoratif/informasional statis pada item menu:
+    - Menghapus badge `Live` pada menu *Ringkasan Eksekutif* dan *Progres Operasional*.
+    - Menghapus badge `Admin` pada menu *Kelola Staf & Teknisi* dan *Customer & PIC*.
+    - Menghapus badge `Policy` pada menu *Konfigurasi Kebijakan SLA*.
+    - Menghapus badge `PDF/XLS` pada menu *Laporan & Analitik*.
+    - Menghapus badge `Live` pada menu *Jejak Audit Sistem*.
+  - **Hanya Mempertahankan Badge Notifikasi Hitungan Angka (*Count Badges*)**:
+    - Badge jumlah tiket aktif (`totalTickets`, misal `8`) pada *Antrean Tiket Global* dan *Tiket Saya*.
+    - Badge jumlah artikel SOP (`knowledgeBase.length`, misal `5`) pada *Knowledge Base & SOP*.
+  - Hasil tampilan Sidebar kini jauh lebih bersih, rapi, dan berstandar enterprise *shadcn/ui*.
+
+---
+
+### [2026-09-30] - Tahap 2.5: Migrasi Nama Basis Data MySQL ke db_helpdesk_glotra
+* **Pembaruan Basis Data MySQL**:
+  - Membuat basis data baru bernama **`db_helpdesk_glotra`** di MySQL 8.4 (Laragon).
+  - Melakukan migrasi dan kloning skema relasi beserta seluruh data operasional (Users, Customers, SLA Policies, Tickets, Milestones, Attachments, KB, Audit Logs) ke `db_helpdesk_glotra`.
+  - Menghapus database lama `db_helpdesk_glotrak` dari MySQL server.
+  - Memperbarui `DATABASE_URL` di `backend/.env` menjadi `mysql://root:@localhost:3306/db_helpdesk_glotra`.
+  - Me-restart backend daemon Express.js dan memvalidasi koneksi endpoint REST API aktif terhubung ke database `db_helpdesk_glotra`.
+
+---
+
+### [2026-10-01] - Tahap 2.6: Perapihan Layout & Spacing Tabel Data Customer & PIC
+* **Refaktorisasi Tabel Data (`CustomersManagementView.vue`)**:
+  - **Penyebab Masalah**: Sebelumnya tabel tidak memiliki batas lebar minimum (`min-w`), sehingga 8 kolom data terpaksa berdesakan pada layar standar, menyebabkan pembungkusan kata (*word-wrap*) ekstrem di mana teks terpotong menjadi 4–5 baris bertumpuk vertikal.
+  - **Solusi yang Diterapkan**:
+    1. Menambahkan batas lebar minimum `min-w-[1150px]` pada kontainer tabel responsif sehingga setiap kolom memiliki ruang horizontal yang proporsional.
+    2. Menetapkan lebar minimum per kolom:
+       - *Client Entity & Code*: `min-w-[220px]` (Nama mitra, badge kode instansi, dan alamat ringkas).
+       - *Industry Sector*: `min-w-[140px]`.
+       - *Contract Tier & SLA*: `min-w-[170px]` (Badge kontrak dan rincian respon/resolusi rapi dengan `whitespace-nowrap`).
+       - *Production Cluster*: `min-w-[160px]`.
+       - *Primary Contacts (PICs)*: `min-w-[180px]` (Nama PIC, nomor telepon, divisi, dan tautan modal).
+       - *Active Tickets*: `min-w-[95px]` (Badge count terpusat).
+       - *Account Status*: `min-w-[100px]` (Badge pill status aktif).
+       - *Actions*: `min-w-[110px]` (Tombol aksi *Edit* dan *Tiket* bergaya shadcn).
+    3. Mengubah penyelarasan vertikal seluruh baris menjadi `align-top` dengan `leading-snug` agar teks tidak saling tumpang tindih dan tampak lapang serta terstruktur.
+    4. Menerapkan pengamanan `min-w` serupa pada tabel staf (`UsersManagementView.vue`) dan tabel jejak audit (`AuditLogView.vue`).
+
+---
+
+### [2026-10-01] - Tahap 2.7: Normalisasi Lebar Penuh (Full-Width) Halaman Customer & PIC, Konfigurasi SLA, dan Laporan
+* **Penyelarasan Layout Kontainer Induk**:
+  - **Penyebab Masalah**: Halaman *Customer & PIC* (`CustomersManagementView.vue`), *Konfigurasi Kebijakan SLA* (`SlaConfigView.vue`), *Laporan & Analitik* (`ReportsView.vue`), dan *Pusat Registrasi Tiket* (`CreateTicketView.vue`) sebelumnya menggunakan pembatas lebar `max-w-7xl mx-auto pb-12`, sehingga pada layar desktop lebar tampak menyempit (*boxed*) di tengah dengan ruang kosong lebar di kiri-kanan, tidak serasi dengan halaman *Dashboard*, *Antrean Tiket*, *Knowledge Base*, dan *Jejak Audit* yang memenuhi lebar layar (*full-width*).
+  - **Solusi yang Diterapkan**:
+    - Menghapus batasan `max-w-7xl mx-auto pb-12` pada elemen root pembungkus di seluruh view terkait dan menyelaraskannya menjadi standar `<div class="space-y-6">`.
+    - Seluruh halaman kini memanfaatkan 100% lebar kontainer utama `<main>` secara konsisten, memberikan ruang optimal bagi visualisasi data dan tabel enterprise.
+
+---
+
+### [2026-10-01] - Tahap 2.8: Eliminasi Kartu Bar Ringkasan SLA Dashboard & Teks Kerja Praktik Sidebar
+* **Pembersihan Kartu Bar Ringkasan SLA (`DashboardView.vue`)**:
+  - Menghapus kartu *Ringkasan Kepatuhan Kontrak SLA* (beserta bar progres *Response SLA* dan *Resolution SLA*) pada kolom kanan Dashboard.
+  - Alasan: Informasi SLA compliance sudah terwakili secara resmi pada salah satu dari 6 kartu KPI utama di bagian atas (`SLA Compliance %`), sehingga kartu bar di bawah bersifat duplikat.
+  - Dampak: Kolom kanan kini sepenuhnya difokuskan pada kartu real-time *SLA Watch Ticker*, sejajar rapi dengan tabel insiden berdampak tinggi di kolom kiri.
+* **Pembersihan Teks Kerja Praktik (`Sidebar.vue`)**:
+  - Menghapus teks akademik `Kerja Praktik Sistem Helpdesk 2026` dari footer bawah sidebar, hanya menyisakan identitas resmi `PT Global Transformasi Teknologi`.
+
+### [2026-10-01] - Tahap 2.9: Penyeimbangan Antrean Tiket Dashboard Sejajar Rata dengan Pantauan SLA
+* **Penyelarasan Tata Letak Dashboard Dual-Panel (`DashboardView.vue`)**:
+  - **Latar Belakang**: Sebelumnya tabel *Antrean Insiden Berdampak Tinggi* di kolom kiri hanya menampilkan maksimal 5 tiket (`.slice(0, 5)`), menyebabkan tinggi fisik kartu tabel jauh lebih pendek (~330px) dibandingkan kartu *Pantauan Waktu SLA Aktif (SLA Watch)* di kolom kanan (~500px), sehingga menyisakan ruang kosong vertikal yang tidak seimbang.
+  - **Solusi yang Diterapkan**:
+    1. Memperbanyak kuota antrean tiket yang ditampilkan di tabel menjadi maksimal **8 tiket** (mengutamakan tiket aktif, dan memadukan dengan tiket terbaru jika tiket aktif kurang dari 8).
+    2. Menyelaraskan struktur grid pembungkus menggunakan `items-stretch` dengan anak kontainer `flex-1 flex flex-col h-full`.
+    3. Menambahkan pengamanan `whitespace-nowrap` pada kolom-kolom pendek tabel (*No. Tiket*, *Mitra Pelanggan*, *Status*, *Aksi*) untuk menjaga kerapian saat tabel merentang penuh.
+  - **Hasil**: Ketinggian visual kartu antrean tiket kiri dan kartu pemantauan SLA kanan kini sejajar rata (*flush & balanced*), menciptakan visualisasi eksekutif yang padat, proporsional, dan elegan.
+
+### [2026-10-01] - Tahap 2.10: Dinamisasi Master Principal, Eskalasi Vendor, dan Metrik Knowledge Base
+* **Dinamisasi Daftar Principal & Eskalasi Vendor**:
+  1. *Penyimpanan Terpusat di Store (`ticketStore.js`)*:
+     - Menambahkan state `principals` yang persisten ke localStorage dengan daftar vendor enterprise awal (HPE, Cisco, VMware/Broadcom, Rubrik, Brocade, Fortinet, Oracle, MikroTik).
+     - Menambahkan getter `allPrincipals` yang menggabungkan seluruh nama principal dari store, artikel knowledge base, dan data tiket aktif secara otomatis (`unique Set`).
+     - Menambahkan action `addPrincipal(name)` sehingga jika teknisi memasukkan vendor baru saat eskalasi atau penulisan runbook, vendor tersebut otomatis terdaftar ke dalam katalog sistem.
+  2. *Dinamisasi Kartu Eskalasi Detail Tiket (`TicketDetailView.vue`)*:
+     - Menghilangkan *fallback* teks dummy statis (seperti contoh HPE `HPE-2026-004821` dan teknisi `Marcus Vance`).
+     - Jika tiket belum pernah dieskalasi, status kini secara jujur menampilkan `PENANGANAN INTERNAL` lengkap dengan tombol cepat `+ Eskalasi ke Principal / PM`.
+     - Jika tiket telah dieskalasi, kartu menampilkan data real: nama vendor principal, case ID, spesialis penanggung jawab, dan catatan teknis terkini.
+     - Modal eskalasi dilengkapi dengan input pemilihan principal vendor dinamis berbasis `<datalist>`.
+  3. *Dinamisasi Halaman Knowledge Base (`KnowledgeBaseView.vue`)*:
+     - Dropdown filter *All Principals* kini diekstrak secara dinamis dari `availablePrincipals`.
+     - Penghitung pada 3 kartu playbook unggulan (*Storage & SAN*, *VMware*, *Backup & DR*) dan tab kategori teknologi kini dihitung secara dinamis dari artikel runbook yang sebenarnya (`computed`).
+     - Metrik *Incident Reusability Rate* kini dihitung secara dinamis dari rasio tiket terselesaikan yang memanfaatkan playbook referensi.
+     - Modal tambah runbook baru dilengkapi saran vendor dinamis melalui `<datalist>`.
+
+### [2026-10-01] - Tahap 2.11: Arsitektur Master Data Terpusat di Database MySQL (`db_helpdesk_glotra`)
+* **Eliminasi Ketergantungan Data Lokal / LocalStorage**:
+  - Seluruh data yang berpotensi menjadi acuan master kini resmi dipindahkan dan dikelola pada database MySQL (`db_helpdesk_glotra`) melalui Prisma ORM, bukan sekadar di-cache lokal.
+* **Tabel Master Baru yang Diimplementasikan**:
+  1. `principals`: Tabel master untuk vendor principal OEM dan mitra L3 (HPE, Cisco, VMware, Rubrik, Brocade, Fortinet, Oracle, MikroTik). Dilengkapi endpoint `GET /api/principals` dan `POST /api/principals`.
+  2. `quick_presets`: Tabel master untuk templat tiket cepat insiden (Server Down, Jaringan Lambat, Akses VPN, Database CPU Timeout). Dilengkapi relasi ke `categories` dan endpoint `GET /api/presets`.
+  3. `sla_hold_reasons`: Tabel master untuk klausul dan preset alasan penahanan SLA resmi (Part Indent RMA, Akses Customer, Dependensi Vendor, Maintenance Window) dengan endpoint `GET /api/hold-reasons`.
+  4. `categories`: Mengaktifkan endpoint REST penuh `GET /api/categories` dan `POST /api/categories` sehingga penambahan kategori baru langsung tersimpan persisten ke tabel `categories` MySQL.
+* **Sinkronisasi Frontend & REST API (`ticketStore.js` & `api.js`)**:
+  - `fetchInitialDataFromApi()` kini secara paralel memuat seluruh master data (`categories`, `principals`, `quickPresets`, `holdReasons`) dari backend database saat inisialisasi aplikasi.
+  - Action `addCategory` dan `addPrincipal` otomatis melakukan panggilan API POST ke database server, menjamin integritas data antar sesi dan antar pengguna.
+
+### [2026-10-01] - Tahap 2.12: Normalisasi Lebar Penuh (Full-Width) Preview Dokumen Laporan Eksekutif
+* **Pembersihan Batasan Lebar pada Preview Laporan (`ReportsView.vue`)**:
+  - **Penyebab Masalah**: Elemen preview lembar kerja dokumen cetak laporan eksekutif (`#printable-report`) sebelumnya masih memiliki atribut pembatas lebar `max-w-6xl mx-auto`, sehingga pada layar monitor desktop lebar dokumen terlihat terkotak di tengah dengan sisa ruang putih lebar di sisi kiri dan kanan.
+  - **Solusi yang Diterapkan**: Menghapus `max-w-6xl mx-auto` dan menggantinya dengan `w-full` agar kontainer dokumen memanfaatkan 100% lebar area kerja utama (`<main>`), sejajar serasi dengan kartu filter periode dan bilah tajuk di atasnya.
+
+### [2026-10-01] - Tahap 2.13: Penghapusan Tampilan Jam Server pada Header Navbar (`Navbar.vue`)
+* **Latar Belakang & Permintaan**:
+  - Jam server (format WIB | UTC) yang berada di header navbar atas dinilai tidak diperlukan karena membebani tampilan navigasi dan sudah ada jam sistem operasi pengguna serta stempel waktu presisi pada masing-masing tiket dan jejak audit.
+* **Tindakan yang Diterapkan**:
+  - Menghapus komponen badge jam waktu server di template bilah navigasi header (`Navbar.vue`).
+  - Menghilangkan *interval timer* berkala (`setInterval` 1000ms), fungsi `updateClock()`, serta variabel penampung `currentWibTime` dan `currentUtcTime` untuk menghemat siklus pemrosesan CPU dan memori peramban web.
+  - Memastikan header navbar kini lebih bersih (*clean*), fokus pada identitas merek, tombol navigasi responsif, pemilih peran (*role switcher*), dan profil pengguna.
+
+### [2026-10-01] - Tahap 2.15: Konfigurasi Port Forwarding Cloudflare Tunnel & Pintasan NPM
+* **Latar Belakang Permintaan**:
+  - Proyek Helpdesk Ticketing disiapkan agar dapat diakses dari internet publik untuk demonstrasi, review klien, atau presentasi KP menggunakan Cloudflare Tunnel tanpa perlu IP publik statis atau port forwarding router.
+* **Arsitektur & Konfigurasi yang Diterapkan**:
+  1. **Konfigurasi Proxy Terpadu Vite (`frontend/vite.config.js`)**:
+     - Mengatur `server.host: '0.0.0.0'`, `port: 5173`, dan `allowedHosts: true` agar Vite menerima Host header dari domain Cloudflare (`*.trycloudflare.com`).
+     - Menambahkan konfigurasi reverse-proxy bawaan Vite untuk `/api` dan `/uploads` yang meneruskan traffic langsung ke backend Express (`http://localhost:5000`). Dengan demikian, hanya diperlukan **satu (1) terowongan Cloudflare** untuk melayani antarmuka SPA frontend sekaligus API backend tanpa kendala CORS atau Mixed Content (HTTPS/HTTP).
+  2. **Penyesuaian Service API (`frontend/src/services/api.js`)**:
+     - Mengubah default `API_BASE_URL` dari `http://localhost:5000/api` menjadi relatif `/api`, sehingga otomatis mengikuti host aktif (baik saat berjalan di localhost maupun melalui domain publik Cloudflare).
+  3. **Pintasan Eksekusi Proyek (`package.json` & `start-tunnel.bat`)**:
+     - Menambahkan script `"tunnel": "cloudflared tunnel --url http://localhost:5173"` pada `frontend/package.json`.
+     - Menambahkan script `"tunnel": "cloudflared tunnel --url http://localhost:5000"` pada `backend/package.json`.
+     - Menyediakan root `package.json` dengan perintah terpadu: `npm run tunnel`.
+     - Membuat skrip instan Windows [start-tunnel.bat](file:///d:/Unpam/Semester%206/KP/Ticketing-helpdesk/start-tunnel.bat) agar pengembang dapat mengaktifkan forwarding tunnel cukup dengan klik dua kali.
+
+### [2026-10-01] - Tahap 2.16: Integrasi CRUD Penuh Master Customer & PIC ke Database MySQL
+* **Latar Belakang Permintaan**:
+  - Pengguna menanyakan apakah data Customer dan PIC masih hardcoded, dan meminta agar seluruh pengelolaan Mitra Pelanggan (Customer) dan Kontak PIC (Person in Charge) sepenuhnya berbasis database MySQL (`db_helpdesk_glotra`), bukan sekadar array statis atau cache browser.
+* **Tindakan & Solusi Arsitektur yang Diterapkan**:
+  1. **Backend REST API (`customerController.js` & `customerRoutes.js`)**:
+     - Memastikan seluruh operasi terhubung langsung ke tabel `customers` dan `customer_pics` melalui Prisma ORM.
+     - Menambahkan handler baru:
+       - `DELETE /api/customers/:id` (`deleteCustomer`): Menghapus mitra korporat dari database dengan validasi proteksi integritas relasi (menolak hapus jika masih terdapat tiket aktif).
+       - `POST /api/customers/:id/pics` (`addCustomerPic`): Menyimpan kontak PIC baru langsung ke tabel `customer_pics`.
+       - `PUT /api/customers/:id/pics/:picId` (`updateCustomerPic`): Memperbarui data PIC di tabel `customer_pics`.
+       - `DELETE /api/customers/:id/pics/:picId` (`deleteCustomerPic`): Menghapus kontak PIC dari tabel `customer_pics`.
+     - Setiap aksi CRUD otomatis mencatat jejak audit (`logAuditEvent`).
+  2. **Frontend Service & Store (`api.js` & `ticketStore.js`)**:
+     - Menambahkan method klien `deleteCustomer`, `updateCustomerPic`, dan `deleteCustomerPic` pada `api.js`.
+     - Memperbarui action `addCustomer`, `updateCustomer`, `deleteCustomer`, `addCustomerPic`, dan `deleteCustomerPic` pada `ticketStore.js` agar secara asynchronous melakukan sinkronisasi dua arah ke API backend MySQL.
+  3. **Antarmuka Pengguna (`CustomersManagementView.vue`)**:
+     - Menambahkan tombol aksi **Hapus** pada tabel daftar mitra pelanggan dengan dialog konfirmasi aman.
+     - Menambahkan tombol hapus kontak PIC pada masing-masing baris daftar PIC di modal detail PIC.
+     - Menghubungkan form edit mitra dan form tambah PIC langsung ke action store database.
+
+### [2026-10-01] - Tahap 2.17: Penanganan Zero-State & Perhitungan SLA Murni Dinamis Saat Database Tiket Kosong
+* **Latar Belakang Permintaan**:
+  - Pada halaman **Customer & PIC** (`CustomersManagementView.vue`) dan **Laporan Analitik** (`ReportsView.vue`), kartu SLA Compliance sebelumnya menampilkan nilai `100%` / `100.0%` dan teks *"Melampaui target korporat 98.0%"* meskipun database tiket masih kosong. Hal ini disebabkan nilai fallback hardcoded `100` pada logika computed ketika total tiket adalah 0.
+* **Perbaikan yang Diterapkan**:
+  1. **Halaman Customer & PIC (`CustomersManagementView.vue`)**:
+     - `slaComplianceRate` kini mengembalikan `null` jika tidak ada tiket di database.
+     - Tampilan kartu metrik SLA Compliance menampilkan `-` dengan keterangan *"Belum ada data tiket"* dan latar ikon abu-abu netral (`bg-slate-100 text-slate-400`).
+  2. **Halaman Laporan & Analitik Eksekutif (`ReportsView.vue`)**:
+     - `reportStats.slaRate` mengembalikan `null` saat tiket pada filter periode terpilih kosong.
+     - Kartu metrik SLA menampilkan `-` dan teks *"Belum ada data tiket"* dengan warna kontainer netral `bg-slate-50 border-slate-200`.
+     - Tabel **Account SLA Performance Breakdown**: Mitra yang belum memiliki tiket (`handled === 0`) menampilkan nilai respon & resolusi `-`, MTTR `-`, dan tren status *"NO DATA"* (badge abu-abu), bukan klaim 100% atau *"EXCELLENT"*.
+     - Tabel **Engineer Workload Roster**: Menampilkan `-` untuk compliance teknisi jika belum ada tiket yang ditugaskan.
+  3. **Penyelarasan Komponen Lainnya (`DashboardView.vue`, `Sidebar.vue`, `TicketListView.vue`)**:
+     - Memastikan seluruh indikator dan widget SLA di sistem menangani status `null` secara seragam dengan menampilkan `-` dan deskripsi data belum tersedia, bukan angka default 100%.
+
+### [2026-10-05] - Tahap 2.18: Refactoring Halaman Knowledge Base & Integrasi Template Runbook Resmi 12 Bagian
+* **Latar Belakang Permintaan**:
+  - Halaman Knowledge Base diselaraskan dengan dokumen acuan resmi [GTT_Knowledge_Base_Engineering_Runbook_Template.docx](file:///d:/Unpam/Semester%206/KP/Ticketing-helpdesk/docs/GTT_Knowledge_Base_Engineering_Runbook_Template.docx).
+  - Formulir dan alur pengajuan Knowledge Base (`/knowledge-base/propose`) dipisahkan menjadi halaman mandiri berstruktur penuh (mendukung metode Upload PDF dengan auto-ekstraksi metadata atau input manual berstruktur).
+  - Filter dan isolasi tiket bagi Support Engineer diterapkan pada pemilihan tiket rujukan kasus.
+* **Perbaikan & Fitur yang Diterapkan**:
+  1. **Halaman Utama Knowledge Base (`KnowledgeBaseView.vue`)**:
+     - Penyelarasan desain berbasis **Shadcn/UI & Corporate Clean Blue** (menghapus dekorasi gradasi neon/AI).
+     - Tombol **+ Buat Runbook Baru** kini mengarahkan langsung ke halaman pengajuan `/knowledge-base/propose`.
+     - Tombol **Unduh Template (.docx)** langsung mengunduh template resmi dari `/templates/GTT_Knowledge_Base_Engineering_Runbook_Template.docx`.
+     - Drawer/Modal Detail Runbook menyajikan **12 Bagian Standar ITIL GTT**:
+       1. Document Information (Platform, Firmware, Case Type)
+       2. Problem Description (Symptom, Error Code, Environment, Scope)
+       3. Pre-Check / Prerequisite
+       4. Troubleshooting / Diagnostic Steps
+       5. Root Cause Analysis (RCA)
+       6. Resolution Procedure & CLI Commands (dengan copy snippet)
+       7. Verification & Expected Result
+       8. Rollback Procedure (Protokol Keselamatan)
+       9. Risk / Potential Impact
+       10. Related Case / Ticket (terhubung ke ID Tiket insiden)
+       11. Supporting Document & Evidence (dengan tombol unduh berkas bukti/telemetri)
+       12. Review & Approval (Prepared By, Approver, Status, Version)
+     - Tombol **Cetak SOP** yang menghasilkan dokumen cetak (*print-ready*) terformat rapi sesuai formulir resmi runbook GTT.
+     - Bagi peran Admin, modal detail dan panel Governance kini dilengkapi tombol instan **Setujui & Publikasikan (Approve & Publish)** untuk runbook yang berstatus `PENDING_APPROVAL`.
+     - Banner notifikasi otomatis muncul ketika engineer dialihkan kembali dari pengajuan runbook baru (`?created=ID`).
+  2. **Navigasi Sidebar (`Sidebar.vue`)**:
+     - Memperbarui status tautan aktif menu Knowledge Base menggunakan `$route.path.startsWith('/knowledge-base')` agar tetap aktif saat membuka sub-rute `/knowledge-base/propose`.
+  3. **Penyempurnaan Alur Step Form & Lampiran Tiket (`TicketDetailView.vue`)**:
+     - Memastikan milestone step teknisi memiliki form upload bukti diagnostik serta tautan silang (*cross-link*) langsung antara berkas lampiran dan langkah milestone.
+
+### [2026-10-05] - Tahap 2.19: Refactoring Dashboard Eksekutif Sesuai Mockup Resmi (9. Dashboard)
+* **Latar Belakang Permintaan**:
+  - Halaman Dashboard Eksekutif (`DashboardView.vue`) diselaraskan 100% dengan rancangan visual mockup acuan **"9. Dashboard"**.
+* **Pembaruan Elemen & Komponen Antarmuka**:
+  1. **Executive Welcome Header**:
+     - Salam dinamis: `Selamat Bertugas, [Nama Pengguna]` dengan subjudul operasional.
+     - Dropdown rentang waktu `Last 30 Days` dengan ikon kalender.
+     - Status telemetri korporat: `● Sistem Operasional Aktif` (lampu hijau berdenyut).
+  2. **6 Kartu Metrik KPI (6-Column Metric Grid)**:
+     - **TOTAL TIKET (30 Hari)**: 156 (dengan lencana tren `↑ 12%`).
+     - **OPEN (BARU)**: 12 (angka merah tua dengan lencana tren `↑ 20%`).
+     - **IN PROGRESS**: 18 (angka biru dengan lencana tren `↓ 10%`).
+     - **MENUNGGU (HOLD)**: 6 (angka amber dengan lencana netral `→ 0%`).
+     - **CLOSED / SOLVED**: 120 (angka hijau dengan lencana tren `↑ 18%`).
+     - **SLA COMPLIANCE**: 98% (dengan keterangan *Target 100% Terlaksana*).
+  3. **Baris Visualisasi 1 (Grafik Tren & Distribusi Keparahan)**:
+     - **Trend Tiket & Penyelesaian &ndash; 30 Hari Terakhir**: Grafik multi-garis SVG interaktif dengan area bayangan biru, membandingkan *Tiket Baru* (biru), *Tiket Selesai* (hijau), dan *Open / Backlog* (amber) di sumbu X (01 Sep s.d. 29 Sep) dan Y (0 s.d. 40).
+     - **Distribusi Tiket berdasarkan Severity**: Donut chart SVG 4 warna dengan lencana tengah `156 Tiket` dan daftar rincian di sisi kanan: *Critical P1 (12)*, *High P2 (24)*, *Medium P3 (58)*, dan *Low P4 (62)*.
+  4. **Baris Visualisasi 2 (Pantauan SLA Watch & SLA Performance)**:
+     - **Pantauan Waktu SLA Aktif (SLA Watch)**: Tabel interaktif 5 tiket prioritas dengan hitung mundur detik real-time (*00:45:12 SLA RISK*, *02:10:33 WARNING*, *03:25:18 IN PROGRESS*, *05:12:10 ASSIGNED*, *07:31:50 OPEN*), tautan nomor tiket, nama mitra pelanggan, serta tombol *Lihat Semua &rarr;*.
+     - **SLA Performance**: Donut gauge 98% hijau dengan status rincian: *Within SLA (153)*, *Near Breach (2)*, *SLA Risk (1)*, dan *SLA Breached (0)*.
+  5. **Baris Visualisasi 3 (Beban Teknisi & Top 5 Kategori)**:
+     - **Ticket Aktif per Engineer**: Tabel distribusi penugasan 4 teknisi (*Ahmad Fauzi*, *Budi Santoso*, *Andi Wijaya*, *Rizky Pratama*) dengan bar proporsional per kolom (*Assigned*, *In Progress*, *Hold*, *SLA Risk*) dan total tiket aktif.
+     - **Top 5 Kategori Tiket**: Tabel 5 kategori insiden teratas (*Server / Infrastructure (42 &bull; 26.9%)*, *Jaringan / Network (30 &bull; 19.2%)*, *Storage (24 &bull; 15.4%)*, *Backup (18 &bull; 11.5%)*, *Aplikasi / System (12 &bull; 7.7%)*) dengan bar persentase horizontal berwarna.
+---
+
+### [2026-10-11] - Tahap 3.0: Sinkronisasi Laporan Bab 3, Model Enterprise Architect, & Pembersihan Repositori
+* **Penyelarasan Bab 3 Dokumen Laporan Kerja Praktek (BAB_3_Laporan_KP_Helpdesk_Ticketing_GTT.docx)**:
+  1. **Integrasi 13 Gambar Tangkapan Layar Asli (docs/WEB VIEW/)**:
+     - Gambar 3.16: Halaman Login Pengguna & Portal RBAC (dengan fitur Quick Demo Login untuk verifikasi peran).
+     - Gambar 3.17: Dashboard Operasional Admin & SLA Monitor (277 tiket, 99% SLA Compliance, grafik tren & donut severity).
+     - Gambar 3.18: Manajemen Antrean Tiket Global / Admin View (Active Queue Load 115, Avg MTTR 3h 25m, filter multi-dimensi).
+     - Gambar 3.19: Pembuatan Tiket Baru (PT Astra, PIC Bpk. Bambang Sutrisno, SLA Target otomatis, rekomendasi Knowledge Base).
+     - Gambar 3.20: Detail Penanganan Tiket & Timeline Diagnostik (TICK-20261001-0002, countdown Near Breach, Pause SLA, eskalasi Cisco TAC).
+     - Gambar 3.21: Antrean Tugas Teknisi / Engineer View (isolasi antrean tugas personal Budi Santoso, 46 tiket).
+     - Gambar 3.22: Portal Pelacakan Tiket Mandiri Pelanggan (Customer Self-Service via token aman anti-IDOR 128-bit, Live Tracking).
+     - Gambar 3.23: Konfigurasi Master Kebijakan SLA Policy (4 tier: Platinum 24x7, Enterprise 8x5 Gold, Government, Standard Silver).
+     - Gambar 3.24: Manajemen Pelanggan Korporat & Kuota PKS (16 mitra, peringatan kuota kritis sisa 10% PT PJB).
+     - Gambar 3.25: Manajemen Pengguna & Hak Akses Staf RBAC (9 staf: 3 Admin/CPIG dan 6 IT Support Engineer).
+     - Gambar 3.26: ITIL Knowledge Base & Runbook Repositori (99% reusability rate, runbook HPE 3PAR & Brocade FC).
+     - Gambar 3.27: Laporan Eksekutif & Analitik SLA Helpdesk (REPORT-SLA-2026-10, MTTR 3h 31m, grafik kepatuhan SLA per mitra).
+     - Gambar 3.28: Profil Pengguna & Preferensi Keamanan Akun (biodata Rina Anggraini, ganti sandi mandiri).
+  2. **Penyempurnaan Manual Program (Subbab 3.3.4)**:
+     - Panduan operasional langkah demi langkah bagi Administrator / CPIG, IT Support Engineer, dan Mitra Pelanggan (Customer Self-Service).
+  3. **Penyelarasan Uji Coba Black Box Testing (Subbab 3.3.5 - Tabel 3.3)**:
+     - Memperbarui 13 skenario kasus uji (TC-01 s/d TC-13) yang menggunakan data riil dari sistem (login valid/invalid, demo RBAC, kuota PT PJB, tiket PT Astra, pembekuan waktu Pause SLA, dan token anti-IDOR).
+
+* **Sinkronisasi Model Enterprise Architect (EA XML & XMI 2.1)**:
+  1. Regenerasi berkas Enterprise_Architect_Helpdesk_GTT.xml dan .xmi via scripts/generate_ea_xmi.py.
+  2. Sinkronisasi 2 Aktor Utama (Admin / CPIG Helpdesk & IT Support Engineer) dan 6 Core Use Cases (UC-01 s/d UC-06).
+  3. Pembaruan seluruh lifeline Sequence Diagram menjadi :Database (MySQL).
+  4. Penerbitan panduan standar dan cetak biru pemodelan UML di docs/enterprise-architect/PANDUAN_STANDAR_UML_ENTERPRISE_ARCHITECT.md.
+
+* **Pembersihan Berkas Bantuan & Artefak Usang (Repository Cleanup)**:
+  - Menghapus 12 berkas bantuan/sementara yang sudah usang dan digantikan oleh modul resmi:
+    1. docs/dokumen/BAB_3_Laporan_KP_Helpdesk_Ticketing_GTT_Updated.docx (duplikat lama cadangan).
+    2. scripts/organize_docs.py (skrip migrasi folder sekali pakai).
+    3. scripts/generate_architecture_docx.py (skrip lama rusak).
+    4. scripts/generate_architecture_pdf.py (skrip lama rancangan awal).
+    5. scripts/generate_drawio_and_render.py (skrip lama Draw.io).
+    6. scripts/generate_flowchart_image.py (skrip lama flowchart terpisah).
+    7. generate_pdf.py (skrip root converter PDF lama).
+    8. Panduan_Pengguna_Helpdesk_GTT.html & .pdf (dokumen user guide versi awal).
+    9. Rancangan_Arsitektur_dan_Alur_Helpdesk_Ticketing.docx (dokumen perancangan awal di root).
+    10. TASK_LIST_IMPLEMENTASI.md (to-do list fase awal yang sudah selesai seluruhnya).
+    11. start-tunnel.bat (utilitas tunnel testing sementara).
+    12. Berkas *temporary lock* Word (~$...docx).
+  - Struktur repositori kini rapi, bersih, dan hanya memuat berkas-berkas aktif dan mutakhir.

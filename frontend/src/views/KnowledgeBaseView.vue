@@ -1,5 +1,5 @@
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 pb-12 animate-in fade-in duration-200">
     <!-- Top Bar / Breadcrumb & Status Telemetry -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
       <div class="flex items-center space-x-2 text-xs text-slate-500 font-mono">
@@ -10,11 +10,33 @@
         <span class="text-slate-500">Knowledge Base</span>
       </div>
       <div class="flex items-center space-x-3 text-xs">
-        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
           <span class="w-2 h-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
-          Systems Normal • SLA Engine Active
+          Sistem Operasional Aktif
         </span>
       </div>
+    </div>
+
+    <!-- Alert Banner when article was recently created/proposed -->
+    <div 
+      v-if="createdAlertMessage" 
+      class="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between text-xs text-emerald-900 shadow-xs animate-in fade-in slide-in-from-top-2 duration-300"
+    >
+      <div class="flex items-center space-x-3">
+        <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm shrink-0">
+          ✓
+        </div>
+        <div>
+          <strong class="font-bold text-emerald-950 block">Dokumen Knowledge Base Berhasil Diajukan!</strong>
+          <span class="text-emerald-800 text-[11px]">{{ createdAlertMessage }}</span>
+        </div>
+      </div>
+      <button 
+        @click="createdAlertMessage = ''" 
+        class="text-emerald-700 hover:text-emerald-900 font-bold px-2 py-1 text-sm rounded-lg hover:bg-emerald-100/60 cursor-pointer"
+      >
+        &times;
+      </button>
     </div>
 
     <!-- Header Banner -->
@@ -26,10 +48,10 @@
           </span>
         </div>
         <h1 class="text-2xl font-black text-slate-900 tracking-tight">
-          Knowledge Base
+          Knowledge Base &amp; Runbook SOP
         </h1>
         <p class="text-xs text-slate-500 leading-relaxed">
-          Internal repository of validated troubleshooting procedures, root cause analysis, and standard resolutions across multi-vendor data center architectures.
+          Repositori terpusat prosedur troubleshooting terverifikasi, analisis akar masalah (RCA), dan standar pemulihan multi-vendor data center.
         </p>
       </div>
 
@@ -39,7 +61,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Search symptoms, products, errors, or incident IDs... [/]"
+            placeholder="Cari gejala, vendor, produk, atau kode KB..."
             class="w-full pl-9 pr-8 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white transition-all"
           />
           <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,15 +76,29 @@
           </button>
         </div>
 
-        <button
-          @click="openProposeModal"
+        <!-- Download Official Template DOCX Button -->
+        <a
+          href="/templates/GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
+          download="GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
+          class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 shadow-2xs transition-all flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer"
+          title="Unduh file dokumen template resmi (.docx)"
+        >
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          <span>Unduh Template (.docx)</span>
+        </a>
+
+        <!-- Buat Runbook Baru Button -> Leads to KnowledgeProposeView -->
+        <router-link
+          to="/knowledge-base/propose"
           class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold text-xs rounded-xl shadow-xs transition-all flex items-center justify-center space-x-1.5 shrink-0 cursor-pointer"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
           </svg>
-          <span>+ Propose New Article</span>
-        </button>
+          <span>+ Buat Runbook Baru</span>
+        </router-link>
       </div>
     </div>
 
@@ -102,7 +138,7 @@
               </svg>
             </div>
             <span class="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200">
-              24 PLAYBOOKS
+              {{ storagePlaybooksCount }} PLAYBOOKS
             </span>
           </div>
           <div>
@@ -110,7 +146,7 @@
               Storage &amp; SAN Troubleshooting
             </h3>
             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-              High-availability failover, optical SFP diagnostics, and unmap queue recovery across enterprise arrays.
+              High-availability failover, optical SFP diagnostics, dan unmap queue recovery pada enterprise storage.
             </p>
           </div>
         </div>
@@ -133,7 +169,7 @@
               </svg>
             </div>
             <span class="text-[10px] font-mono font-bold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded border border-indigo-200">
-              18 PLAYBOOKS
+              {{ vmwarePlaybooksCount }} PLAYBOOKS
             </span>
           </div>
           <div>
@@ -141,7 +177,7 @@
               VMware Infrastructure Recovery
             </h3>
             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-              ESXi PSOD register triage, APD/PDL datastore isolation, and locked VM process terminations.
+              ESXi PSOD register triage, APD/PDL datastore isolation, dan locked VM process terminations.
             </p>
           </div>
         </div>
@@ -164,7 +200,7 @@
               </svg>
             </div>
             <span class="text-[10px] font-mono font-bold bg-cyan-50 text-cyan-700 px-2 py-0.5 rounded border border-cyan-200">
-              12 PLAYBOOKS
+              {{ backupPlaybooksCount }} PLAYBOOKS
             </span>
           </div>
           <div>
@@ -172,7 +208,7 @@
               Enterprise Backup Resiliency
             </h3>
             <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-              Rubrik cluster sync, locked snapshot consolidation, and MS SQL / Oracle VSS writer unfreezes.
+              Rubrik cluster sync, locked snapshot consolidation, dan MS SQL / Oracle VSS writer unfreezes.
             </p>
           </div>
         </div>
@@ -192,17 +228,13 @@
           <div class="flex items-center space-x-2">
             <span class="font-bold text-slate-400 text-[10px] uppercase tracking-wider font-mono">FILTER RUNBOOKS</span>
             
-            <!-- Filter by Principal -->
+            <!-- Filter by Principal (Dinamis) -->
             <select
               v-model="selectedPrincipal"
               class="border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
             >
-              <option value="">All Principals</option>
-              <option value="HPE">HPE 3PAR / Primera</option>
-              <option value="VMware">VMware ESXi / vSAN</option>
-              <option value="Rubrik">Rubrik CDM</option>
-              <option value="Brocade">Brocade Fabric OS</option>
-              <option value="Oracle">Oracle / PostgreSQL</option>
+              <option value="">Semua Principal (All)</option>
+              <option v-for="p in availablePrincipals" :key="p" :value="p">{{ p }}</option>
             </select>
 
             <!-- Filter by Status -->
@@ -210,9 +242,10 @@
               v-model="selectedStatus"
               class="border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
             >
-              <option value="ALL">Status: All</option>
-              <option value="PUBLISHED">Status: Approved</option>
-              <option value="DRAFT">Status: Draft / Review</option>
+              <option value="ALL">Semua Status (All)</option>
+              <option value="PUBLISHED">Status: Published / Approved</option>
+              <option value="PENDING_APPROVAL">Status: Menunggu Review</option>
+              <option value="DRAFT">Status: Draft</option>
             </select>
           </div>
 
@@ -244,7 +277,7 @@
                   {{ item.kbCode || `KB-${item.id}` }}
                 </span>
                 <span class="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
-                  {{ item.category }}
+                  {{ item.category || item.categoryGroup }}
                 </span>
                 <span class="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
                   {{ item.technologyPrincipal }}
@@ -275,7 +308,7 @@
               <div class="flex items-center space-x-2">
                 <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                 <span>
-                  {{ item.approver ? `${item.approver}` : `Author: ${item.author}` }}
+                  {{ item.approver ? `${item.approver}` : `Author: ${item.author || item.engineerName}` }}
                 </span>
                 <span>•</span>
                 <span class="text-slate-400">Updated {{ item.updatedAt || 'Recently' }}</span>
@@ -283,10 +316,14 @@
 
               <div class="flex items-center space-x-2">
                 <span 
-                  class="px-2 py-0.5 rounded text-[10px] font-bold"
-                  :class="item.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'"
+                  class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
+                  :class="{
+                    'bg-emerald-50 text-emerald-700 border border-emerald-200': item.status === 'PUBLISHED',
+                    'bg-amber-50 text-amber-700 border border-amber-200': item.status === 'PENDING_APPROVAL',
+                    'bg-slate-100 text-slate-600 border border-slate-200': item.status === 'DRAFT'
+                  }"
                 >
-                  {{ item.status === 'PUBLISHED' ? 'VERIFIED PLAYBOOK' : 'PENDING REVIEW' }}
+                  {{ item.status === 'PUBLISHED' ? 'VERIFIED PLAYBOOK' : (item.status === 'PENDING_APPROVAL' ? 'PENDING REVIEW' : 'DRAFT') }}
                 </span>
                 <span class="text-blue-600 group-hover:translate-x-0.5 transition-transform font-bold text-xs">&rarr;</span>
               </div>
@@ -302,11 +339,11 @@
             </div>
             <div class="font-bold text-slate-800 text-sm">Tidak ditemukan runbook yang cocok</div>
             <p class="text-xs text-slate-500 max-w-sm mx-auto">
-              Coba ganti filter teknologi principal atau kata kunci pencarian pada bilah di atas.
+              Coba ubah filter teknologi principal, status, atau kata kunci pencarian pada bilah di atas.
             </p>
             <button
               @click="resetFilters"
-              class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold"
+              class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer"
             >
               Reset Semua Filter
             </button>
@@ -325,7 +362,7 @@
             <button
               @click="currentPage--"
               :disabled="currentPage === 1"
-              class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+              class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 cursor-pointer"
             >
               Previous
             </button>
@@ -333,7 +370,7 @@
               v-for="page in totalPages"
               :key="page"
               @click="currentPage = page"
-              class="w-7 h-7 rounded-lg text-xs font-bold font-mono transition-all"
+              class="w-7 h-7 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer"
               :class="currentPage === page ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-100'"
             >
               {{ page }}
@@ -341,7 +378,7 @@
             <button
               @click="currentPage++"
               :disabled="currentPage === totalPages || totalPages === 0"
-              class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50"
+              class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 cursor-pointer"
             >
               Next
             </button>
@@ -374,15 +411,15 @@
                 INCIDENT REUSABILITY RATE
               </span>
               <span class="text-3xl font-black text-blue-900 font-mono tracking-tight mt-0.5 block">
-                64%
+                {{ incidentReusabilityRate }}%
               </span>
             </div>
             <div class="w-12 h-12 rounded-full border-4 border-blue-600/20 border-t-blue-600 flex items-center justify-center font-bold text-blue-700 text-xs font-mono">
-              64%
+              {{ incidentReusabilityRate }}%
             </div>
           </div>
           <p class="text-[11px] text-slate-500 leading-relaxed">
-            64% of resolved L2/L3 enterprise incidents directly link to a verified playbook, saving an average of 42 minutes per incident recovery.
+            {{ incidentReusabilityRate }}% insiden terselesaikan didukung oleh playbook runbook terverifikasi, memangkas durasi investigasi teknis secara signifikan.
           </p>
 
           <!-- Pending Approvals Sub-section -->
@@ -391,14 +428,14 @@
               <span class="text-[10px] font-mono font-bold text-slate-500 uppercase tracking-wider">
                 PENDING APPROVALS
               </span>
-              <span class="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.2 rounded-full">
-                {{ ticketStore.pendingKbApprovals.length }} Pending
+              <span class="text-[10px] font-bold bg-amber-100 text-amber-800 px-2 py-0.2 rounded-full font-mono">
+                {{ allPendingItems.length }} Pending
               </span>
             </div>
 
             <div class="space-y-2">
               <div
-                v-for="pending in ticketStore.pendingKbApprovals"
+                v-for="pending in allPendingItems.slice(0, 3)"
                 :key="pending.id"
                 class="p-2.5 rounded-xl border border-slate-200 bg-slate-50/70 hover:bg-white hover:border-blue-300 transition-all text-xs space-y-1"
               >
@@ -406,28 +443,33 @@
                   <span class="font-bold text-slate-800 text-[11px] line-clamp-1">{{ pending.title }}</span>
                 </div>
                 <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
-                  <span>From {{ pending.sourceTicket }}</span>
-                  <span class="text-amber-700 font-semibold">{{ pending.stage }}</span>
+                  <span>{{ pending.sourceTicket ? `From ${pending.sourceTicket}` : (pending.author ? `By ${pending.author}` : 'Runbook Baru') }}</span>
+                  <span class="text-amber-700 font-semibold">{{ pending.stage || 'Review Needed' }}</span>
                 </div>
                 <div class="pt-1 flex items-center justify-between text-[10px]">
-                  <span class="text-slate-400">{{ pending.submittedAt }}</span>
+                  <span class="text-slate-400">{{ pending.submittedAt || pending.updatedAt || 'Recent' }}</span>
                   <button
-                    v-if="authStore.currentUser.roleCode === 'ADMIN'"
-                    @click="handleApprovePending(pending.id)"
-                    class="text-blue-600 font-bold hover:underline"
+                    v-if="authStore.isAdmin"
+                    @click="handleApproveAnyPending(pending)"
+                    class="text-blue-600 font-bold hover:underline cursor-pointer"
                   >
                     Review &amp; Approve &rarr;
                   </button>
                   <span v-else class="text-slate-400 italic">Menunggu Approval Admin</span>
                 </div>
               </div>
+
+              <div v-if="allPendingItems.length === 0" class="text-slate-400 text-center py-2 text-[11px]">
+                Tidak ada antrean approval pending.
+              </div>
             </div>
 
             <button
+              v-if="allPendingItems.length > 0"
               @click="showPendingModal = true"
-              class="w-full text-center text-xs font-bold text-blue-600 hover:text-blue-800 pt-1 block"
+              class="w-full text-center text-xs font-bold text-blue-600 hover:text-blue-800 pt-1 block cursor-pointer"
             >
-              Manage Approvals Queue &rarr;
+              Lihat Semua Antrean Approval ({{ allPendingItems.length }}) &rarr;
             </button>
           </div>
         </div>
@@ -443,7 +485,7 @@
             </h4>
           </div>
           <p class="text-[11px] text-slate-500">
-            Quick queries frequently used by on-call engineers in the last 48 hours:
+            Kueri penelusuran yang sering diakses engineer dalam 48 jam terakhir:
           </p>
           <div class="flex flex-wrap gap-1.5 pt-1">
             <button
@@ -457,52 +499,75 @@
           </div>
         </div>
 
-        <!-- 3. Authoring Standard Note Card (Figma Frame 08 Spec) -->
+        <!-- 3. Template Runbook GTT Standard Card -->
         <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-2xl p-5 shadow-xs space-y-2.5">
-          <div class="flex items-center space-x-2">
-            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-            </svg>
-            <h4 class="font-bold text-xs uppercase tracking-wider text-blue-300">
-              Authoring Standard
-            </h4>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              <h4 class="font-bold text-xs uppercase tracking-wider text-blue-300">
+                Template Runbook GTT
+              </h4>
+            </div>
+            <a
+              href="/templates/GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
+              download="GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
+              class="text-[10px] font-bold text-blue-300 hover:text-white underline cursor-pointer"
+            >
+              Unduh .docx
+            </a>
           </div>
           <p class="text-xs text-slate-300 leading-relaxed">
-            Ensure all submitted runbooks include sanitized log excerpts, exact CLI syntax verification, and a validated rollback section before supervisor sign-off.
+            Format resmi 12 bagian Engineering Runbook mencakup Pre-Check, Analisis Akar Masalah, Prosedur CLI, hingga Verifikasi &amp; Rollback.
           </p>
           <div class="pt-2 border-t border-slate-700/80 flex items-center justify-between text-[11px] text-slate-400">
-            <span>ITIL v4 Compliant</span>
-            <span class="text-blue-400 font-mono">ISO/IEC 20000</span>
+            <span>Template v1.0</span>
+            <span class="text-blue-400 font-mono">12 Bagian Standar</span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal 1: Runbook Detail Drawer / Modal -->
+    <!-- Modal 1: Runbook Detail Drawer / Modal (Conforms to Official 12-Section Template) -->
     <div v-if="selectedRunbook" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-      <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
         <!-- Modal Header -->
         <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-start justify-between gap-3">
           <div class="space-y-1">
-            <div class="flex items-center space-x-2">
+            <div class="flex items-center space-x-2 flex-wrap gap-y-1">
               <span class="font-mono font-bold text-xs bg-blue-100 text-blue-800 px-2.5 py-0.5 rounded border border-blue-200">
                 {{ selectedRunbook.kbCode || `KB-${selectedRunbook.id}` }}
               </span>
               <span class="text-xs font-semibold text-slate-700 bg-white border border-slate-200 px-2.5 py-0.5 rounded">
-                {{ selectedRunbook.category }}
+                {{ selectedRunbook.category || selectedRunbook.categoryGroup }}
               </span>
               <span class="text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded">
                 {{ selectedRunbook.technologyPrincipal }}
               </span>
-              <span class="text-[10px] font-mono font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded">
-                VERIFIED
+              <span class="text-[10px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded uppercase">
+                {{ selectedRunbook.caseType || 'Incident' }}
+              </span>
+              <span 
+                class="text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase"
+                :class="{
+                  'bg-emerald-100 text-emerald-800 border-emerald-200': selectedRunbook.status === 'PUBLISHED',
+                  'bg-amber-100 text-amber-800 border-amber-200': selectedRunbook.status === 'PENDING_APPROVAL',
+                  'bg-slate-100 text-slate-700 border-slate-200': selectedRunbook.status === 'DRAFT'
+                }"
+              >
+                {{ selectedRunbook.status === 'PUBLISHED' ? 'VERIFIED SOP' : (selectedRunbook.status === 'PENDING_APPROVAL' ? 'PENDING APPROVAL' : 'DRAFT') }}
               </span>
             </div>
-            <h2 class="text-base sm:text-lg font-black text-slate-900 leading-snug">
+            <h2 class="text-base sm:text-xl font-black text-slate-900 leading-snug">
               {{ selectedRunbook.title }}
             </h2>
-            <div class="text-[11px] text-slate-500 flex items-center space-x-2">
-              <span>{{ selectedRunbook.approver ? `${selectedRunbook.approver}` : `Author: ${selectedRunbook.author}` }}</span>
+            <div class="text-[11px] text-slate-500 flex items-center space-x-2 flex-wrap">
+              <span>Prepared By: <strong>{{ selectedRunbook.author || selectedRunbook.engineerName || 'Engineer GTT' }}</strong></span>
+              <span>•</span>
+              <span>Approver: <strong>{{ selectedRunbook.approver || 'Denny Wicaksono' }}</strong></span>
+              <span>•</span>
+              <span>Version: <strong>{{ selectedRunbook.version || '1.0' }}</strong></span>
               <span>•</span>
               <span>Updated {{ selectedRunbook.updatedAt || 'Recently' }}</span>
               <span>•</span>
@@ -518,247 +583,289 @@
           </button>
         </div>
 
-        <!-- Modal Body (Scrollable) -->
-        <div class="p-6 overflow-y-auto space-y-5 text-xs text-slate-700">
-          <!-- Incident Source Banner -->
-          <div v-if="selectedRunbook.source" class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-3 flex items-center space-x-2 text-indigo-900 font-mono text-[11px]">
-            <svg class="w-4 h-4 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
-            </svg>
-            <span><strong>Validated Lineage:</strong> {{ selectedRunbook.source }}</span>
+        <!-- Modal Body (12 Structured Sections from Official Template) -->
+        <div class="p-6 overflow-y-auto space-y-6 text-xs text-slate-700 font-sans">
+          <!-- 1. DOCUMENT INFORMATION -->
+          <div class="p-4 bg-slate-50/70 border border-slate-200 rounded-xl space-y-2">
+            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-blue-700">
+              <span class="w-5 h-5 rounded bg-blue-100 text-blue-700 flex items-center justify-center text-[10px]">1</span>
+              <span>Document Information</span>
+            </h4>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
+              <div>
+                <span class="text-slate-400 text-[10px] block">Product / Platform</span>
+                <strong class="text-slate-800">{{ selectedRunbook.productPlatform || selectedRunbook.technologyPrincipal || 'HPE 3PAR / Primera' }}</strong>
+              </div>
+              <div>
+                <span class="text-slate-400 text-[10px] block">Version / Firmware / OS</span>
+                <strong class="text-slate-800 font-mono">{{ selectedRunbook.firmwareVersion || 'v3.3.1 MU5 / ESXi 8.0' }}</strong>
+              </div>
+              <div>
+                <span class="text-slate-400 text-[10px] block">Case Type</span>
+                <strong class="text-blue-700 uppercase">{{ selectedRunbook.caseType || 'Incident' }}</strong>
+              </div>
+              <div>
+                <span class="text-slate-400 text-[10px] block">Source Reference</span>
+                <strong class="text-slate-800 truncate block">{{ selectedRunbook.source || 'Standard Engineering SOP' }}</strong>
+              </div>
+            </div>
           </div>
 
-          <!-- Symptoms & Root Cause Analysis -->
+          <!-- 2. PROBLEM DESCRIPTION -->
+          <div class="space-y-3">
+            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
+              <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">2</span>
+              <span>Problem Description</span>
+            </h4>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="bg-amber-50/40 border border-amber-200 rounded-xl p-4 space-y-1.5">
+                <span class="text-[10px] font-bold text-amber-800 uppercase block">Symptom / Gejala</span>
+                <p class="text-slate-700 leading-relaxed">{{ selectedRunbook.symptom }}</p>
+              </div>
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
+                <div>
+                  <span class="text-[10px] font-bold text-slate-500 uppercase block">Error Code / Alert</span>
+                  <span class="font-mono text-rose-700 font-bold">{{ selectedRunbook.errorCode || 'ALERT-PCIE-BUS-STALL' }}</span>
+                </div>
+                <div class="flex justify-between pt-1 border-t border-slate-100">
+                  <div>
+                    <span class="text-[10px] text-slate-400 block">Environment</span>
+                    <strong class="text-slate-800">{{ selectedRunbook.environment || 'Production DC Cluster' }}</strong>
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-slate-400 block">Impact / Scope</span>
+                    <strong class="text-rose-700">{{ selectedRunbook.impactScope || 'Standard Operational / Latency' }}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. PRE-CHECK / PREREQUISITE -->
+          <div class="border border-slate-200 rounded-xl p-4 space-y-1.5 bg-slate-50/50">
+            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
+              <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">3</span>
+              <span>Pre-Check / Prerequisite</span>
+            </h4>
+            <p class="text-slate-700 leading-relaxed bg-white p-3 rounded-lg border border-slate-200 font-mono text-[11px]">
+              {{ selectedRunbook.prerequisites || 'Akses SSH CLI dengan privilege level 3 / admin, verifikasi backup datastore sebelum maintenance.' }}
+            </p>
+          </div>
+
+          <!-- 4. TROUBLESHOOTING / DIAGNOSTIC & 5. ROOT CAUSE ANALYSIS -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1.5">
-              <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-1.5">
-                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                <span>Incident Symptom (Gejala)</span>
+            <div class="border border-slate-200 rounded-xl p-4 space-y-2 bg-slate-50">
+              <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
+                <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">4</span>
+                <span>Troubleshooting / Diagnostic Steps</span>
               </h4>
-              <p class="text-slate-600 leading-relaxed">
-                {{ selectedRunbook.symptom }}
+              <p class="text-slate-700 leading-relaxed font-sans whitespace-pre-line">
+                {{ selectedRunbook.diagnosticSteps || '1. Periksa status port dan cluster hardware node.\n2. Cek alur link optical power dan error frame counter.\n3. Analisis core dump file exception kernel.' }}
               </p>
             </div>
 
-            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-1.5">
-              <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-1.5">
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+            <div class="border border-rose-200 rounded-xl p-4 space-y-2 bg-rose-50/40">
+              <h4 class="font-bold text-rose-900 text-xs uppercase tracking-wider flex items-center space-x-2">
+                <span class="w-5 h-5 rounded bg-rose-200 text-rose-800 flex items-center justify-center text-[10px]">5</span>
                 <span>Root Cause Analysis (RCA)</span>
               </h4>
-              <p class="text-slate-600 leading-relaxed">
+              <p class="text-slate-700 leading-relaxed font-sans">
                 {{ selectedRunbook.rootCause }}
               </p>
             </div>
           </div>
 
-          <!-- Prerequisites & Hardware Compatibility -->
-          <div v-if="selectedRunbook.prerequisites" class="border border-slate-200 rounded-xl p-4 space-y-1 bg-slate-50/50">
-            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider text-slate-500">
-              Prerequisites &amp; Environment Target
-            </h4>
-            <p class="text-slate-700 font-mono text-[11px]">
-              {{ selectedRunbook.prerequisites }}
-            </p>
-          </div>
-
-          <!-- CLI Command Snippet (Dark Terminal) -->
-          <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <h4 class="font-black text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2">
-                <svg class="w-4 h-4 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                </svg>
-                <span>Verified Diagnostic &amp; Resolution CLI Sequence</span>
-              </h4>
-              <button
-                @click="copySnippet(selectedRunbook.cliSnippet)"
-                class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-lg transition-colors flex items-center space-x-1 cursor-pointer"
-              >
-                <span>{{ copiedCode ? '✓ Copied to Clipboard' : '📋 Copy Commands' }}</span>
-              </button>
-            </div>
-
-            <div class="bg-slate-950 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-slate-800 shadow-inner">
-              <pre class="whitespace-pre leading-relaxed">{{ selectedRunbook.cliSnippet }}</pre>
-            </div>
-          </div>
-
-          <!-- Verification Steps & Rollback Procedure -->
+          <!-- 6. RESOLUTION PROCEDURE & CLI COMMANDS -->
           <div class="space-y-3">
-            <div v-if="selectedRunbook.verificationSteps" class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1">
-              <h5 class="font-bold text-emerald-900 text-xs flex items-center space-x-1.5">
-                <span>✓ Health Check &amp; Post-Fix Verification</span>
-              </h5>
-              <p class="text-emerald-800 text-[11px] leading-relaxed">
-                {{ selectedRunbook.verificationSteps }}
+            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
+              <span class="w-5 h-5 rounded bg-blue-600 text-white flex items-center justify-center text-[10px]">6</span>
+              <span>Resolution Procedure &amp; CLI Commands</span>
+            </h4>
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+              <span class="text-[11px] font-bold text-slate-700 block">Resolution Steps:</span>
+              <p class="text-slate-700 leading-relaxed font-sans whitespace-pre-line">
+                {{ selectedRunbook.resolutionSteps || 'Terapkan rebalance FC host path, bersihkan command unmap yang tersendat, dan jalankan targeted rescan pada adapter storage ESXi.' }}
               </p>
             </div>
 
-            <div v-if="selectedRunbook.rollbackProcedure" class="p-3.5 rounded-xl bg-rose-50 border border-rose-200 space-y-1">
-              <h5 class="font-bold text-rose-900 text-xs flex items-center space-x-1.5">
-                <span>⚠️ Rollback &amp; Fallback Procedure (Safety Protocol)</span>
-              </h5>
-              <p class="text-rose-800 text-[11px] leading-relaxed">
-                {{ selectedRunbook.rollbackProcedure }}
+            <!-- Terminal CLI Snippet -->
+            <div v-if="selectedRunbook.cliSnippet" class="space-y-1.5">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="font-mono text-slate-500 font-semibold">CLI Configuration Snippet:</span>
+                <button
+                  @click="copySnippet(selectedRunbook.cliSnippet)"
+                  class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors flex items-center space-x-1 cursor-pointer"
+                >
+                  <span>{{ copiedCode ? '✓ Copied' : '📋 Copy Snippet' }}</span>
+                </button>
+              </div>
+              <div class="bg-slate-950 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-slate-800 shadow-inner">
+                <pre class="whitespace-pre leading-relaxed">{{ selectedRunbook.cliSnippet }}</pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. VERIFICATION & 8. ROLLBACK PROCEDURE -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-2">
+              <h4 class="font-bold text-emerald-900 text-xs uppercase tracking-wider flex items-center space-x-2">
+                <span class="w-5 h-5 rounded bg-emerald-200 text-emerald-800 flex items-center justify-center text-[10px]">7</span>
+                <span>Verification Procedure &amp; Expected Result</span>
+              </h4>
+              <p class="text-emerald-900 text-[11px] leading-relaxed">
+                <strong>Verifikasi:</strong> {{ selectedRunbook.verificationSteps || 'Uji fungsionalitas volume dan pastikan status IO running normal.' }}
+              </p>
+              <p class="text-emerald-800 text-[11px] leading-relaxed border-t border-emerald-200/60 pt-2">
+                <strong>Expected Result:</strong> {{ selectedRunbook.expectedResult || 'Semua antarmuka storage melaporkan Active/Optimized, zero latency timeout.' }}
               </p>
             </div>
 
-            <div v-if="selectedRunbook.recommendation" class="p-3.5 rounded-xl bg-blue-50 border border-blue-200 space-y-1">
-              <h5 class="font-bold text-blue-900 text-xs flex items-center space-x-1.5">
-                <span>🛡️ Long-term Preventive Recommendation</span>
-              </h5>
-              <p class="text-blue-800 text-[11px] leading-relaxed">
-                {{ selectedRunbook.recommendation }}
+            <div class="p-4 rounded-xl bg-rose-50/60 border border-rose-200 space-y-2">
+              <h4 class="font-bold text-rose-900 text-xs uppercase tracking-wider flex items-center space-x-2">
+                <span class="w-5 h-5 rounded bg-rose-200 text-rose-800 flex items-center justify-center text-[10px]">8</span>
+                <span>Rollback Procedure (Safety Protocol)</span>
+              </h4>
+              <p class="text-rose-900 text-[11px] leading-relaxed">
+                {{ selectedRunbook.rollbackProcedure || 'Jika proses gagal dalam 10 menit, eksekusi command halt pada node dan eskalasikan ke support principal.' }}
               </p>
+            </div>
+          </div>
+
+          <!-- 9. RISK & 10. RELATED TICKET -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="border border-slate-200 rounded-xl p-4 space-y-1.5 bg-slate-50">
+              <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
+                <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">9</span>
+                <span>Risk / Potential Impact</span>
+              </h4>
+              <p class="text-slate-600 text-[11px] leading-relaxed">
+                {{ selectedRunbook.riskPotentialImpact || 'Potensi transient failover selama proses eksekusi perbaikan path SAN switch.' }}
+              </p>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl p-4 space-y-1.5 bg-slate-50">
+              <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
+                <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">10</span>
+                <span>Related Case / Ticket</span>
+              </h4>
+              <div class="text-[11px] space-y-1">
+                <div>Ticket Ref: <strong class="text-blue-700 font-mono">{{ selectedRunbook.relatedTicketId || selectedRunbook.ticketNumber || 'TICK-20261004-0005' }}</strong></div>
+                <div>Case Date: <span class="text-slate-700 font-medium">{{ selectedRunbook.caseDate || '04 Okt 2026' }}</span> &bull; Engineer: <strong class="text-slate-800">{{ selectedRunbook.engineerName || selectedRunbook.author }}</strong></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 11. SUPPORTING DOCUMENT & 12. REVIEW & APPROVAL -->
+          <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div>
+                <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800 mb-1.5">
+                  <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">11</span>
+                  <span>Supporting Document &amp; Evidence</span>
+                </h4>
+                <div v-if="selectedRunbook.uploadedDocName || selectedRunbook.pdfAttachmentUrl" class="p-2.5 bg-white border border-slate-200 rounded-lg flex items-center justify-between">
+                  <div class="flex items-center space-x-2 min-w-0">
+                    <span class="text-base">📄</span>
+                    <span class="font-mono text-slate-800 text-[11px] truncate font-medium">{{ selectedRunbook.uploadedDocName || 'lampiran_telemetry.pdf' }}</span>
+                  </div>
+                  <button 
+                    @click="downloadSupportingDoc(selectedRunbook)"
+                    class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded text-[10px] border border-blue-200 flex items-center space-x-1 shrink-0 cursor-pointer"
+                  >
+                    <span>Unduh Berkas</span>
+                    <span>&darr;</span>
+                  </button>
+                </div>
+                <div v-else class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 text-[11px] italic">
+                  Tidak ada dokumen lampiran tambahan.
+                </div>
+              </div>
+
+              <div>
+                <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800 mb-1.5">
+                  <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">12</span>
+                  <span>Review &amp; Approval</span>
+                </h4>
+                <div class="p-2.5 bg-white border border-slate-200 rounded-lg space-y-1.5 text-[11px]">
+                  <div class="flex justify-between">
+                    <span class="text-slate-400">Prepared By:</span>
+                    <strong class="text-slate-800">{{ selectedRunbook.author || selectedRunbook.engineerName || 'Engineer GTT' }}</strong>
+                  </div>
+                  <div class="flex justify-between">
+                    <span class="text-slate-400">Reviewed By:</span>
+                    <strong class="text-slate-800">{{ selectedRunbook.approver || 'Denny Wicaksono (Supervisor)' }}</strong>
+                  </div>
+                  <div class="flex justify-between items-center">
+                    <span class="text-slate-400">Status Governance:</span>
+                    <span 
+                      class="font-bold px-2 py-0.5 rounded border text-[10px] font-mono uppercase"
+                      :class="{
+                        'bg-emerald-50 text-emerald-700 border-emerald-200': selectedRunbook.status === 'PUBLISHED',
+                        'bg-amber-50 text-amber-700 border-amber-200': selectedRunbook.status === 'PENDING_APPROVAL',
+                        'bg-slate-100 text-slate-700 border-slate-200': selectedRunbook.status === 'DRAFT'
+                      }"
+                    >
+                      {{ selectedRunbook.status || 'PUBLISHED' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Modal Footer -->
-        <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
-          <button
-            @click="printRunbook"
-            class="px-3.5 py-1.5 border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-semibold rounded-lg text-xs transition-colors flex items-center space-x-1.5 cursor-pointer"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-            </svg>
-            <span>Cetak Runbook SOP</span>
-          </button>
+        <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center space-x-2">
+            <!-- Cetak SOP Button -->
+            <button
+              @click="printRunbook"
+              class="px-3.5 py-2 border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-semibold rounded-lg text-xs transition-colors flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+            >
+              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+              </svg>
+              <span>Cetak SOP</span>
+            </button>
 
-          <button
-            @click="selectedRunbook = null"
-            class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer"
-          >
-            Tutup
-          </button>
+            <!-- Unduh Template Dokumen DOCX -->
+            <a
+              href="/templates/GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
+              download="GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
+              class="px-3.5 py-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded-lg text-xs transition-colors flex items-center space-x-1.5 shadow-2xs cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <span>Unduh Template (.docx)</span>
+            </a>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <!-- Approve button if Admin and runbook is PENDING_APPROVAL -->
+            <button
+              v-if="authStore.isAdmin && selectedRunbook.status === 'PENDING_APPROVAL'"
+              @click="publishSelectedRunbook"
+              class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs flex items-center space-x-1.5 cursor-pointer"
+            >
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span>Setujui &amp; Publikasikan SOP</span>
+            </button>
+
+            <button
+              @click="selectedRunbook = null"
+              class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer"
+            >
+              Tutup
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Modal 2: Propose New Article Modal -->
-    <div v-if="showProposeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-      <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
-        <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-          <div>
-            <h3 class="font-bold text-slate-900 text-sm">Propose New Engineering Runbook</h3>
-            <p class="text-[11px] text-slate-500">Ajukan prosedur troubleshooting terverifikasi untuk disetujui lead engineer.</p>
-          </div>
-          <button @click="showProposeModal = false" class="text-slate-400 hover:text-slate-600 text-2xl font-bold cursor-pointer">&times;</button>
-        </div>
-
-        <form @submit.prevent="submitProposedArticle" class="p-6 overflow-y-auto space-y-4 text-xs">
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">Judul Runbook &amp; Prosedur *</label>
-            <input
-              v-model="newArticle.title"
-              required
-              type="text"
-              placeholder="Contoh: Cisco Nexus 9000 VPC Split-Brain Recovery via Keepalive Interface"
-              class="w-full p-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
-            />
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Kategori Infrastruktur *</label>
-              <select v-model="newArticle.categoryGroup" required class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white">
-                <option value="SAN & Enterprise Storage">SAN &amp; Enterprise Storage</option>
-                <option value="VMware & Hypervisors">VMware &amp; Hypervisors</option>
-                <option value="Network & Switches">Network &amp; Switches</option>
-                <option value="Backup & DR">Backup &amp; DR</option>
-                <option value="Database & Middleware">Database &amp; Middleware</option>
-                <option value="Security & Firewall">Security &amp; Firewall</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Principal / Platform Vendor *</label>
-              <input
-                v-model="newArticle.technologyPrincipal"
-                required
-                type="text"
-                placeholder="Contoh: Cisco NX-OS / VMware ESXi 8.0"
-                class="w-full p-2.5 border border-slate-200 rounded-xl text-xs"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">Gejala Kerusakan (Symptom Description) *</label>
-            <textarea
-              v-model="newArticle.symptom"
-              required
-              rows="2"
-              placeholder="Jelaskan indikasi kegagalan sistem, error code, atau perilaku anomali..."
-              class="w-full p-2.5 border border-slate-200 rounded-xl text-xs"
-            ></textarea>
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">Akar Masalah Teknis (Root Cause Analysis) *</label>
-            <textarea
-              v-model="newArticle.rootCause"
-              required
-              rows="2"
-              placeholder="Rincikan faktor teknis utama penyebab kegagalan..."
-              class="w-full p-2.5 border border-slate-200 rounded-xl text-xs"
-            ></textarea>
-          </div>
-
-          <div>
-            <label class="block font-semibold text-slate-700 mb-1">CLI Commands &amp; Resolution Sequence *</label>
-            <textarea
-              v-model="newArticle.cliSnippet"
-              required
-              rows="4"
-              placeholder="# Step 1: Check status\nshow status\n\n# Step 2: Remediate issue\nrestart service"
-              class="w-full p-2.5 border border-slate-200 rounded-xl text-xs font-mono bg-slate-900 text-slate-100"
-            ></textarea>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Prosedur Verifikasi Sukses</label>
-              <input
-                v-model="newArticle.verificationSteps"
-                type="text"
-                placeholder="Contoh: Pastikan vPC peer link status up dan link flapping berhenti."
-                class="w-full p-2.5 border border-slate-200 rounded-xl text-xs"
-              />
-            </div>
-
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Prosedur Rollback Darurat</label>
-              <input
-                v-model="newArticle.rollbackProcedure"
-                type="text"
-                placeholder="Contoh: Isolate secondary peer switch jika traffic drop."
-                class="w-full p-2.5 border border-slate-200 rounded-xl text-xs"
-              />
-            </div>
-          </div>
-
-          <div class="pt-4 border-t border-slate-200 flex justify-end space-x-2">
-            <button
-              type="button"
-              @click="showProposeModal = false"
-              class="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-semibold cursor-pointer"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer"
-            >
-              Publikasikan Runbook
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-
-    <!-- Modal 3: Pending Approvals Queue Modal -->
+    <!-- Modal 2: Pending Approvals Queue Modal -->
     <div v-if="showPendingModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
       <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
         <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -766,7 +873,7 @@
             <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
             <h3 class="font-bold text-slate-900 text-sm">Governance &amp; Approvals Queue</h3>
             <span class="text-[10px] font-mono bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">
-              {{ ticketStore.pendingKbApprovals.length }} Tiket Menunggu
+              {{ allPendingItems.length }} Tiket &amp; Runbook Menunggu
             </span>
           </div>
           <button @click="showPendingModal = false" class="text-slate-400 hover:text-slate-600 text-2xl font-bold cursor-pointer">&times;</button>
@@ -774,35 +881,44 @@
 
         <div class="p-6 overflow-y-auto space-y-3 text-xs">
           <div
-            v-for="pending in ticketStore.pendingKbApprovals"
+            v-for="pending in allPendingItems"
             :key="pending.id"
             class="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-2"
           >
             <div class="flex items-center justify-between">
               <span class="font-bold text-slate-900 text-sm">{{ pending.title }}</span>
               <span class="text-[10px] font-mono font-bold bg-amber-100 text-amber-800 px-2 py-0.5 rounded">
-                {{ pending.stage }}
+                {{ pending.stage || 'Review Needed' }}
               </span>
             </div>
-            <p class="text-slate-600 text-[11px] leading-relaxed">
+            <p class="text-slate-600 text-[11px] leading-relaxed line-clamp-2">
               {{ pending.summary }}
             </p>
             <div class="pt-2 border-t border-slate-200 flex items-center justify-between text-[11px] text-slate-500 font-mono">
               <div>
-                <span>Source: <strong>{{ pending.sourceTicket }}</strong> ({{ pending.customer }})</span>
+                <span v-if="pending.sourceTicket">Source: <strong>{{ pending.sourceTicket }}</strong></span>
                 <span class="ml-2">By: {{ pending.author }}</span>
               </div>
-              <button
-                v-if="authStore.currentUser.roleCode === 'ADMIN'"
-                @click="handleApprovePending(pending.id)"
-                class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer"
-              >
-                Setujui &amp; Terbitkan
-              </button>
+              <div class="flex items-center space-x-2">
+                <button
+                  v-if="pending.type === 'ARTICLE_SUBMISSION'"
+                  @click="openRunbookDetail(pending.raw); showPendingModal = false;"
+                  class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold rounded-lg text-xs cursor-pointer"
+                >
+                  Lihat Detail
+                </button>
+                <button
+                  v-if="authStore.isAdmin"
+                  @click="handleApproveAnyPending(pending)"
+                  class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-xs cursor-pointer"
+                >
+                  Setujui &amp; Terbitkan
+                </button>
+              </div>
             </div>
           </div>
 
-          <div v-if="ticketStore.pendingKbApprovals.length === 0" class="text-center py-8 text-slate-400">
+          <div v-if="allPendingItems.length === 0" class="text-center py-8 text-slate-400">
             Semua antrean proposal telah disetujui.
           </div>
         </div>
@@ -821,10 +937,13 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import { useTicketStore } from '../stores/ticketStore';
 
+const route = useRoute();
+const router = useRouter();
 const authStore = useAuthStore();
 const ticketStore = useTicketStore();
 
@@ -838,9 +957,20 @@ const currentPage = ref(1);
 const pageSize = 5;
 
 const selectedRunbook = ref(null);
-const showProposeModal = ref(false);
 const showPendingModal = ref(false);
 const copiedCode = ref(false);
+const createdAlertMessage = ref('');
+
+onMounted(() => {
+  if (route.query.created) {
+    const createdId = Number(route.query.created);
+    const found = ticketStore.knowledgeBase.find(k => k.id === createdId);
+    if (found) {
+      selectedRunbook.value = found;
+      createdAlertMessage.value = `Runbook "${found.title}" telah didaftarkan dengan kode ${found.kbCode || `KB-${found.id}`}. Status: ${found.status === 'PUBLISHED' ? 'Terverifikasi & Diterbitkan' : 'Menunggu Review Admin'}.`;
+    }
+  }
+});
 
 const frequentTags = [
   'Datastore inaccessible',
@@ -850,26 +980,77 @@ const frequentTags = [
   'Replication lag'
 ];
 
-const categoryTabs = [
-  { id: 'all', label: 'All Technologies', count: 85 },
-  { id: 'vmware', label: 'VMware & Hypervisors', count: 18 },
-  { id: 'storage', label: 'SAN & Enterprise Storage', count: 24 },
-  { id: 'network', label: 'Network & Switches', count: 15 },
-  { id: 'backup', label: 'Backup & DR', count: 12 },
-  { id: 'database', label: 'Database & Middleware', count: 9 },
-  { id: 'security', label: 'Security & Firewall', count: 7 }
-];
-
-const newArticle = ref({
-  title: '',
-  categoryGroup: 'SAN & Enterprise Storage',
-  technologyPrincipal: '',
-  symptom: '',
-  rootCause: '',
-  cliSnippet: '',
-  verificationSteps: '',
-  rollbackProcedure: ''
+const availablePrincipals = computed(() => {
+  return ticketStore.allPrincipals;
 });
+
+const storagePlaybooksCount = computed(() => {
+  return ticketStore.knowledgeBase.filter(k => 
+    (k.categoryGroup || '').toLowerCase().includes('storage') || 
+    (k.category || '').toLowerCase().includes('storage') ||
+    (k.title || '').toLowerCase().includes('3par') ||
+    (k.title || '').toLowerCase().includes('san')
+  ).length;
+});
+
+const vmwarePlaybooksCount = computed(() => {
+  return ticketStore.knowledgeBase.filter(k => 
+    (k.categoryGroup || '').toLowerCase().includes('vmware') || 
+    (k.category || '').toLowerCase().includes('vmware') ||
+    (k.title || '').toLowerCase().includes('esxi') ||
+    (k.title || '').toLowerCase().includes('vsan')
+  ).length;
+});
+
+const backupPlaybooksCount = computed(() => {
+  return ticketStore.knowledgeBase.filter(k => 
+    (k.categoryGroup || '').toLowerCase().includes('backup') || 
+    (k.category || '').toLowerCase().includes('backup') ||
+    (k.title || '').toLowerCase().includes('rubrik') ||
+    (k.title || '').toLowerCase().includes('veeam')
+  ).length;
+});
+
+const incidentReusabilityRate = computed(() => {
+  const closedOrResolved = ticketStore.tickets.filter(t => ['RESOLVED', 'CLOSED'].includes(t.status));
+  if (closedOrResolved.length === 0) return 64;
+  const withKb = closedOrResolved.filter(t => t.isProposeKb || (t.rootCause && t.rootCause.length > 10)).length;
+  return Math.min(100, Math.round((withKb / closedOrResolved.length) * 100));
+});
+
+const categoryTabs = computed(() => [
+  { id: 'all', label: 'All Technologies', count: ticketStore.knowledgeBase.length },
+  { 
+    id: 'vmware', 
+    label: 'VMware & Hypervisors', 
+    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('VMware') || (k.category || '').toLowerCase().includes('vmware')).length 
+  },
+  { 
+    id: 'storage', 
+    label: 'SAN & Enterprise Storage', 
+    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('Storage') || (k.category || '').toLowerCase().includes('storage')).length 
+  },
+  { 
+    id: 'network', 
+    label: 'Network & Switches', 
+    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('Network') || (k.category || '').toLowerCase().includes('network')).length 
+  },
+  { 
+    id: 'backup', 
+    label: 'Backup & DR', 
+    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('Backup') || (k.category || '').toLowerCase().includes('backup')).length 
+  },
+  { 
+    id: 'database', 
+    label: 'Database & Middleware', 
+    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('Database') || (k.category || '').toLowerCase().includes('database')).length 
+  },
+  { 
+    id: 'security', 
+    label: 'Security & Firewall', 
+    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('Security') || (k.category || '').toLowerCase().includes('security')).length 
+  }
+]);
 
 const filteredRunbooks = computed(() => {
   return ticketStore.knowledgeBase.filter(item => {
@@ -889,13 +1070,15 @@ const filteredRunbooks = computed(() => {
     // 2. Principal filter
     if (selectedPrincipal.value) {
       const p = selectedPrincipal.value.toLowerCase();
-      const matchPrincipal = item.technologyPrincipal?.toLowerCase().includes(p) || item.title.toLowerCase().includes(p);
+      const matchPrincipal = item.technologyPrincipal?.toLowerCase().includes(p) || item.title?.toLowerCase().includes(p);
       if (!matchPrincipal) return false;
     }
 
     // 3. Status filter
     if (selectedStatus.value !== 'ALL') {
-      if (item.status !== selectedStatus.value) return false;
+      if (selectedStatus.value === 'PUBLISHED' && item.status !== 'PUBLISHED') return false;
+      if (selectedStatus.value === 'PENDING_APPROVAL' && item.status !== 'PENDING_APPROVAL') return false;
+      if (selectedStatus.value === 'DRAFT' && item.status !== 'DRAFT') return false;
     }
 
     // 4. Search query
@@ -925,6 +1108,37 @@ const totalPages = computed(() => {
 const paginatedRunbooks = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
   return filteredRunbooks.value.slice(start, start + pageSize);
+});
+
+// All pending proposals (from tickets and directly proposed articles)
+const allPendingItems = computed(() => {
+  const fromTickets = (ticketStore.pendingKbApprovals || []).map(p => ({
+    id: p.id,
+    type: 'TICKET_PROPOSAL',
+    title: p.title,
+    sourceTicket: p.sourceTicket,
+    author: p.author,
+    customer: p.customer,
+    stage: p.stage,
+    submittedAt: p.submittedAt,
+    summary: p.summary,
+    raw: p
+  }));
+  const fromArticles = (ticketStore.knowledgeBase || [])
+    .filter(k => k.status === 'PENDING_APPROVAL')
+    .map(k => ({
+      id: k.id,
+      type: 'ARTICLE_SUBMISSION',
+      title: k.title,
+      sourceTicket: k.relatedTicketId || k.ticketNumber || null,
+      author: k.author || k.engineerName,
+      customer: k.customerName || null,
+      stage: 'Article Pending Review',
+      submittedAt: k.updatedAt || 'Recent',
+      summary: k.symptom,
+      raw: k
+    }));
+  return [...fromArticles, ...fromTickets];
 });
 
 const filterByFeatured = (groupName) => {
@@ -961,34 +1175,162 @@ const copySnippet = (code) => {
   }, 2500);
 };
 
-const openProposeModal = () => {
-  newArticle.value = {
-    title: '',
-    categoryGroup: 'SAN & Enterprise Storage',
-    technologyPrincipal: '',
-    symptom: '',
-    rootCause: '',
-    cliSnippet: '# 1. Triage & Verify\nshow port\n\n# 2. Remediate\nset online',
-    verificationSteps: '',
-    rollbackProcedure: ''
-  };
-  showProposeModal.value = true;
-};
-
-const submitProposedArticle = () => {
-  const item = ticketStore.proposeNewArticle(newArticle.value, authStore.currentUser);
-  showProposeModal.value = false;
-  selectedRunbook.value = item;
-};
-
-const handleApprovePending = (pendingId) => {
-  ticketStore.approvePendingApproval(pendingId, authStore.currentUser);
-  if (showPendingModal.value && ticketStore.pendingKbApprovals.length === 0) {
+const handleApproveAnyPending = (pendingItem) => {
+  if (pendingItem.type === 'ARTICLE_SUBMISSION') {
+    ticketStore.publishKbArticle(pendingItem.id, authStore.currentUser);
+    if (selectedRunbook.value && selectedRunbook.value.id === pendingItem.id) {
+      selectedRunbook.value.status = 'PUBLISHED';
+    }
+  } else {
+    ticketStore.approvePendingApproval(pendingItem.id, authStore.currentUser);
+  }
+  if (showPendingModal.value && allPendingItems.value.length === 0) {
     showPendingModal.value = false;
   }
 };
 
+const publishSelectedRunbook = () => {
+  if (!selectedRunbook.value) return;
+  ticketStore.publishKbArticle(selectedRunbook.value.id, authStore.currentUser);
+  selectedRunbook.value.status = 'PUBLISHED';
+};
+
+const downloadSupportingDoc = (item) => {
+  const fileName = item.uploadedDocName || 'supporting_evidence.txt';
+  const dummyContent = `=== PT GLOTRA HELPDESK ENGINEERING EVIDENCE FILE ===\nKnowledge Base Ref: ${item.kbCode || item.id}\nTitle: ${item.title}\nDocument: ${fileName}\n\nEvidence Content / System Telemetry Log:\nVerified operational diagnostics at ${new Date().toISOString()}`;
+  const blob = new Blob([dummyContent], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
+
 const printRunbook = () => {
-  window.print();
+  if (!selectedRunbook.value) return;
+  const rb = selectedRunbook.value;
+  const printWindow = window.open('', '_blank');
+  if (!printWindow) {
+    window.print();
+    return;
+  }
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>${rb.kbCode || 'KB'} - ${rb.title}</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 24px; color: #1e293b; line-height: 1.4; font-size: 12px; }
+        h1 { font-size: 18px; margin-bottom: 4px; color: #0f172a; }
+        .meta { color: #64748b; font-size: 11px; margin-bottom: 16px; border-bottom: 2px solid #e2e8f0; padding-bottom: 8px; }
+        .section { margin-bottom: 14px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; page-break-inside: avoid; }
+        .section-header { background: #f1f5f9; padding: 6px 10px; font-weight: bold; font-size: 11px; color: #0f172a; text-transform: uppercase; border-bottom: 1px solid #cbd5e1; }
+        .section-body { padding: 10px; font-size: 11px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 6px 8px; text-align: left; vertical-align: top; border-bottom: 1px solid #e2e8f0; }
+        th { width: 25%; font-weight: 600; color: #475569; background: #f8fafc; }
+        pre { background: #0f172a; color: #f8fafc; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 10px; white-space: pre-wrap; margin: 0; }
+        @media print { body { padding: 0; } }
+      </style>
+    </head>
+    <body>
+      <h1>${rb.kbCode || 'KB'} : ${rb.title}</h1>
+      <div class="meta">
+        <strong>PT Global Transformasi Teknologi (Glotra) - Operations Helpdesk SOP</strong><br/>
+        Category: ${rb.categoryGroup || rb.category || '-'} | Vendor: ${rb.technologyPrincipal || '-'} | Version: ${rb.version || '1.0'} | Status: ${rb.status || 'PUBLISHED'}
+      </div>
+
+      <div class="section">
+        <div class="section-header">1. Document Information</div>
+        <div class="section-body">
+          <table>
+            <tr><th>Product / Platform</th><td>${rb.productPlatform || rb.technologyPrincipal || '-'}</td></tr>
+            <tr><th>Version / Firmware</th><td>${rb.firmwareVersion || '-'}</td></tr>
+            <tr><th>Case Type</th><td>${rb.caseType || 'Incident'}</td></tr>
+            <tr><th>Prepared By</th><td>${rb.author || rb.engineerName || '-'}</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">2. Problem Description</div>
+        <div class="section-body">
+          <table>
+            <tr><th>Symptom / Gejala</th><td>${rb.symptom || '-'}</td></tr>
+            <tr><th>Error Code / Alert</th><td>${rb.errorCode || '-'}</td></tr>
+            <tr><th>Environment</th><td>${rb.environment || '-'}</td></tr>
+            <tr><th>Impact / Scope</th><td>${rb.impactScope || '-'}</td></tr>
+          </table>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">3. Pre-Check / Prerequisite</div>
+        <div class="section-body">${rb.prerequisites || '-'}</div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">4. Troubleshooting / Diagnostic Steps</div>
+        <div class="section-body" style="white-space: pre-line;">${rb.diagnosticSteps || '-'}</div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">5. Root Cause Analysis (RCA)</div>
+        <div class="section-body">${rb.rootCause || '-'}</div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">6. Resolution Procedure & CLI Commands</div>
+        <div class="section-body">
+          <p style="margin-top: 0;">${rb.resolutionSteps || '-'}</p>
+          ${rb.cliSnippet ? `<pre>${rb.cliSnippet}</pre>` : ''}
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">7. Verification & Expected Result</div>
+        <div class="section-body">
+          <strong>Verification:</strong> ${rb.verificationSteps || '-'}<br/>
+          <strong>Expected Result:</strong> ${rb.expectedResult || '-'}
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">8. Rollback Procedure</div>
+        <div class="section-body">${rb.rollbackProcedure || '-'}</div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">9. Risk & Potential Impact</div>
+        <div class="section-body">${rb.riskPotentialImpact || '-'}</div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">10. Related Case / Ticket</div>
+        <div class="section-body">
+          Ticket Ref: <strong>${rb.relatedTicketId || rb.ticketNumber || '-'}</strong> | Date: ${rb.caseDate || '-'} | Engineer: ${rb.engineerName || rb.author || '-'}
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">11. Supporting Document & Evidence</div>
+        <div class="section-body">${rb.uploadedDocName || 'Tidak ada dokumen lampiran tambahan.'}</div>
+      </div>
+
+      <div class="section">
+        <div class="section-header">12. Review & Approval</div>
+        <div class="section-body">
+          Reviewed By: <strong>${rb.approver || '-'}</strong> | Status: <strong>${rb.status || 'PUBLISHED'}</strong> | Version: <strong>${rb.version || '1.0'}</strong>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
+  printWindow.focus();
+  setTimeout(() => {
+    printWindow.print();
+  }, 250);
 };
 </script>

@@ -38,7 +38,7 @@
       </div>
 
       <!-- Quick Action Button for CPIG / Admin only -->
-      <div v-if="['CPIG', 'ADMIN'].includes(authStore.currentUser.roleCode)">
+      <div v-if="authStore.isAdmin">
         <router-link
           to="/tickets/create"
           @click="uiStore.closeSidebar()"
@@ -56,164 +56,196 @@
       <div class="bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg flex items-center justify-between text-xs">
         <span class="text-slate-500 font-semibold text-[11px]">Akses Menu:</span>
         <span class="font-bold text-blue-700 font-mono text-[11px]">
-          {{ authStore.currentUser.roleCode === 'ADMIN' ? 'ADMIN / CPIG' : 'ENGINEER' }}
+          {{ authStore.currentUser?.roleCode === 'ADMIN' ? 'ADMIN / CPIG' : 'ENGINEER' }}
         </span>
       </div>
 
-      <!-- Navigation Links -->
+      <!-- Navigation Links (Role-Adaptive) -->
       <nav class="space-y-1 text-xs">
-        <!-- 1. Operational Dashboard (Mission Control) -->
-        <router-link
-          to="/"
-          @click="uiStore.closeSidebar()"
-          class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
-          :class="$route.path === '/' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
-        >
-          <div class="flex items-center space-x-2.5">
+        <!-- ADMIN NAVIGATION -->
+        <template v-if="authStore.currentUser?.roleCode === 'ADMIN'">
+          <!-- 1. Executive Dashboard (Mission Control) -->
+          <router-link
+            to="/"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center px-3 py-2 rounded-lg font-medium transition-colors space-x-2.5"
+            :class="$route.path === '/' ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          >
             <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path>
             </svg>
-            <span>Mission Control</span>
-          </div>
-          <span class="bg-emerald-100 text-emerald-700 text-[10px] px-1.5 py-0.2 rounded font-mono font-bold">
-            Live
-          </span>
-        </router-link>
+            <span>Ringkasan Eksekutif</span>
+          </router-link>
 
-        <!-- 2. Dedicated Ticket Queue (/tickets) -->
-        <router-link
-          to="/tickets"
-          @click="uiStore.closeSidebar()"
-          class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
-          :class="$route.path === '/tickets' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
-        >
-          <div class="flex items-center space-x-2.5">
-            <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/tickets' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-            </svg>
-            <span>Antrean Tiket</span>
-          </div>
-          <span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
-            {{ ticketStore.totalTickets }}
-          </span>
-        </router-link>
+          <!-- 2. Antrean Tiket Global (/tickets) -->
+          <router-link
+            to="/tickets"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
+            :class="$route.path === '/tickets' ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          >
+            <div class="flex items-center space-x-2.5">
+              <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/tickets' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+              <span>Antrean Tiket Global</span>
+            </div>
+            <span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+              {{ ticketStore.totalTickets }}
+            </span>
+          </router-link>
 
-        <!-- 2. Admin Menus: Users Management -->
-        <router-link
-          v-if="authStore.currentUser.roleCode === 'ADMIN'"
-          to="/admin/users"
-          @click="uiStore.closeSidebar()"
-          class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
-          :class="$route.path === '/admin/users' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
-        >
-          <div class="flex items-center space-x-2.5">
+          <!-- 3. Kelola Staf (Users) -->
+          <router-link
+            to="/admin/users"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center px-3 py-2 rounded-lg font-medium transition-colors space-x-2.5"
+            :class="$route.path === '/admin/users' ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          >
             <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/admin/users' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
             </svg>
-            <span>Kelola Staf (Users)</span>
-          </div>
-          <span class="bg-purple-100 text-purple-700 text-[10px] px-1.5 py-0.5 rounded font-bold">Admin</span>
-        </router-link>
+            <span>Kelola Staf & Teknisi</span>
+          </router-link>
 
-        <!-- 3. Admin Menus: Customers Management -->
-        <router-link
-          v-if="authStore.currentUser.roleCode === 'ADMIN'"
-          to="/admin/customers"
-          @click="uiStore.closeSidebar()"
-          class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
-          :class="$route.path === '/admin/customers' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
-        >
-          <div class="flex items-center space-x-2.5">
+          <!-- 4. Kelola Customer & PIC -->
+          <router-link
+            to="/admin/customers"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center px-3 py-2 rounded-lg font-medium transition-colors space-x-2.5"
+            :class="$route.path === '/admin/customers' ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          >
             <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/admin/customers' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
             </svg>
-            <span>Kelola Customer & PIC</span>
-          </div>
-          <span class="bg-purple-100 text-purple-700 text-[10px] px-1.5 py-0.5 rounded font-bold">Admin</span>
-        </router-link>
+            <span>Customer & PIC</span>
+          </router-link>
 
-        <!-- Konfigurasi SLA (Admin only) -->
-        <router-link
-          v-if="authStore.currentUser.roleCode === 'ADMIN'"
-          to="/admin/sla-configuration"
-          @click="uiStore.closeSidebar()"
-          class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
-          :class="$route.path === '/admin/sla-configuration' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
-        >
-          <div class="flex items-center space-x-2.5">
+          <!-- 5. Konfigurasi SLA -->
+          <router-link
+            to="/admin/sla-configuration"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center px-3 py-2 rounded-lg font-medium transition-colors space-x-2.5"
+            :class="$route.path === '/admin/sla-configuration' ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          >
             <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/admin/sla-configuration' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
             </svg>
-            <span>Konfigurasi SLA</span>
-          </div>
-          <span class="bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.5 rounded font-mono font-bold">Policy</span>
-        </router-link>
+            <span>Konfigurasi Kebijakan SLA</span>
+          </router-link>
 
-        <!-- 4. Laporan Eksekutif (Admin only) -->
-        <router-link
-          v-if="authStore.currentUser.roleCode === 'ADMIN'"
-          to="/reports"
-          @click="uiStore.closeSidebar()"
-          class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
-          :class="$route.path === '/reports' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
-        >
-          <div class="flex items-center space-x-2.5">
+          <!-- 6. Laporan Eksekutif -->
+          <router-link
+            to="/reports"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center px-3 py-2 rounded-lg font-medium transition-colors space-x-2.5"
+            :class="$route.path === '/reports' ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          >
             <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/reports' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
             </svg>
-            <span>Laporan Eksekutif</span>
-          </div>
-          <span class="bg-indigo-50 text-indigo-700 text-[10px] px-1.5 py-0.5 rounded font-bold">PDF/XLS</span>
-        </router-link>
+            <span>Laporan & Analitik</span>
+          </router-link>
 
-        <!-- 5. Knowledge Base (Admin, CPIG, Engineer) -->
-        <router-link
-          v-if="['ADMIN', 'CPIG', 'ENGINEER'].includes(authStore.currentUser.roleCode)"
-          to="/knowledge-base"
-          @click="uiStore.closeSidebar()"
-          class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
-          :class="$route.path === '/knowledge-base' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
-        >
-          <div class="flex items-center space-x-2.5">
-            <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/knowledge-base' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-            </svg>
-            <span>Knowledge Base</span>
-          </div>
-          <span class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full font-semibold">
-            {{ ticketStore.knowledgeBase.length }}
-          </span>
-        </router-link>
+          <!-- 7. Knowledge Base -->
+          <router-link
+            to="/knowledge-base"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
+            :class="$route.path.startsWith('/knowledge-base') ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          >
+            <div class="flex items-center space-x-2.5">
+              <svg class="w-4 h-4 text-slate-400" :class="$route.path.startsWith('/knowledge-base') ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              <span>Knowledge Base & SOP</span>
+            </div>
+            <span class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full font-semibold">
+              {{ ticketStore.knowledgeBase.length }}
+            </span>
+          </router-link>
 
-        <!-- 6. Audit Logs (Admin only) -->
-        <router-link
-          v-if="authStore.currentUser.roleCode === 'ADMIN'"
-          to="/audit-logs"
-          @click="uiStore.closeSidebar()"
-          class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
-          :class="$route.path === '/audit-logs' ? 'bg-blue-50 text-blue-700 font-semibold' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
-        >
-          <div class="flex items-center space-x-2.5">
+          <!-- 8. Audit Logs -->
+          <router-link
+            to="/audit-logs"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center px-3 py-2 rounded-lg font-medium transition-colors space-x-2.5"
+            :class="$route.path === '/audit-logs' ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          >
             <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/audit-logs' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
-            <span>Jejak Audit (Logs)</span>
-          </div>
-          <span class="bg-emerald-50 text-emerald-700 text-[10px] px-1.5 py-0.5 rounded font-semibold">Live</span>
-        </router-link>
+            <span>Jejak Audit Sistem</span>
+          </router-link>
+        </template>
+
+        <!-- SUPPORT ENGINEER NAVIGATION (Simplified per MoM) -->
+        <template v-else>
+          <!-- 1. Tiket Saya (Assigned Queue) -->
+          <router-link
+            to="/tickets"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
+            :class="$route.path === '/tickets' ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          >
+            <div class="flex items-center space-x-2.5">
+              <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/tickets' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+              </svg>
+              <span>Tiket Saya</span>
+            </div>
+            <span class="bg-blue-100 text-blue-700 text-[10px] px-2 py-0.5 rounded-full font-bold">
+              {{ ticketStore.tickets.filter(t => t.assignedToId === authStore.currentUser?.id && t.status !== 'CLOSED').length }}
+            </span>
+          </router-link>
+
+
+          <!-- 3. Knowledge Base & Runbooks -->
+          <router-link
+            to="/knowledge-base"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center justify-between px-3 py-2 rounded-lg font-medium transition-colors"
+            :class="$route.path.startsWith('/knowledge-base') ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          >
+            <div class="flex items-center space-x-2.5">
+              <svg class="w-4 h-4 text-slate-400" :class="$route.path.startsWith('/knowledge-base') ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+              </svg>
+              <span>Knowledge Base (SOP)</span>
+            </div>
+            <span class="bg-slate-100 text-slate-600 text-[10px] px-2 py-0.5 rounded-full font-semibold">
+              {{ ticketStore.knowledgeBase.length }}
+            </span>
+          </router-link>
+        </template>
+
+        <!-- Profil & Keamanan Akun (Common for both Admin & Engineer) -->
+        <div class="pt-2 mt-2 border-t border-slate-100">
+          <router-link
+            to="/profile"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center px-3 py-2 rounded-lg font-medium transition-colors space-x-2.5"
+            :class="$route.path === '/profile' ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'"
+          >
+            <svg class="w-4 h-4 text-slate-400" :class="$route.path === '/profile' ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+            </svg>
+            <span>Profil &amp; Sandi Akun</span>
+          </router-link>
+        </div>
       </nav>
 
       <!-- SLA Status Widget -->
       <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2.5">
         <div class="flex items-center justify-between">
           <span class="text-[11px] font-bold text-slate-700 uppercase tracking-wider">Performa SLA 24/7</span>
-          <span class="text-xs font-bold text-blue-600">{{ ticketStore.slaComplianceRate }}%</span>
+          <span class="text-xs font-bold text-blue-600">{{ ticketStore.slaComplianceRate !== null ? `${ticketStore.slaComplianceRate}%` : '-' }}</span>
         </div>
         <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
           <div 
             class="bg-blue-600 h-1.5 rounded-full transition-all duration-500" 
-            :style="{ width: `${ticketStore.slaComplianceRate}%` }"
+            :style="{ width: `${ticketStore.slaComplianceRate || 0}%` }"
           ></div>
         </div>
         <div class="grid grid-cols-2 gap-2 pt-1 text-[11px]">
@@ -230,9 +262,8 @@
     </div>
 
     <!-- Bottom: Company Info Card -->
-    <div class="pt-3 border-t border-slate-200 text-xs text-slate-500 space-y-0.5" :class="{ 'lg:hidden': uiStore.isSidebarCollapsed }">
+    <div class="pt-3 border-t border-slate-200 text-xs text-slate-500" :class="{ 'lg:hidden': uiStore.isSidebarCollapsed }">
       <p class="font-semibold text-slate-700 text-[11px]">PT Global Transformasi Teknologi</p>
-      <p class="text-[10px] text-slate-400">Kerja Praktik Sistem Helpdesk 2026</p>
     </div>
   </aside>
 </template>

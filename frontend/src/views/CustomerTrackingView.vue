@@ -348,7 +348,13 @@ const statusBannerClass = computed(() => {
 });
 
 const confirmCustomerSatisfaction = () => {
-  alert('Terima kasih! Konfirmasi Anda telah dicatat. Tiket akan diarsipkan sebagai CLOSED.');
+  if (!ticket.value) return;
+  ticketStore.closeTicket(
+    ticket.value.id,
+    { name: pic.value?.name || 'PIC Pelanggan', roleCode: 'CUSTOMER' },
+    'Pelanggan telah memverifikasi layanan normal dan mengonfirmasi penyelesaian tiket.'
+  );
+  alert('Terima kasih! Konfirmasi kepuasan Anda telah dicatat. Tiket resmi diarsipkan dengan status CLOSED.');
 };
 
 // Share Link to Customer Internal Team

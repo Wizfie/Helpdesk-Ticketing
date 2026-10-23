@@ -6,7 +6,7 @@ const STORAGE_KEY_ROLE = 'gtt_current_role';
 const STORAGE_KEY_USERS = 'gtt_mock_users';
 
 const USER_DATA_VERSION_KEY = 'gtt_user_data_version';
-const CURRENT_USER_DATA_VERSION = 'v2.2-users';
+const CURRENT_USER_DATA_VERSION = 'v3.1-with-andi-wijaya';
 
 function getStoredUsers() {
   if (typeof window === 'undefined' || !window.localStorage) {
@@ -40,27 +40,26 @@ function getStoredCurrentUser(users) {
     const storedUserId = localStorage.getItem(STORAGE_KEY_USER_ID);
     if (storedUserId) {
       const matched = users.find(u => u.id === Number(storedUserId));
-      if (matched) return matched;
-    }
-
-    const storedRole = localStorage.getItem(STORAGE_KEY_ROLE);
-    if (storedRole) {
-      const matchedByRole = users.find(u => u.roleCode === storedRole);
-      if (matchedByRole) return matchedByRole;
+      if (matched && matched.isActive) return matched;
     }
   } catch (e) {
     console.error('Failed to load current user from localStorage:', e);
   }
 
-  // Default fallback: Ahmad Fauzi / Rina Anggraini (ADMIN / CPIG)
-  return users.find(u => u.roleCode === 'ADMIN') || users[0];
+  // Default to null so user can login, or Budi Santoso if testing
+  return null;
 }
 
 function saveCurrentAuthState(user) {
-  if (typeof window === 'undefined' || !window.localStorage || !user) return;
+  if (typeof window === 'undefined' || !window.localStorage) return;
   try {
-    localStorage.setItem(STORAGE_KEY_USER_ID, String(user.id));
-    localStorage.setItem(STORAGE_KEY_ROLE, user.roleCode);
+    if (user) {
+      localStorage.setItem(STORAGE_KEY_USER_ID, String(user.id));
+      localStorage.setItem(STORAGE_KEY_ROLE, user.roleCode);
+    } else {
+      localStorage.removeItem(STORAGE_KEY_USER_ID);
+      localStorage.removeItem(STORAGE_KEY_ROLE);
+    }
   } catch (e) {
     console.error('Failed to save current user to localStorage:', e);
   }
@@ -84,7 +83,39 @@ export const useAuthStore = defineStore('auth', {
       roles: ROLES
     };
   },
+  getters: {
+    isAuthenticated: (state) => !!state.currentUser,
+    isEngineer: (state) => state.currentUser?.roleCode === 'ENGINEER',
+    isAdmin: (state) => state.currentUser?.roleCode === 'ADMIN'
+  },
   actions: {
+    login(email, password) {
+      const trimmedEmail = (email || '').trim().toLowerCase();
+      const user = this.users.find(u => u.email.toLowerCase() === trimmedEmail);
+      if (!user) {
+        return { success: false, message: 'Email staf tidak terdaftar dalam sistem GTT.' };
+      }
+      if (!user.isActive) {
+        return { success: false, message: 'Akun staf berstatus non-aktif. Silakan hubungi Admin CPIG.' };
+      }
+      // Demo password check (allow 'password123' or matching user password)
+      if (password && password !== 'password123' && user.password && user.password !== password) {
+        return { success: false, message: 'Kata sandi tidak sesuai. Gunakan kata sandi akun Anda atau password123.' };
+      }
+
+      this.currentUser = user;
+      saveCurrentAuthState(user);
+      return { success: true, user };
+    },
+    loginAs(user) {
+      if (!user) return;
+      this.currentUser = user;
+      saveCurrentAuthState(user);
+    },
+    logout() {
+      this.currentUser = null;
+      saveCurrentAuthState(null);
+    },
     switchUser(userId) {
       const user = this.users.find(u => u.id === Number(userId));
       if (user) {
@@ -179,14 +210,132 @@ export const useAuthStore = defineStore('auth', {
 
       if (ticketStore && ticketStore.addAuditLog) {
         ticketStore.addAuditLog({
-          userName: actorUser.name,
-          role: actorUser.roleCode,
+          userName: actorUser ? actorUser.name : 'System Admin',
+          role: actorUser ? actorUser.roleCode : 'ADMIN',
           action: 'USER_STATUS_TOGGLED',
           entityType: 'USER',
           entityId: `USER-00${user.id}`,
           description: `Mengubah status keaktifan staf ${user.name} menjadi ${user.isActive ? 'Aktif' : 'Nonaktif'}`
         });
       }
+    },
+
+    changePassword(userId, oldPassword, newPassword, ticketStore) {
+      const user = this.users.find(u => u.id === Number(userId));
+      if (!user) {
+        return { success: false, message: 'Pengguna tidak ditemukan.' };
+      }
+
+      // Check existing password if present (default fallback is password123)
+      const currentStoredPass = user.password || 'password123';
+      if (oldPassword !== currentStoredPass) {
+        return { success: false, message: 'Kata sandi saat ini yang Anda masukkan salah.' };
+      }
+
+      if (!newPassword || newPassword.length < 6) {
+        return { success: false, message: 'Kata sandi baru minimal harus 6 karakter.' };
+      }
+
+      if (newPassword === oldPassword) {
+        return { success: false, message: 'Kata sandi baru tidak boleh sama dengan kata sandi lama.' };
+      }
+
+      user.password = newPassword;
+
+      if (this.currentUser && this.currentUser.id === user.id) {
+        this.currentUser.password = newPassword;
+        saveCurrentAuthState(this.currentUser);
+      }
+
+      saveUsersState(this.users);
+
+      if (ticketStore && ticketStore.addAuditLog) {
+        ticketStore.addAuditLog({
+          userName: user.name,
+          role: user.roleCode,
+          action: 'USER_PASSWORD_CHANGED',
+          entityType: 'USER',
+          entityId: `USER-00${user.id}`,
+          description: `Pengguna ${user.name} (${user.roleCode}) berhasil memperbarui kata sandi akun secara mandiri.`
+        });
+      }
+
+      return { success: true, message: 'Kata sandi akun Anda berhasil diperbarui.' };
+    },
+
+    updateProfile(userId, profileData, ticketStore) {
+      const user = this.users.find(u => u.id === Number(userId));
+      if (!user) {
+        return { success: false, message: 'Pengguna tidak ditemukan.' };
+      }
+
+      if (profileData.name) {
+        user.name = profileData.name.trim();
+        const parts = user.name.split(' ');
+        user.initials = parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+      }
+
+      if (profileData.phone) {
+        user.phone = profileData.phone.trim();
+      }
+
+      if (profileData.roleTitle) {
+        user.roleTitle = profileData.roleTitle.trim();
+      }
+
+      if (this.currentUser && this.currentUser.id === user.id) {
+        this.currentUser = { ...user };
+        saveCurrentAuthState(this.currentUser);
+      }
+
+      saveUsersState(this.users);
+
+      if (ticketStore && ticketStore.addAuditLog) {
+        ticketStore.addAuditLog({
+          userName: user.name,
+          role: user.roleCode,
+          action: 'PROFILE_UPDATED',
+          entityType: 'USER',
+          entityId: `USER-00${user.id}`,
+          description: `Pengguna ${user.name} memperbarui informasi profil akun.`
+        });
+      }
+
+      return { success: true, message: 'Data profil berhasil diperbarui.' };
+    },
+
+    adminResetPassword(userId, newPassword, actorUser, ticketStore) {
+      const user = this.users.find(u => u.id === Number(userId));
+      if (!user) {
+        return { success: false, message: 'Pengguna tidak ditemukan.' };
+      }
+
+      const passToSet = newPassword && newPassword.trim() ? newPassword.trim() : 'GTT@2026!';
+      user.password = passToSet;
+
+      if (this.currentUser && this.currentUser.id === user.id) {
+        this.currentUser.password = passToSet;
+        saveCurrentAuthState(this.currentUser);
+      }
+
+      saveUsersState(this.users);
+
+      if (ticketStore && ticketStore.addAuditLog) {
+        ticketStore.addAuditLog({
+          userName: actorUser ? actorUser.name : 'System Admin',
+          role: actorUser ? actorUser.roleCode : 'ADMIN',
+          action: 'USER_PASSWORD_RESET_BY_ADMIN',
+          entityType: 'USER',
+          entityId: `USER-00${user.id}`,
+          description: `Administrator ${actorUser ? actorUser.name : 'Admin'} mereset kata sandi staf ${user.name} (${user.email}).`
+        });
+      }
+
+      return { 
+        success: true, 
+        message: `Kata sandi untuk ${user.name} berhasil direset menjadi: ${passToSet}`,
+        temporaryPassword: passToSet 
+      };
     }
   }
 });

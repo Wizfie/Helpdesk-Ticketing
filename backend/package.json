@@ -1,0 +1,41 @@
+{
+  "name": "gtt-helpdesk-backend",
+  "version": "1.0.0",
+  "description": "Backend REST API Helpdesk Ticketing Enterprise PT Glotra (Express.js, Prisma, MySQL)",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js",
+    "tunnel": "cloudflared tunnel --url http://localhost:5000",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "node prisma/seed.js",
+    "prisma:studio": "prisma studio"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
+  "keywords": [
+    "helpdesk",
+    "ticketing",
+    "express",
+    "prisma",
+    "mysql"
+  ],
+  "author": "Mahasiswa KP Unpam",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
+    "node-cron": "^4.6.0"
+  },
+  "devDependencies": {
+    "prisma": "^6.19.3"
+  }
+}

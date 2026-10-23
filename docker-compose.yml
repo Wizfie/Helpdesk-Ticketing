@@ -1,0 +1,71 @@
+services:
+  # 1. Layanan Database: MySQL 8.0
+  db:
+    image: mysql:8.0
+    container_name: helpdesk-db
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_glotra_pass_2026}
+      MYSQL_DATABASE: ${DB_NAME:-helpdesk_glotra}
+      MYSQL_USER: ${DB_USER:-glotra_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-glotra_password_2026}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      # Port 3306 hanya dibuka di 127.0.0.1 (localhost VPS) agar aman dari luar
+      - "127.0.0.1:3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${DB_ROOT_PASSWORD:-root_glotra_pass_2026}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - helpdesk-net
+
+  # 2. Layanan Backend API: Express.js + Prisma ORM
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: helpdesk-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 5000
+      NODE_ENV: production
+      DATABASE_URL: mysql://${DB_USER:-glotra_user}:${DB_PASSWORD:-glotra_password_2026}@db:3306/${DB_NAME:-helpdesk_glotra}
+      JWT_SECRET: ${JWT_SECRET:-glotra_jwt_secret_production_2026}
+      SEED_ON_START: ${SEED_ON_START:-true}
+    volumes:
+      # Volume persisten untuk file lampiran bukti digital
+      - uploads_data:/app/uploads
+    networks:
+      - helpdesk-net
+
+  # 3. Layanan Frontend: Vue.js 3 + Nginx Web Server & Reverse Proxy
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: helpdesk-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      # Port web publik (bisa diakses via IP / Domain)
+      - "80:80"
+    networks:
+      - helpdesk-net
+
+volumes:
+  mysql_data:
+    name: helpdesk_mysql_data
+  uploads_data:
+    name: helpdesk_uploads_data
+
+networks:
+  helpdesk-net:
+    name: helpdesk-net
+    driver: bridge

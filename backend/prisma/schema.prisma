@@ -1,0 +1,356 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ----------------------------------------------------
+// 1. Roles & Users (Strict RBAC for Glotra Helpdesk)
+// ----------------------------------------------------
+model Role {
+  id        Int      @id @default(autoincrement())
+  code      String   @unique // 'ADMIN', 'ENGINEER'
+  name      String
+  users     User[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("roles")
+}
+
+model User {
+  id              Int               @id @default(autoincrement())
+  roleId          Int
+  role            Role              @relation(fields: [roleId], references: [id])
+  name            String
+  email           String            @unique
+  password        String?           @default("$2a$10$defaultPlaceholderHash2026")
+  initials        String
+  phone           String?
+  roleTitle       String?           // e.g. 'Service Delivery Lead', 'Senior Storage Engineer'
+  shift           String?           // e.g. 'Morning Tier-2 (08:00 - 17:00 WIB)'
+  supervisor      String?           // e.g. 'Denny Wicaksono'
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  createdTickets  Ticket[]          @relation("TicketCreatedBy")
+  assignedTickets Ticket[]          @relation("TicketAssignedTo")
+  milestones      TicketMilestone[] @relation("MilestoneActor")
+
+  @@map("users")
+}
+
+// ----------------------------------------------------
+// 2. Customers & PICs (Corporate Clients Glotra)
+// ----------------------------------------------------
+model Customer {
+  id                 Int           @id @default(autoincrement())
+  name               String
+  code               String        @unique // 'AHM', 'BCA', 'SLM', 'KMN'
+  industry           String
+  serviceContract    String        @default("PKS Layanan Managed Service 24x7")
+  contractTier       String        @default("8x5 GOLD ENTERPRISE")
+  contractSla        String?       @default("GOLD_8X5")
+  slaTier            String?       @default("8x5 GOLD ENTERPRISE")
+  slaCoverage        String?       @default("First Touch: 30m • Resolusi: 8h")
+  address            String?       @db.Text
+  cluster            String?       @default("PROD-CL01")
+  environment        String?       @default("PROD-DC-01")
+  maintenanceStart   String?
+  maintenanceEnd     String?
+  ticketQuota        String?       @default("Unlimited")
+  initialUsedTickets Int           @default(0)
+  deactivatedReason  String?
+  isActive           Boolean       @default(true)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  pics               CustomerPic[]
+  tickets            Ticket[]
+
+  @@map("customers")
+}
+
+model CustomerPic {
+  id         Int      @id @default(autoincrement())
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  name       String
+  dept       String?
+  phone      String?
+  email      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  tickets    Ticket[]
+
+  @@map("customer_pics")
+}
+
+// ----------------------------------------------------
+// 3. Ticket Categories & Master SLA Policies
+// ----------------------------------------------------
+model Category {
+  id           Int           @id @default(autoincrement())
+  name         String
+  code         String        @unique
+  desc         String?       @db.Text
+  tickets      Ticket[]
+  quickPresets QuickPreset[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@map("categories")
+}
+
+// ----------------------------------------------------
+// 3b. Master Principals & Technology Vendors (OEM)
+// ----------------------------------------------------
+model Principal {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  code         String   @unique // 'HPE', 'CISCO', 'VMWARE', 'RUBRIK', etc.
+  category     String?  // 'Storage & SAN', 'Network Infrastructure', etc.
+  specialist   String?  // Default specialist / TAC contact
+  supportEmail String?
+  supportPhone String?
+  portalUrl    String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("principals")
+}
+
+// ----------------------------------------------------
+// 3c. Master Quick Presets & SLA Hold Reasons
+// ----------------------------------------------------
+model QuickPreset {
+  id              Int      @id @default(autoincrement())
+  title           String
+  categoryId      Int
+  category        Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  severity        String   @default("HIGH") // 'HIGH', 'MEDIUM', 'LOW'
+  responseHours   Float    @default(0.5)
+  resolutionHours Float    @default(4.0)
+  description     String   @db.Text
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@map("quick_presets")
+}
+
+model SlaHoldReason {
+  id             Int      @id @default(autoincrement())
+  code           String   @unique // 'PART_INDENT', 'CUSTOMER', 'VENDOR', 'OTHER'
+  name           String
+  description    String?  @db.Text
+  requiresCaseId Boolean  @default(false)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@map("sla_hold_reasons")
+}
+
+model SlaPolicy {
+  id                   Int      @id @default(autoincrement())
+  tierCode             String   @unique // 'PLATINUM_24X7', 'GOLD_8X5', 'SILVER_8X5', 'GOV_TIER1'
+  tierName             String
+  operatingHours       String   // '24 Jam x 7 Hari (Non-Stop)', 'Senin - Jumat (08:00 - 17:00 WIB)'
+  p1ResponseHours      Float    // Critical Response (hours)
+  p1ResolutionHours    Float    // Critical Resolution (hours)
+  p2ResponseHours      Float    // Major Response
+  p2ResolutionHours    Float    // Major Resolution
+  p3ResponseHours      Float    // Medium Response
+  p3ResolutionHours    Float    // Medium Resolution
+  p4ResponseHours      Float    // Low Response
+  p4ResolutionHours    Float    // Low Resolution
+  notes                String?  @db.Text
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@map("sla_policies")
+}
+
+// ----------------------------------------------------
+// 4. Ticket Lifecycle & Multi-Tier Escalation
+// ----------------------------------------------------
+model Ticket {
+  id                       Int               @id @default(autoincrement())
+  ticketNumber             String            @unique // 'TICK-YYYYMMDD-XXXX'
+  customerId               Int
+  customer                 Customer          @relation(fields: [customerId], references: [id])
+  customerPicId            Int?
+  customerPic              CustomerPic?      @relation(fields: [customerPicId], references: [id])
+  categoryId               Int
+  category                 Category          @relation(fields: [categoryId], references: [id])
+  severity                 String            @default("MEDIUM") // 'HIGH', 'MEDIUM', 'LOW'
+  channel                  String            @default("EMAIL")  // 'EMAIL', 'WHATSAPP', 'PORTAL'
+  title                    String
+  rawMessage               String?           @db.Text
+  description              String            @db.Text
+  status                   String            @default("OPEN") // 'OPEN', 'ASSIGNED', 'IN_PROGRESS', 'PENDING_VENDOR', 'PENDING_CUSTOMER', 'RESOLVED', 'CLOSED'
+  trackingToken            String            @unique // Tokenized security tracking link anti-IDOR
+  createdById              Int
+  createdBy                User              @relation("TicketCreatedBy", fields: [createdById], references: [id])
+  assignedToId             Int?
+  assignedTo               User?             @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
+
+  contractSla              String?           @default("SLA-GOLD-2026")
+  contractTier             String?           @default("8x5 GOLD ENTERPRISE")
+  cluster                  String?           @default("PROD-CL01")
+  environment              String?           @default("PROD-DC-01")
+  impactScope              String?           @default("Standard Operational")
+  isEmailSync              Boolean           @default(true)
+  isProposeKb              Boolean           @default(false)
+
+  // Escalation Tier sesuai hasil MoM Glotra:
+  // INTERNAL, PROJECT_MANAGER, PARTNER, VENDOR_PRINCIPAL
+  escalationTier           String            @default("INTERNAL")
+  principalVendor          String?           // e.g. 'HPE', 'Cisco', 'VMware'
+  principalCaseId          String?           // e.g. 'HPE-2026-004821'
+  principalSpecialist      String?
+  principalBridgeStatus    String?
+  principalLatestUpdate    String?           @db.Text
+  principalUpdateTimestamp String?
+  partnerName              String?
+  partnerPic               String?
+  projectManager           String?
+
+  createdAt                DateTime          @default(now())
+  updatedAt                DateTime          @updatedAt
+  responseDeadline         DateTime
+  resolutionDeadline       DateTime
+  respondedAt              DateTime?
+  resolvedAt               DateTime?
+  closedAt                 DateTime?
+
+  // SLA Hold / Freeze Mechanism
+  isPaused                 Boolean           @default(false)
+  pausedAt                 DateTime?
+  totalPausedDurationSec   Int               @default(0)
+  isSlaResponseBreached     Boolean           @default(false)
+  isSlaResolutionBreached   Boolean           @default(false)
+  isNearBreachFlag          Boolean           @default(false)
+
+  rootCause                String?           @db.Text
+  resolutionStrategy       String?           @db.Text
+  actionTaken              String?           @db.Text
+  resolutionNotes          String?           @db.Text
+  recommendation           String?           @db.Text
+
+  milestones               TicketMilestone[]
+  attachments              Attachment[]
+  holdLogs                 SlaHoldLog[]
+
+  @@map("tickets")
+}
+
+// ----------------------------------------------------
+// 5. SLA Hold / Freeze History Log
+// ----------------------------------------------------
+model SlaHoldLog {
+  id              Int       @id @default(autoincrement())
+  ticketId        Int
+  ticket          Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  // Skenario hold sesuai MoM Glotra:
+  // 'PART_INDENT', 'PENDING_CUSTOMER', 'VENDOR_DEPENDENCY', 'OTHER'
+  reasonType      String
+  reasonDetail    String    @db.Text
+  principalCaseId String?
+  pausedAt        DateTime  @default(now())
+  resumedAt       DateTime?
+  durationSec     Int       @default(0)
+  actorName       String
+  createdAt       DateTime  @default(now())
+
+  @@map("sla_hold_logs")
+}
+
+// ----------------------------------------------------
+// 6. Troubleshooting Timeline & Attachments
+// ----------------------------------------------------
+model TicketMilestone {
+  id           Int      @id @default(autoincrement())
+  ticketId     Int
+  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  stepName     String
+  status       String
+  actorId      Int?
+  actor        User?    @relation("MilestoneActor", fields: [actorId], references: [id])
+  actorName    String
+  actorRole    String
+  notes        String   @db.Text
+  proofFile    String?
+  timestampUtc DateTime @default(now())
+
+  @@map("ticket_milestones")
+}
+
+model Attachment {
+  id           Int      @id @default(autoincrement())
+  ticketId     Int
+  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  name         String
+  originalName String
+  filePath     String?
+  fileType     String
+  size         String
+  uploadedBy   String
+  uploadedAt   DateTime @default(now())
+  source       String   @default("Milestone Upload")
+
+  @@map("attachments")
+}
+
+// ----------------------------------------------------
+// 7. ITIL Knowledge Base & Runbooks (With PDF Support)
+// ----------------------------------------------------
+model KnowledgeBase {
+  id                     Int      @id @default(autoincrement())
+  kbCode                 String   @unique // 'KB-1024'
+  title                  String
+  category               String
+  categoryGroup          String?
+  technologyPrincipal    String?
+  author                 String
+  approver               String?
+  status                 String   @default("PUBLISHED") // 'DRAFT', 'PENDING_REVIEW', 'PUBLISHED'
+  ticketsReferencedCount Int      @default(0)
+  sourceTicket           String?
+  symptom                String   @db.Text
+  rootCause              String   @db.Text
+  prerequisites          String?  @db.Text
+  cliSnippet             String?  @db.Text
+  verificationSteps      String?  @db.Text
+  rollbackProcedure      String?  @db.Text
+  recommendation         String?  @db.Text
+  pdfAttachmentUrl       String?  // Storage path to uploaded PDF runbook
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  @@map("knowledge_base")
+}
+
+// ----------------------------------------------------
+// 8. Security & Activity Audit Log
+// ----------------------------------------------------
+model AuditLog {
+  id           Int      @id @default(autoincrement())
+  userName     String
+  role         String
+  action       String   // 'LOGIN', 'TICKET_CREATED', 'SLA_PAUSED', 'SLA_RESUMED', 'TICKET_RESOLVED', 'SLA_POLICY_UPDATED', etc.
+  entityType   String?  // 'TICKET', 'USER', 'SLA_POLICY', 'CUSTOMER', 'KB'
+  entityId     String?
+  description  String   @db.Text
+  ipAddress    String   @default("127.0.0.1")
+  timestampUtc DateTime @default(now())
+
+  @@map("audit_logs")
+}

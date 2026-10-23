@@ -23,11 +23,17 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { useTicketStore } from './stores/ticketStore';
 import Navbar from './components/Navbar.vue';
 import Sidebar from './components/Sidebar.vue';
 
 const route = useRoute();
+const ticketStore = useTicketStore();
 const isPublicRoute = computed(() => Boolean(route.meta && route.meta.public));
+
+onMounted(() => {
+  ticketStore.fetchInitialDataFromApi();
+});
 </script>

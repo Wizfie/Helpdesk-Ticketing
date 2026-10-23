@@ -1,39 +1,63 @@
 // Date and Time Helper Functions (Ensuring UTC+0 standard with Local WIB display)
 
 export function formatUtcToLocal(utcDateString) {
-  if (!utcDateString) return '-';
-  const date = new Date(utcDateString);
-  
-  // Format as Indonesian standard (WIB: GMT+7)
-  const localFormatted = new Intl.DateTimeFormat('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false,
-    timeZone: 'Asia/Jakarta'
-  }).format(date);
-
-  // Format the exact UTC string for tooltip or reference
-  const utcHours = String(date.getUTCHours()).padStart(2, '0');
-  const utcMinutes = String(date.getUTCMinutes()).padStart(2, '0');
-  const utcFormatted = `${utcHours}:${utcMinutes} UTC`;
-
-  return {
-    local: `${localFormatted} WIB`,
-    utc: utcFormatted,
-    full: `${localFormatted} WIB (${utcFormatted})`,
-    iso: date.toISOString()
+  const fallback = {
+    local: '-',
+    utc: '-',
+    full: '-',
+    iso: ''
   };
+  if (!utcDateString) return fallback;
+
+  const date = new Date(utcDateString);
+  if (isNaN(date.getTime())) {
+    const str = String(utcDateString);
+    return {
+      local: str,
+      utc: str,
+      full: str,
+      iso: ''
+    };
+  }
+
+  try {
+    // Format as Indonesian standard (WIB: GMT+7)
+    const localFormatted = new Intl.DateTimeFormat('id-ID', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      timeZone: 'Asia/Jakarta'
+    }).format(date);
+
+    // Format the exact UTC string for tooltip or reference
+    const utcHours = String(date.getUTCHours()).padStart(2, '0');
+    const utcMinutes = String(date.getUTCMinutes()).padStart(2, '0');
+    const utcFormatted = `${utcHours}:${utcMinutes} UTC`;
+
+    return {
+      local: `${localFormatted} WIB`,
+      utc: utcFormatted,
+      full: `${localFormatted} WIB (${utcFormatted})`,
+      iso: date.toISOString()
+    };
+  } catch (err) {
+    return fallback;
+  }
 }
 
 export function calculateSlaCountdown(deadlineUtc, isPaused = false, resolvedAtUtc = null) {
   if (!deadlineUtc) return { label: '-', status: 'NORMAL', percentage: 0, isBreached: false };
 
-  const now = new Date();
   const deadline = new Date(deadlineUtc);
+  if (isNaN(deadline.getTime())) {
+    return { label: '-', status: 'NORMAL', percentage: 0, isBreached: false };
+  }
+
+  const now = new Date();
   
   // If resolved, calculate using resolvedAt time
   const targetTime = resolvedAtUtc ? new Date(resolvedAtUtc) : now;

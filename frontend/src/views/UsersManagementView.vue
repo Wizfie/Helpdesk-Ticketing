@@ -34,7 +34,7 @@
       </div>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-left">
+        <table class="w-full text-left min-w-[800px]">
           <thead class="bg-slate-50/70 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
             <tr>
               <th class="py-3 px-4">Pengguna</th>
@@ -84,10 +84,20 @@
               </td>
 
               <td class="py-3 px-4 text-right">
-                <div class="flex items-center justify-end space-x-2">
+                <div class="flex items-center justify-end space-x-1.5">
+                  <button
+                    @click="openResetModal(user)"
+                    class="text-xs font-semibold px-2.5 py-1 rounded text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors flex items-center space-x-1 cursor-pointer"
+                    title="Bantu reset kata sandi staf ini"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                    <span>Reset Sandi</span>
+                  </button>
                   <button
                     @click="openEditModal(user)"
-                    class="text-xs font-semibold px-2.5 py-1 rounded text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors flex items-center space-x-1"
+                    class="text-xs font-semibold px-2.5 py-1 rounded text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors flex items-center space-x-1 cursor-pointer"
                     title="Ubah data profil staf ini"
                   >
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -97,8 +107,8 @@
                   </button>
                   <button
                     @click="toggleStatus(user)"
-                    class="text-xs font-semibold px-2.5 py-1 rounded transition-colors"
-                    :class="user.isActive ? 'text-amber-700 bg-amber-50 hover:bg-amber-100' : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'"
+                    class="text-xs font-semibold px-2.5 py-1 rounded transition-colors cursor-pointer"
+                    :class="user.isActive ? 'text-rose-700 bg-rose-50 hover:bg-rose-100' : 'text-emerald-700 bg-emerald-50 hover:bg-emerald-100'"
                   >
                     {{ user.isActive ? 'Nonaktifkan' : 'Aktifkan' }}
                   </button>
@@ -202,6 +212,84 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal: Admin Reset User Password -->
+    <div v-if="showResetModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+      <div class="bg-white rounded-2xl shadow-xl border border-slate-200 w-full max-w-md p-6 space-y-4 text-xs animate-in fade-in duration-150">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-bold text-slate-900 text-sm">Bantu Reset Sandi Staf</h4>
+              <p class="text-[11px] text-slate-500">Pusat Bantuan Lupa Sandi Akun Helpdesk</p>
+            </div>
+          </div>
+          <button @click="showResetModal = false" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
+        </div>
+
+        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">Nama Pengguna:</span>
+            <span class="font-bold text-slate-800">{{ resetTargetUser?.name }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">Email:</span>
+            <span class="font-mono text-slate-700">{{ resetTargetUser?.email }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500">Peran:</span>
+            <span class="font-bold text-blue-700">{{ resetTargetUser?.roleCode }}</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="block font-bold text-slate-700">Kata Sandi Baru / Sementara *</label>
+          <div class="flex space-x-2">
+            <input 
+              v-model="resetPasswordValue" 
+              type="text" 
+              required
+              class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 focus:ring-2 focus:ring-amber-500"
+            />
+            <button 
+              type="button" 
+              @click="resetPasswordValue = 'GTT@2026!'"
+              class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[11px] shrink-0 cursor-pointer"
+              title="Gunakan default GTT@2026!"
+            >
+              Default
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-500">
+            Berikan kata sandi sementara ini kepada pengguna yang bersangkutan. Pengguna dapat mengubahnya kembali secara mandiri di halaman Profil.
+          </p>
+        </div>
+
+        <div v-if="resetSuccessMsg" class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center space-x-2">
+          <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+          </svg>
+          <span class="font-semibold">{{ resetSuccessMsg }}</span>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+          <button type="button" @click="showResetModal = false" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-50 cursor-pointer">
+            {{ resetSuccessMsg ? 'Selesai' : 'Batal' }}
+          </button>
+          <button 
+            type="button" 
+            @click="submitResetPassword"
+            class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl shadow-xs cursor-pointer"
+          >
+            Reset Sandi Sekarang
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -217,6 +305,11 @@ const users = computed(() => authStore.users);
 
 const showAddModal = ref(false);
 const showEditModal = ref(false);
+const showResetModal = ref(false);
+
+const resetTargetUser = ref(null);
+const resetPasswordValue = ref('GTT@2026!');
+const resetSuccessMsg = ref('');
 
 const newUser = ref({
   name: '',
@@ -253,6 +346,26 @@ const openEditModal = (user) => {
     isActive: user.isActive
   };
   showEditModal.value = true;
+};
+
+const openResetModal = (user) => {
+  resetTargetUser.value = user;
+  resetPasswordValue.value = 'GTT@2026!';
+  resetSuccessMsg.value = '';
+  showResetModal.value = true;
+};
+
+const submitResetPassword = () => {
+  if (!resetTargetUser.value) return;
+  const res = authStore.adminResetPassword(
+    resetTargetUser.value.id,
+    resetPasswordValue.value,
+    authStore.currentUser,
+    ticketStore
+  );
+  if (res.success) {
+    resetSuccessMsg.value = `Sandi berhasil direset ke: ${res.temporaryPassword}`;
+  }
 };
 
 const submitAddUser = () => {

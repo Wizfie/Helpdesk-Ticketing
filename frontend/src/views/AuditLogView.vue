@@ -90,7 +90,7 @@
     <!-- Audit Logs Table -->
     <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
       <div class="overflow-x-auto">
-        <table class="w-full text-left">
+        <table class="w-full text-left min-w-[900px]">
           <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
             <tr>
               <th class="py-3 px-4">Waktu (WIB / UTC)</th>
@@ -153,13 +153,25 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useTicketStore } from '../stores/ticketStore';
+import { api } from '../services/api';
 import { formatUtcToLocal } from '../utils/dateFormatter';
 
 const ticketStore = useTicketStore();
 const searchQuery = ref('');
 const filterAction = ref('');
+
+onMounted(async () => {
+  try {
+    const res = await api.getAuditLogs();
+    if (res && res.data && res.data.length > 0) {
+      ticketStore.auditLogs = res.data;
+    }
+  } catch (err) {
+    console.warn('[AuditLogs] Gagal memuat audit log dari API, fallback lokal:', err.message);
+  }
+});
 
 const formatTime = (utc) => formatUtcToLocal(utc);
 

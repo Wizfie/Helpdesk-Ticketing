@@ -1,0 +1,54 @@
+name: CI / CD Build & Docker Verification
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate-and-build:
+    name: Verify Frontend, Backend, & Docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: 2. Setup Node.js 22 (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: |
+            frontend/package-lock.json
+            backend/package.json
+
+      - name: 3. Verify Backend & Prisma Schema
+        working-directory: ./backend
+        run: |
+          npm install
+          npx prisma validate
+          echo "✅ Backend syntax & Prisma schema validated successfully."
+
+      - name: 4. Verify Frontend Build
+        working-directory: ./frontend
+        run: |
+          npm ci || npm install
+          npm run build
+          echo "✅ Frontend production bundle compiled successfully."
+
+      - name: 5. Validate Docker Compose Configuration
+        run: |
+          docker compose config
+          echo "✅ docker-compose.yml configuration syntax is valid."
+
+      - name: 6. Test Docker Build Images
+        run: |
+          docker compose build
+          echo "✅ All Docker images (Frontend & Backend) built successfully."
