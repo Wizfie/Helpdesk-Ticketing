@@ -1,5 +1,5 @@
 # Backend Dockerfile - Express.js + Prisma ORM + MySQL Client
-FROM node:22-alpine
+FROM node:24-alpine
 
 # Install openssl & netcat (untuk pengecekan database socket)
 RUN apk add --no-cache openssl netcat-openbsd

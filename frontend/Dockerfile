@@ -1,7 +1,7 @@
-# Frontend Dockerfile - Multi-Stage Build (Node 22 Alpine -> Nginx Alpine)
+# Frontend Dockerfile - Multi-Stage Build (Node 24 Alpine -> Nginx Alpine)
 
 # Tahap 1: Kompilasi Aset Vue.js
-FROM node:22-alpine AS builder
+FROM node:24-alpine AS builder
 
 WORKDIR /app
 
