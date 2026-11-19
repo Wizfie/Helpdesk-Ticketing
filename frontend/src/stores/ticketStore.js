@@ -33,6 +33,11 @@ const STORAGE_KEYS = {
   SELECTED_TICKET_ID: 'gtt_selected_ticket_id'
 };
 
+export const MOCK_SLA_CODES = ['PLATINUM_24X7', 'GOLD_8X5', 'GOV_TIER1', 'SILVER_8X5'];
+export function filterCleanSlaPolicies(list) {
+  return (list || []).filter(p => p && !MOCK_SLA_CODES.includes(p.tierCode) && !(p.id >= 1 && p.id <= 4));
+}
+
 /**
  * Robust Stored Data Loader:
  * - Reads from localStorage safely
@@ -77,40 +82,7 @@ function saveStoredData(key, data) {
  * Any custom tickets created by the user during interactive testing are preserved.
  */
 function ensureCanonicalTickets(existingTickets) {
-  const list = Array.isArray(existingTickets) ? [...existingTickets] : [];
-  const canonicalList = cloneDeep(INITIAL_TICKETS);
-
-  // Check which canonical tickets are missing
-  const existingNumbers = new Set(list.map(t => t.ticketNumber).filter(Boolean));
-  const missingCanonical = canonicalList.filter(ct => !existingNumbers.has(ct.ticketNumber));
-
-  if (missingCanonical.length > 0) {
-    // Prepend missing canonical tickets
-    return [...canonicalList, ...list.filter(t => !canonicalList.some(ct => ct.ticketNumber === t.ticketNumber))];
-  }
-
-  // Update existing canonical tickets with canonical spec fields
-  return list.map(t => {
-    const canonical = canonicalList.find(ct => ct.ticketNumber === t.ticketNumber);
-    if (canonical) {
-      return {
-        ...canonical,
-        ...t,
-        slaResponseText: t.slaResponseText || canonical.slaResponseText,
-        slaResolutionText: t.slaResolutionText || canonical.slaResolutionText,
-        isSlaResolutionBreached: canonical.isSlaResolutionBreached !== undefined ? canonical.isSlaResolutionBreached : t.isSlaResolutionBreached,
-        isSlaResponseBreached: canonical.isSlaResponseBreached !== undefined ? canonical.isSlaResponseBreached : t.isSlaResponseBreached,
-        isNearBreachFlag: canonical.isNearBreachFlag !== undefined ? canonical.isNearBreachFlag : t.isNearBreachFlag,
-        progressPercent: t.progressPercent !== undefined ? t.progressPercent : canonical.progressPercent,
-        principalVendor: t.principalVendor !== undefined ? t.principalVendor : canonical.principalVendor,
-        principalCaseId: t.principalCaseId !== undefined ? t.principalCaseId : canonical.principalCaseId,
-        kbMatchCount: t.kbMatchCount !== undefined ? t.kbMatchCount : canonical.kbMatchCount,
-        actionLabel: t.actionLabel || canonical.actionLabel,
-        scopeSubtitle: t.scopeSubtitle || canonical.scopeSubtitle
-      };
-    }
-    return t;
-  });
+  return Array.isArray(existingTickets) ? existingTickets : [];
 }
 
 export const DATA_MODES = {
@@ -120,12 +92,12 @@ export const DATA_MODES = {
 
 const DATA_MODE_KEY = 'gtt_app_data_mode';
 const DATA_VERSION_KEY = 'gtt_data_version';
-const CURRENT_DATA_VERSION = 'v4.3-notif-enrichment';
+const CURRENT_DATA_VERSION = 'v8.0-clean-all-zero';
 
 function getStoredDataMode() {
-  if (typeof window === 'undefined' || !window.localStorage) return DATA_MODES.FULL_MOCK;
+  if (typeof window === 'undefined' || !window.localStorage) return DATA_MODES.CLEAN_TESTING;
   const mode = localStorage.getItem(DATA_MODE_KEY);
-  return mode === DATA_MODES.CLEAN_TESTING ? DATA_MODES.CLEAN_TESTING : DATA_MODES.FULL_MOCK;
+  return mode === DATA_MODES.FULL_MOCK ? DATA_MODES.FULL_MOCK : DATA_MODES.CLEAN_TESTING;
 }
 
 function checkAndMigrateData() {
@@ -141,6 +113,14 @@ function checkAndMigrateData() {
       localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
       localStorage.removeItem(STORAGE_KEYS.SLA_POLICIES);
       localStorage.removeItem(STORAGE_KEYS.AUDIT_LOGS);
+      localStorage.removeItem(STORAGE_KEYS.SELECTED_TICKET_ID);
+      localStorage.removeItem(DATA_MODE_KEY);
+      localStorage.removeItem('gtt_read_notifications');
+      localStorage.removeItem('gtt_dismissed_notifications_map');
+      localStorage.setItem(STORAGE_KEYS.TICKETS, JSON.stringify([]));
+      localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify([]));
+      localStorage.setItem(STORAGE_KEYS.KNOWLEDGE_BASE, JSON.stringify([]));
+      localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify([]));
     }
   } catch (e) {
     console.error('Data migration error:', e);
@@ -151,33 +131,17 @@ checkAndMigrateData();
 export const useTicketStore = defineStore('tickets', {
   state: () => {
     const activeMode = getStoredDataMode();
-    const isClean = activeMode === DATA_MODES.CLEAN_TESTING;
 
     return {
       appDataMode: activeMode,
-      tickets: isClean
-        ? loadStoredData(STORAGE_KEYS.TICKETS, [], true)
-        : ensureCanonicalTickets(loadStoredData(STORAGE_KEYS.TICKETS, INITIAL_TICKETS)),
-      customers: loadStoredData(STORAGE_KEYS.CUSTOMERS, MOCK_CUSTOMERS),
+      tickets: loadStoredData(STORAGE_KEYS.TICKETS, [], true),
+      customers: loadStoredData(STORAGE_KEYS.CUSTOMERS, [], true),
       categories: loadStoredData(STORAGE_KEYS.CATEGORIES, MOCK_CATEGORIES),
-      slaPolicies: loadStoredData(STORAGE_KEYS.SLA_POLICIES, [], true),
+      slaPolicies: filterCleanSlaPolicies(loadStoredData(STORAGE_KEYS.SLA_POLICIES, [], true)),
       quickPresets: loadStoredData(STORAGE_KEYS.QUICK_PRESETS, QUICK_PRESETS),
-      auditLogs: isClean
-        ? loadStoredData(STORAGE_KEYS.AUDIT_LOGS, [
-            {
-              id: 1,
-              timestampUtc: new Date().toISOString(),
-              userName: 'System Administrator',
-              role: 'ADMIN',
-              action: 'SYSTEM_CLEAN_INIT',
-              entityType: 'SYSTEM',
-              entityId: 'SYS-INIT',
-              description: 'Sistem Helpdesk aktif dalam Mode Bersih (0 Tiket). Siap digunakan untuk pengujian alur tiket baru dari awal.'
-            }
-          ], true)
-        : loadStoredData(STORAGE_KEYS.AUDIT_LOGS, MOCK_AUDIT_LOGS),
-      knowledgeBase: loadStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, MOCK_KNOWLEDGE_BASE),
-      pendingKbApprovals: cloneDeep(MOCK_PENDING_KB_APPROVALS),
+      auditLogs: loadStoredData(STORAGE_KEYS.AUDIT_LOGS, [], true),
+      knowledgeBase: loadStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, [], true),
+      pendingKbApprovals: [],
       principals: loadStoredData('gtt_principals_data', [
         'Hewlett Packard Enterprise (HPE)',
         'Cisco Systems',
@@ -189,7 +153,7 @@ export const useTicketStore = defineStore('tickets', {
         'MikroTik'
       ]),
       holdReasons: [],
-      selectedTicketId: isClean ? null : (Number(loadStoredData(STORAGE_KEYS.SELECTED_TICKET_ID, 5)) || 5),
+      selectedTicketId: null,
       readNotificationIds: loadStoredData('gtt_read_notifications', []),
       dismissedNotifications: loadStoredData('gtt_dismissed_notifications_map', {}),
       lastNotificationCheck: new Date().toISOString(),
@@ -200,7 +164,7 @@ export const useTicketStore = defineStore('tickets', {
 
   getters: {
     isCleanMode(state) {
-      return state.appDataMode === DATA_MODES.CLEAN_TESTING;
+      return false;
     },
     allPrincipals(state) {
       const set = new Set(state.principals || []);
@@ -261,11 +225,11 @@ export const useTicketStore = defineStore('tickets', {
             badgeColor: 'slate'
           };
         }
-        const quota = customer.ticketQuota;
-        if (!quota || quota === 'Unlimited' || quota === 'unlimited') {
+        const quotaStr = String(customer.ticketQuota || '').trim().toLowerCase();
+        if (!quotaStr || quotaStr === 'unlimited' || isNaN(Number(quotaStr)) || Number(quotaStr) <= 0) {
           return {
             quota: 'Unlimited',
-            used: (customer.initialUsedTickets || 0),
+            used: Number(customer.initialUsedTickets || 0),
             remaining: 'Unlimited',
             percentage: null,
             isNearLimit: false,
@@ -273,10 +237,11 @@ export const useTicketStore = defineStore('tickets', {
             badgeColor: 'slate'
           };
         }
-        const numQuota = Number(quota);
-        const used = customer.initialUsedTickets !== undefined ? Number(customer.initialUsedTickets) : 0;
+        const numQuota = Number(quotaStr);
+        const actualTicketsCount = state.tickets.filter(t => t.customerId === customer.id).length;
+        const used = Math.max(Number(customer.initialUsedTickets || 0), actualTicketsCount);
         const remaining = Math.max(0, numQuota - used);
-        const percentage = numQuota > 0 ? Math.round((remaining / numQuota) * 100) : 0;
+        const percentage = Math.round((remaining / numQuota) * 100);
         const isCritical = percentage <= 10;
         const isNearLimit = percentage <= 20;
         const badgeColor = isCritical ? 'rose' : (isNearLimit ? 'amber' : 'emerald');
@@ -295,17 +260,21 @@ export const useTicketStore = defineStore('tickets', {
       let totalQuota = 0;
       let totalUsed = 0;
       state.customers.forEach(c => {
-        if (c.ticketQuota && c.ticketQuota !== 'Unlimited' && c.ticketQuota !== 'unlimited') {
-          totalQuota += Number(c.ticketQuota);
-          totalUsed += Number(c.initialUsedTickets || 0);
+        const qStr = String(c.ticketQuota || '').trim().toLowerCase();
+        if (qStr && qStr !== 'unlimited') {
+          const num = Number(qStr);
+          if (!isNaN(num) && num > 0) {
+            totalQuota += num;
+            const actualTicketsCount = state.tickets.filter(t => t.customerId === c.id).length;
+            totalUsed += Math.max(Number(c.initialUsedTickets || 0), actualTicketsCount);
+          }
         }
       });
-      // Fallback display if totalQuota is calculated
       const percentage = totalQuota > 0 ? Math.round((totalUsed / totalQuota) * 100) : 0;
       return {
-        totalQuota: totalQuota || 1200,
-        totalUsed: totalUsed || 850,
-        percentage: percentage || 71
+        totalQuota,
+        totalUsed,
+        percentage
       };
     },
     criticalQuotaCustomers(state) {
@@ -629,8 +598,8 @@ export const useTicketStore = defineStore('tickets', {
           api.getCustomers().catch(() => null)
         ]);
         const ticketsList = Array.isArray(ticketsRes) ? ticketsRes : (ticketsRes?.data || null);
-        if (ticketsList && ticketsList.length > 0) {
-          this.tickets = ensureCanonicalTickets(ticketsList);
+        if (ticketsList !== null) {
+          this.tickets = ticketsList;
           saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
         }
       } catch (e) {
@@ -652,60 +621,34 @@ export const useTicketStore = defineStore('tickets', {
         ]);
 
         const ticketsList = Array.isArray(ticketsRes) ? ticketsRes : (ticketsRes?.data || null);
-        if (this.isCleanMode) {
-          this.tickets = [];
-          this.selectedTicketId = null;
-          saveStoredData(STORAGE_KEYS.TICKETS, []);
-        } else if (ticketsList !== null && ticketsList.length > 0) {
+        if (ticketsList !== null) {
           const mapped = ticketsList.map(t => ({
             ...t,
             milestones: t.milestones || [],
             attachments: t.attachments || []
           }));
-          this.tickets = ensureCanonicalTickets(mapped);
-          saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
-        } else if (!this.tickets || this.tickets.length === 0) {
-          this.tickets = ensureCanonicalTickets(INITIAL_TICKETS);
+          this.tickets = mapped;
           saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
         }
         
         await this.checkSystemStatus();
 
         const customersList = Array.isArray(customersRes) ? customersRes : (customersRes?.data || null);
-        if (customersList !== null && customersList.length > 0) {
-          // Merge with MOCK_CUSTOMERS to ensure all 12 directory accounts and maintenance/quota fields are populated
-          const merged = customersList.map(c => {
-            const mock = MOCK_CUSTOMERS.find(m => m.code === c.code || m.id === c.id || (m.name && c.name && m.name.toLowerCase() === c.name.toLowerCase()));
-            return {
-              ...mock,
-              ...c,
-              maintenanceStart: c.maintenanceStart || mock?.maintenanceStart || '2026-12-01',
-              maintenanceEnd: c.maintenanceEnd || mock?.maintenanceEnd || '2027-11-30',
-              ticketQuota: c.ticketQuota !== undefined ? c.ticketQuota : (mock?.ticketQuota ?? 100),
-              initialUsedTickets: c.initialUsedTickets !== undefined ? c.initialUsedTickets : (mock?.initialUsedTickets ?? 0),
-              pics: (c.pics && c.pics.length > 0) ? c.pics : (mock?.pics || [])
-            };
-          });
-          // Ensure all 12 directory accounts from MOCK_CUSTOMERS are present for full ITIL preview
-          MOCK_CUSTOMERS.forEach(mock => {
-            if (!merged.some(m => m.code === mock.code || m.id === mock.id)) {
-              merged.push(cloneDeep(mock));
-            }
-          });
-          this.customers = merged;
+        if (customersList !== null) {
+          this.customers = customersList;
           saveStoredData(STORAGE_KEYS.CUSTOMERS, this.customers);
-        } else if (!this.customers || this.customers.length === 0) {
-          this.customers = cloneDeep(MOCK_CUSTOMERS);
+        } else if (!this.customers) {
+          this.customers = [];
           saveStoredData(STORAGE_KEYS.CUSTOMERS, this.customers);
         }
         this.checkAndSyncCustomerMaintenanceStatus();
 
         const kbList = Array.isArray(kbRes) ? kbRes : (kbRes?.data || null);
-        if (kbList !== null && kbList.length > 0) {
+        if (kbList !== null) {
           this.knowledgeBase = kbList;
           saveStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, this.knowledgeBase);
-        } else if (!this.knowledgeBase || this.knowledgeBase.length === 0) {
-          this.knowledgeBase = cloneDeep(MOCK_KNOWLEDGE_BASE);
+        } else if (!this.knowledgeBase) {
+          this.knowledgeBase = [];
           saveStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, this.knowledgeBase);
         }
 
@@ -739,11 +682,13 @@ export const useTicketStore = defineStore('tickets', {
         // Master SLA Policies from Database
         const slaPoliciesList = Array.isArray(slaPoliciesRes) ? slaPoliciesRes : (slaPoliciesRes?.data || null);
         if (slaPoliciesList !== null) {
-          this.slaPolicies = slaPoliciesList;
+          this.slaPolicies = filterCleanSlaPolicies(slaPoliciesList);
           saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
         } else if (!this.slaPolicies) {
           this.slaPolicies = [];
           saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
+        } else {
+          this.slaPolicies = filterCleanSlaPolicies(this.slaPolicies);
         }
       } catch (e) {
         console.warn('[TicketStore] Backend offline or initial fetch error, using local fallback:', e.message);
@@ -755,11 +700,13 @@ export const useTicketStore = defineStore('tickets', {
         const res = await api.getSlaPolicies();
         const list = Array.isArray(res) ? res : (res?.data || null);
         if (list !== null) {
-          this.slaPolicies = list;
+          this.slaPolicies = filterCleanSlaPolicies(list);
           saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
         } else if (!this.slaPolicies) {
           this.slaPolicies = [];
           saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
+        } else {
+          this.slaPolicies = filterCleanSlaPolicies(this.slaPolicies);
         }
         return this.slaPolicies;
       } catch (err) {
@@ -767,8 +714,32 @@ export const useTicketStore = defineStore('tickets', {
         if (!this.slaPolicies) {
           this.slaPolicies = [];
         }
+        this.slaPolicies = filterCleanSlaPolicies(this.slaPolicies);
         return this.slaPolicies;
       }
+    },
+
+    setSlaPolicies(policies) {
+      this.slaPolicies = filterCleanSlaPolicies(policies);
+      saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
+    },
+
+    saveSlaPolicy(policy) {
+      if (!this.slaPolicies) this.slaPolicies = [];
+      const idx = this.slaPolicies.findIndex(p => p.id === policy.id || p.tierCode === policy.tierCode);
+      if (idx !== -1) {
+        this.slaPolicies[idx] = policy;
+      } else {
+        this.slaPolicies.push(policy);
+      }
+      this.slaPolicies = filterCleanSlaPolicies(this.slaPolicies);
+      saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
+    },
+
+    removeSlaPolicy(policyId) {
+      if (!this.slaPolicies) return;
+      this.slaPolicies = this.slaPolicies.filter(p => p.id !== policyId);
+      saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
     },
 
     createTicket(ticketData, actorUser) {
@@ -797,17 +768,14 @@ export const useTicketStore = defineStore('tickets', {
           resHours = matchedPolicy.p2ResolutionHours;
         }
       } else {
-        // Fallback
-        if (contract.includes('PLATINUM')) {
-          respHours = ticketData.severity === 'HIGH' ? 0.5 : ticketData.severity === 'MEDIUM' ? 1 : 1.5;
-          resHours = ticketData.severity === 'HIGH' ? 4 : ticketData.severity === 'MEDIUM' ? 6 : 12;
-        } else if (contract.includes('SILVER')) {
-          respHours = ticketData.severity === 'HIGH' ? 1 : ticketData.severity === 'MEDIUM' ? 2 : 4;
-          resHours = ticketData.severity === 'HIGH' ? 12 : ticketData.severity === 'MEDIUM' ? 16 : 24;
+        // Fallback to first configured policy in system
+        const defaultPol = this.slaPolicies?.[0];
+        if (defaultPol) {
+          respHours = ticketData.severity === 'HIGH' ? defaultPol.p1ResponseHours : defaultPol.p2ResponseHours;
+          resHours = ticketData.severity === 'HIGH' ? defaultPol.p1ResolutionHours : defaultPol.p2ResolutionHours;
         } else {
-          // Default / GOLD Enterprise
-          respHours = ticketData.severity === 'HIGH' ? 0.5 : ticketData.severity === 'MEDIUM' ? 1 : 2;
-          resHours = ticketData.severity === 'HIGH' ? 8 : ticketData.severity === 'MEDIUM' ? 12 : 24;
+          respHours = 1;
+          resHours = 8;
         }
       }
 
@@ -834,8 +802,8 @@ export const useTicketStore = defineStore('tickets', {
         assignedToId: ticketData.assignedToId ? Number(ticketData.assignedToId) : null,
         
         // Enterprise ITSM fields (Figma Spec)
-        contractSla: ticketData.contractSla || 'SLA-GOLD-2026',
-        contractTier: ticketData.contractTier || '8x5 GOLD ENTERPRISE',
+        contractSla: ticketData.contractSla || '',
+        contractTier: ticketData.contractTier || '',
         cluster: ticketData.cluster || 'PROD-CL01',
         environment: ticketData.environment || 'PROD-DC-01',
         impactScope: ticketData.impactScope || 'Standard Operational',
@@ -1609,27 +1577,37 @@ export const useTicketStore = defineStore('tickets', {
 
     addCustomer(customerData, actorUser) {
       const newId = this.customers.length > 0 ? Math.max(...this.customers.map(c => c.id)) + 1 : 1;
-      const matchedPolicy = (this.slaPolicies || []).find(p => p.tierCode === customerData.contractSla);
-      const tierName = matchedPolicy ? matchedPolicy.tierName : (customerData.contractSla?.includes('PLATINUM') ? '24x7 PLATINUM MISSION CRITICAL' : '8x5 GOLD ENTERPRISE');
+      const matchedPolicy = (this.slaPolicies || []).find(p => p.tierCode === customerData.contractSla || p.tierName === customerData.slaTier);
+      const tierName = customerData.slaTier || (matchedPolicy ? matchedPolicy.tierName : (customerData.contractSla || '8x5 GOLD ENTERPRISE'));
       const slaCoverage = matchedPolicy
         ? `First Touch ≤ ${matchedPolicy.p1ResponseHours}h • Res ≤ ${matchedPolicy.p1ResolutionHours}h`
-        : (customerData.contractSla?.includes('PLATINUM') ? 'First Touch ≤ 30m • Resolusi ≤ 4h' : 'First Touch ≤ 1h • Resolusi ≤ 8h');
+        : '-';
+
+      let customerCode = customerData.code;
+      if (!customerCode || !customerCode.trim()) {
+        const cleanName = (customerData.name || 'CUST').replace(/^(PT|CV|UD|PD|TBK)\s+/i, '').trim();
+        const words = cleanName.split(/\s+/).filter(Boolean);
+        if (words.length >= 2) {
+          customerCode = words.slice(0, 4).map(w => w[0]).join('').toUpperCase();
+        } else if (words.length === 1) {
+          customerCode = words[0].slice(0, 4).toUpperCase();
+        } else {
+          customerCode = 'CUST' + String(newId).padStart(2, '0');
+        }
+      }
 
       const created = {
         id: newId,
         name: customerData.name,
-        code: customerData.code.toUpperCase(),
-        industry: customerData.industry,
+        code: customerCode.toUpperCase(),
+        industry: customerData.industry || 'Klien Korporat',
         serviceContract: customerData.serviceContract || 'PKS Layanan Managed Service 24x7',
-        contractSla: customerData.contractSla || (this.slaPolicies[0]?.tierCode || 'GOLD_8X5'),
         slaTier: tierName,
         slaCoverage,
-        cluster: customerData.cluster || 'PROD-CL01',
-        environment: customerData.environment || 'PROD-DC-01',
-        address: customerData.address,
-        maintenanceStart: customerData.maintenanceStart || '2026-12-01',
-        maintenanceEnd: customerData.maintenanceEnd || '2027-11-30',
-        ticketQuota: customerData.ticketQuota !== undefined ? customerData.ticketQuota : 100,
+        address: customerData.address || '',
+        maintenanceStart: customerData.maintenanceStart || new Date().toISOString().slice(0, 10),
+        maintenanceEnd: customerData.maintenanceEnd || new Date(Date.now() + 365*24*3600*1000).toISOString().slice(0, 10),
+        ticketQuota: customerData.ticketQuota !== undefined && customerData.ticketQuota !== '' ? customerData.ticketQuota : 'Unlimited',
         initialUsedTickets: 0,
         isActive: true,
         pics: [
@@ -1652,11 +1630,11 @@ export const useTicketStore = defineStore('tickets', {
         code: created.code,
         industry: created.industry,
         serviceContract: created.serviceContract,
-        contractTier: created.slaTier,
-        contractSla: created.contractSla,
+        slaTier: created.slaTier,
         address: created.address,
-        cluster: created.cluster,
-        environment: created.environment,
+        maintenanceStart: created.maintenanceStart,
+        maintenanceEnd: created.maintenanceEnd,
+        ticketQuota: created.ticketQuota,
         picName: customerData.picName,
         picPhone: customerData.picPhone,
         picEmail: customerData.picEmail,
@@ -1693,18 +1671,17 @@ export const useTicketStore = defineStore('tickets', {
 
       const oldName = cust.name;
       cust.name = updatedData.name;
-      cust.code = updatedData.code.toUpperCase();
-      cust.industry = updatedData.industry;
+      if (updatedData.code) cust.code = updatedData.code.toUpperCase();
+      cust.industry = updatedData.industry || cust.industry || 'Klien Korporat';
       cust.address = updatedData.address;
-      if (updatedData.contractSla) {
-        cust.contractSla = updatedData.contractSla;
-        const matched = (this.slaPolicies || []).find(p => p.tierCode === updatedData.contractSla);
+      if (updatedData.slaTier || updatedData.contractSla) {
+        const rawTier = updatedData.slaTier || updatedData.contractSla;
+        const matched = (this.slaPolicies || []).find(p => p.tierCode === rawTier || p.tierName === rawTier);
+        cust.slaTier = matched ? matched.tierName : rawTier;
         if (matched) {
-          cust.slaTier = matched.tierName;
           cust.slaCoverage = `First Touch ≤ ${matched.p1ResponseHours}h • Res ≤ ${matched.p1ResolutionHours}h`;
         }
       }
-      if (updatedData.cluster) cust.cluster = updatedData.cluster;
       if (updatedData.maintenanceStart !== undefined) cust.maintenanceStart = updatedData.maintenanceStart;
       if (updatedData.maintenanceEnd !== undefined) cust.maintenanceEnd = updatedData.maintenanceEnd;
       if (updatedData.ticketQuota !== undefined) cust.ticketQuota = updatedData.ticketQuota;
@@ -1718,10 +1695,11 @@ export const useTicketStore = defineStore('tickets', {
         name: cust.name,
         code: cust.code,
         industry: cust.industry,
-        contractTier: cust.slaTier || (cust.contractSla?.includes('PLATINUM') ? '24x7 PLATINUM MISSION CRITICAL' : '8x5 GOLD ENTERPRISE'),
-        contractSla: cust.contractSla,
+        slaTier: cust.slaTier || '8x5 GOLD ENTERPRISE',
         address: cust.address,
-        cluster: cust.cluster,
+        maintenanceStart: cust.maintenanceStart,
+        maintenanceEnd: cust.maintenanceEnd,
+        ticketQuota: cust.ticketQuota,
         isActive: cust.isActive
       }).catch(err => {
         console.warn('[TicketStore] Gagal update customer di MySQL:', err.message);
@@ -1741,26 +1719,38 @@ export const useTicketStore = defineStore('tickets', {
     },
 
     checkAndSyncCustomerMaintenanceStatus() {
-      const todayStr = new Date().toISOString().slice(0, 10);
+      const today = new Date();
+      const todayStr = today.toISOString().slice(0, 10);
       let changed = false;
 
       this.customers.forEach(c => {
-        if (c.maintenanceEnd) {
-          const isExpired = c.maintenanceEnd < todayStr;
-          c.isMaintenanceExpired = isExpired;
+        // Auto-heal missing maintenance dates for customers
+        if (!c.maintenanceStart) {
+          c.maintenanceStart = c.createdAt ? new Date(c.createdAt).toISOString().slice(0, 10) : todayStr;
+          changed = true;
+        }
+        if (!c.maintenanceEnd) {
+          const start = new Date(c.maintenanceStart);
+          const end = isNaN(start.getTime()) ? new Date(today) : new Date(start);
+          end.setFullYear(end.getFullYear() + 1);
+          c.maintenanceEnd = end.toISOString().slice(0, 10);
+          changed = true;
+        }
 
-          // Otomatis nonaktifkan jika periode maintenance telah selesai dan bukan override manual
-          if (isExpired && c.isActive !== false && !c.manualActiveOverride) {
-            c.isActive = false;
-            c.deactivatedReason = 'MAINTENANCE_EXPIRED';
-            c.deactivatedAt = c.deactivatedAt || new Date().toISOString();
-            changed = true;
-          } else if (!isExpired && c.isActive === false && c.deactivatedReason === 'MAINTENANCE_EXPIRED') {
-            // Jika masa maintenance diperpanjang melampaui hari ini, otomatis aktifkan kembali
-            c.isActive = true;
-            c.deactivatedReason = null;
-            changed = true;
-          }
+        const isExpired = c.maintenanceEnd < todayStr;
+        c.isMaintenanceExpired = isExpired;
+
+        // Otomatis nonaktifkan jika periode maintenance telah selesai dan bukan override manual
+        if (isExpired && c.isActive !== false && !c.manualActiveOverride) {
+          c.isActive = false;
+          c.deactivatedReason = 'MAINTENANCE_EXPIRED';
+          c.deactivatedAt = c.deactivatedAt || new Date().toISOString();
+          changed = true;
+        } else if (!isExpired && c.isActive === false && c.deactivatedReason === 'MAINTENANCE_EXPIRED') {
+          // Jika masa maintenance diperpanjang melampaui hari ini, otomatis aktifkan kembali
+          c.isActive = true;
+          c.deactivatedReason = null;
+          changed = true;
         }
       });
 
@@ -1882,7 +1872,9 @@ export const useTicketStore = defineStore('tickets', {
           action: 'CUSTOMER_PIC_ADDED',
           entityType: 'CUSTOMER',
           entityId: cust.code,
-          description: `Menambahkan kontak PIC baru: ${newPic.name} (${newPic.dept}) untuk mitra ${cust.name}`
+          description: newPic.dept
+            ? `Menambahkan kontak PIC baru: ${newPic.name} (${newPic.dept}) untuk mitra ${cust.name}`
+            : `Menambahkan kontak PIC baru: ${newPic.name} (${newPic.phone || newPic.email || 'PIC'}) untuk mitra ${cust.name}`
         });
       }
 
@@ -2069,7 +2061,7 @@ export const useTicketStore = defineStore('tickets', {
       } catch (err) {
         console.warn('Backend seed error, using local fallback:', err);
       }
-      this.appDataMode = DATA_MODES.FULL_MOCK;
+      this.appDataMode = 'PRODUCTION';
       if (typeof window !== 'undefined' && window.localStorage) {
         localStorage.setItem(DATA_MODE_KEY, DATA_MODES.FULL_MOCK);
         localStorage.removeItem(STORAGE_KEYS.TICKETS);
@@ -2082,7 +2074,7 @@ export const useTicketStore = defineStore('tickets', {
         localStorage.removeItem('gtt_dismissed_notifications_map');
       }
       await this.fetchInitialDataFromApi();
-      this.selectedTicketId = this.tickets[0]?.id || 201;
+      this.selectedTicketId = this.tickets[0]?.id || null;
       this.readNotificationIds = [];
       this.dismissedNotifications = {};
       this.persistState();

@@ -326,14 +326,14 @@
         <div>
           <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">CUSTOMER &amp; KONTRAK</span>
           <div class="font-black text-slate-900 text-sm truncate">
-            {{ customerInfo.name }} ({{ customerInfo.code || 'AST' }})
+            {{ customerInfo.name }} <span v-if="customerInfo.code">({{ customerInfo.code }})</span>
           </div>
-          <div class="text-[11px] text-slate-500 truncate mt-0.5">
-            {{ customerInfo.contractName || 'PKS Layanan Managed Service 24x7' }}
+          <div v-if="customerInfo.contractName" class="text-[11px] text-slate-500 truncate mt-0.5">
+            {{ customerInfo.contractName }}
           </div>
-          <div class="mt-2">
+          <div v-if="customerInfo.slaTier" class="mt-2">
             <span class="inline-block bg-blue-100 text-blue-700 font-bold text-[10px] px-2 py-0.5 rounded shadow-2xs">
-              {{ customerInfo.slaTier || '24x7 Mission Critical' }}
+              {{ customerInfo.slaTier }}
             </span>
           </div>
         </div>
@@ -751,12 +751,16 @@
             </span>
           </div>
 
-          <p class="text-[11px] text-slate-400 -mt-1">
+          <p v-if="relatedKbArticles.length > 0" class="text-[11px] text-slate-400 -mt-1">
             Case yang mirip berdasarkan judul, kategori, dan deskripsi.
           </p>
 
+          <div v-if="relatedKbArticles.length === 0" class="p-5 text-center text-xs text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+            Belum ada referensi Knowledge Base runbook yang terkait dengan tiket ini.
+          </div>
+
           <!-- KB Cards List -->
-          <div class="space-y-3">
+          <div v-else class="space-y-3">
             <div 
               v-for="kb in relatedKbArticles" 
               :key="kb.id"
@@ -1925,10 +1929,10 @@ const customerInfo = computed(() => {
   if (!ticket.value) return {};
   const c = getCustomer(ticket.value.customerId);
   return {
-    name: c.name || 'PT Astra',
-    code: c.code || 'AST',
-    contractName: c.contractName || 'PKS Layanan Managed Service 24x7',
-    slaTier: c.contractTier || '24x7 Mission Critical'
+    name: c.name || ticket.value.customerName || 'Mitra Korporat',
+    code: c.code || ticket.value.customerCode || '',
+    contractName: c.contractName || c.serviceContract || '',
+    slaTier: c.slaTier || c.contractTier || ticket.value.contractTier || ticket.value.contractSla || ''
   };
 });
 
@@ -2300,43 +2304,34 @@ const allAttachments = computed(() => {
   return merged;
 });
 
-// Related Knowledge Base articles (Point 5 Reference)
+// Related Knowledge Base articles (dynamically matched from published runbooks)
 const relatedKbArticles = computed(() => {
-  return [
-    {
-      id: 12,
-      kbCode: 'KB-00012',
-      title: 'HPE 3PAR Datastore Unreachable',
-      similarity: 92,
-      symptom: 'Langkah-langkah pengecekan saat datastore pada HPE 3PAR tidak merespon koneksi FC fabric.',
-      rootCause: 'Transient PCIe interconnect bus stall & dirty cache unmap queue congestion.',
-      cliSnippet: `# Verifikasi controller node status\nshowsys -d\ncheckhealth -svc -detail\n\n# Rebalance FC paths\nservicenode start 0\nstatcmp -iter 5\nsetnode online 0`,
-      verificationSteps: 'Pastikan seluruh Virtual Volumes melaporkan status Normal dan ESXi storage adapter Active.',
-      tags: ['Storage', 'HPE', 'Datastore', 'Connectivity']
-    },
-    {
-      id: 8,
-      kbCode: 'KB-00008',
-      title: 'VM Tidak Merespon di Cluster',
-      similarity: 78,
-      symptom: 'Panduan pengecekan status VM pada cluster vCenter saat host terindikasi path failover.',
-      rootCause: 'Host storage adapter path timeout akibat burst traffic I/O sync.',
-      cliSnippet: `# Cek status multipath pada ESXi host\nesxcli storage nmp device list\nesxcli storage core adapter rescan --all`,
-      verificationSteps: 'Status VM kembali running tanpa storage freeze.',
-      tags: ['VMware', 'vCenter', 'Cluster', 'VM']
-    },
-    {
-      id: 5,
-      kbCode: 'KB-00005',
-      title: 'Network Timeout ke Server',
-      similarity: 65,
-      symptom: 'Troubleshooting koneksi jaringan dan routing packet loss ke gateway server produksi.',
-      rootCause: 'Packet drop pada upstream port switch SAN Brocade.',
-      cliSnippet: `sfpshow 1/14\nportstatsshow 1/14`,
-      verificationSteps: 'Ping latency stabil < 1ms tanpa dropped frame.',
-      tags: ['Network', 'Connectivity', 'Timeout']
-    }
-  ];
+  if (!ticketStore.knowledgeBase || ticketStore.knowledgeBase.length === 0 || !ticket.value) {
+    return [];
+  }
+  const t = ticket.value;
+  const query = `${t.title || ''} ${t.category || ''} ${t.principalVendor || ''}`.toLowerCase();
+  return ticketStore.knowledgeBase
+    .filter(k => k.status === 'PUBLISHED')
+    .map(k => {
+      const matchTitle = query && (k.title || '').toLowerCase().includes(t.title?.toLowerCase() || '') ? 25 : 0;
+      const matchCat = query && (k.category || '').toLowerCase().includes(t.category?.toLowerCase() || '') ? 20 : 0;
+      const matchPrinc = query && (k.technologyPrincipal || '').toLowerCase().includes(t.principalVendor?.toLowerCase() || '') ? 25 : 0;
+      const score = Math.min(95, 50 + matchTitle + matchCat + matchPrinc);
+      return {
+        id: k.id,
+        kbCode: k.kbCode || `KB-${k.id}`,
+        title: k.title,
+        similarity: score,
+        symptom: k.symptom || k.title,
+        rootCause: k.rootCause || '',
+        cliSnippet: k.cliSnippet || '',
+        verificationSteps: k.verificationSteps || '',
+        tags: [k.category, k.technologyPrincipal].filter(Boolean)
+      };
+    })
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, 3);
 });
 
 // Badges Styling helpers

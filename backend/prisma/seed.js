@@ -2,9 +2,9 @@ import { seedCompleteEnterpriseData } from '../src/services/systemService.js';
 import prisma from '../src/lib/prisma.js';
 
 async function main() {
-  console.log('🚀 Menjalankan Seeding Lengkap Helpdesk PT Glotra (156 Tiket Realistis)...');
+  console.log('🚀 Menjalankan Inisialisasi Master Data Helpdesk PT Glotra (Roles, Users, Categories, Customers, SLA)...');
   await seedCompleteEnterpriseData();
-  console.log('🎉 Seeding database via CLI berhasil!');
+  console.log('🎉 Inisialisasi master data database via CLI berhasil!');
 }
 
 main()
@@ -13,7 +13,7 @@ main()
     process.exit(0);
   })
   .catch(async (e) => {
-    console.error('❌ Gagal menjalankan seeding:', e);
+    console.error('❌ Gagal menjalankan inisialisasi master data:', e);
     await prisma.$disconnect();
     process.exit(1);
   });

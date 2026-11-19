@@ -564,14 +564,14 @@
             <!-- Empty State -->
             <tr v-if="filteredTickets.length === 0">
               <td colspan="12" class="py-12 text-center text-slate-400 bg-white">
-                <div v-if="ticketStore.isCleanMode && ticketStore.tickets.length === 0" class="max-w-md mx-auto space-y-3">
-                  <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center text-xl mx-auto shadow-inner">
-                    🧪
+                <div v-if="ticketStore.tickets.length === 0" class="max-w-md mx-auto space-y-3 py-4">
+                  <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mx-auto shadow-inner">
+                    🎫
                   </div>
                   <div>
-                    <h3 class="font-bold text-slate-800 text-sm">Mode Bersih Aktif (Belum Ada Tiket)</h3>
+                    <h3 class="font-bold text-slate-800 text-sm">Belum Ada Tiket Insiden</h3>
                     <p class="text-xs text-slate-500 mt-1 leading-relaxed">
-                      Antrean saat ini 0 tiket. Silakan buat tiket baru via akun Admin untuk menguji alur penugasan teknisi, SLA hitung mundur, investigasi, hingga penutupan.
+                      Antrean tiket saat ini kosong. Tiket baru yang dilaporkan oleh mitra atau dibuat oleh tim operasional akan tampil di sini.
                     </p>
                   </div>
                   <router-link
@@ -579,10 +579,10 @@
                     to="/tickets/create"
                     class="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all"
                   >
-                    <span>+ Buat Tiket Baru Sekarang</span>
+                    <span>+ Buat Tiket Baru</span>
                   </router-link>
                 </div>
-                <div v-else>
+                <div v-else class="py-4">
                   <svg class="w-10 h-10 mx-auto mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
@@ -601,48 +601,42 @@
         </table>
       </div>
 
-      <!-- Table Footer: Rows per page & Pagination -->
-      <div class="p-3 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
-        <!-- Rows per page selector -->
+      <!-- Table Footer: Pagination Toolbar -->
+      <div class="p-3 border-t border-slate-200 bg-white flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+        <span class="text-slate-500 font-medium">
+          Menampilkan <strong class="text-slate-800">{{ filteredTickets.length === 0 ? 0 : startIndex + 1 }}</strong> - <strong class="text-slate-800">{{ Math.min(endIndex, filteredTickets.length) }}</strong> dari <strong class="text-slate-800">{{ filteredTickets.length }}</strong> tiket
+        </span>
+
         <div class="flex items-center space-x-2">
-          <span>Tampilkan</span>
-          <select 
-            v-model="itemsPerPage" 
-            class="p-1 px-2 border border-slate-200 rounded text-xs bg-white text-slate-700 font-semibold focus:ring-1 focus:ring-blue-500"
+          <button
+            @click="goToPage(currentPage - 1)"
+            :disabled="currentPage <= 1"
+            class="px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-medium transition-colors"
           >
-            <option :value="8">8</option>
-            <option :value="10">10</option>
-            <option :value="20">20</option>
-            <option :value="50">50</option>
-          </select>
-          <span>data</span>
-        </div>
+            <span>&larr;</span> Prev
+          </button>
 
-        <!-- Pagination Controls -->
-        <div class="flex items-center space-x-3">
-          <span class="text-slate-500 font-mono text-[11px]">
-            Menampilkan <strong class="text-slate-800">{{ filteredTickets.length === 0 ? 0 : startIndex + 1 }}</strong> - <strong class="text-slate-800">{{ Math.min(endIndex, filteredTickets.length) }}</strong> dari <strong class="text-slate-800">{{ filteredTickets.length }}</strong> tiket
-          </span>
-
-          <div class="flex items-center space-x-1 font-mono">
-            <button
-              @click="currentPage--"
-              :disabled="currentPage <= 1"
-              class="w-7 h-7 flex items-center justify-center bg-white border border-slate-200 rounded text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 cursor-pointer"
-            >
-              &lt;
-            </button>
-            <span class="w-7 h-7 flex items-center justify-center bg-blue-600 text-white rounded font-bold text-xs">
-              {{ currentPage }}
-            </span>
-            <button
-              @click="currentPage++"
-              :disabled="currentPage >= totalPages"
-              class="w-7 h-7 flex items-center justify-center bg-white border border-slate-200 rounded text-slate-600 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 cursor-pointer"
-            >
-              &gt;
-            </button>
+          <div class="flex items-center space-x-1.5 text-xs text-slate-600">
+            <span>Halaman</span>
+            <input
+              type="number"
+              min="1"
+              :max="totalPages"
+              :value="currentPage"
+              @keydown.enter="handleJumpPage($event)"
+              @blur="handleJumpPage($event)"
+              class="w-12 py-1 px-1.5 text-center font-mono font-bold text-xs border border-slate-200 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+            <span>dari <strong class="text-slate-800 font-mono">{{ totalPages }}</strong></span>
           </div>
+
+          <button
+            @click="goToPage(currentPage + 1)"
+            :disabled="currentPage >= totalPages"
+            class="px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-medium transition-colors"
+          >
+            Next <span>&rarr;</span>
+          </button>
         </div>
       </div>
     </div>
@@ -791,8 +785,8 @@ const myAssignedCount = computed(() => {
   if (authStore.isEngineer) {
     return baseTickets.value.length;
   }
-  const currentId = authStore.currentUser?.id || 4;
-  return ticketStore.tickets.filter(t => t.assignedToId === currentId).length;
+  const currentId = authStore.currentUser?.id;
+  return currentId ? ticketStore.tickets.filter(t => t.assignedToId === currentId).length : 0;
 });
 
 // 7 Tabs for Status (Point 6 mockup)
@@ -893,6 +887,18 @@ const totalPages = computed(() => Math.ceil(filteredTickets.value.length / items
 const startIndex = computed(() => (currentPage.value - 1) * itemsPerPage.value);
 const endIndex = computed(() => startIndex.value + itemsPerPage.value);
 const paginatedTickets = computed(() => filteredTickets.value.slice(startIndex.value, endIndex.value));
+
+const handleJumpPage = (e) => {
+  const val = parseInt(e.target.value, 10);
+  if (!isNaN(val)) {
+    currentPage.value = Math.max(1, Math.min(totalPages.value, val));
+  }
+  e.target.value = currentPage.value;
+};
+
+const goToPage = (page) => {
+  currentPage.value = Math.max(1, Math.min(totalPages.value, page));
+};
 
 // Action Click handler
 const handleActionClick = (ticket) => {

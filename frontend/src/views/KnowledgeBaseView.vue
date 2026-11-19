@@ -334,53 +334,73 @@
           <div v-if="paginatedRunbooks.length === 0" class="bg-white border border-slate-200 rounded-2xl p-12 text-center space-y-3">
             <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
               <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
               </svg>
             </div>
-            <div class="font-bold text-slate-800 text-sm">Tidak ditemukan runbook yang cocok</div>
+            <div class="font-bold text-slate-800 text-sm">
+              {{ ticketStore.knowledgeBase.length === 0 ? 'Belum Ada Runbook SOP' : 'Tidak ditemukan runbook yang cocok' }}
+            </div>
             <p class="text-xs text-slate-500 max-w-sm mx-auto">
-              Coba ubah filter teknologi principal, status, atau kata kunci pencarian pada bilah di atas.
+              {{ ticketStore.knowledgeBase.length === 0 
+                ? 'Basis pengetahuan saat ini kosong. Buat runbook baru untuk membangun dokumentasi playbook tim teknis.' 
+                : 'Coba ubah filter teknologi principal, status, atau kata kunci pencarian pada bilah di atas.' }}
             </p>
-            <button
-              @click="resetFilters"
-              class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer"
-            >
-              Reset Semua Filter
-            </button>
+            <div class="pt-1">
+              <router-link
+                v-if="ticketStore.knowledgeBase.length === 0"
+                to="/knowledge-base/propose"
+                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs"
+              >
+                + Buat Runbook Baru
+              </router-link>
+              <button
+                v-else
+                @click="resetFilters"
+                class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold cursor-pointer"
+              >
+                Reset Semua Filter
+              </button>
+            </div>
           </div>
         </div>
 
         <!-- Pagination Bar (Figma Frame 08 Spec) -->
-        <div class="bg-white border border-slate-200 rounded-xl px-5 py-3 shadow-xs flex items-center justify-between text-xs text-slate-500">
+        <div class="bg-white border border-slate-200 rounded-xl px-5 py-3 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
           <div>
-            Showing <strong class="text-slate-800">{{ filteredRunbooks.length ? (currentPage - 1) * pageSize + 1 : 0 }}</strong> to 
-            <strong class="text-slate-800">{{ Math.min(currentPage * pageSize, filteredRunbooks.length) }}</strong> of 
-            <strong class="text-slate-800">{{ filteredRunbooks.length }}</strong> published runbooks
+            Menampilkan <strong class="text-slate-800">{{ filteredRunbooks.length ? (currentPage - 1) * pageSize + 1 : 0 }}</strong> - 
+            <strong class="text-slate-800">{{ Math.min(currentPage * pageSize, filteredRunbooks.length) }}</strong> dari 
+            <strong class="text-slate-800">{{ filteredRunbooks.length }}</strong> runbooks
           </div>
 
-          <div class="flex items-center space-x-1">
+          <div class="flex items-center space-x-2">
             <button
-              @click="currentPage--"
-              :disabled="currentPage === 1"
-              class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 cursor-pointer"
+              @click="goToPage(currentPage - 1)"
+              :disabled="currentPage <= 1"
+              class="px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-medium transition-colors"
             >
-              Previous
+              <span>&larr;</span> Prev
             </button>
+
+            <div class="flex items-center space-x-1.5 text-xs text-slate-600">
+              <span>Halaman</span>
+              <input
+                type="number"
+                min="1"
+                :max="totalPages"
+                :value="currentPage"
+                @keydown.enter="handleJumpPage($event)"
+                @blur="handleJumpPage($event)"
+                class="w-12 py-1 px-1.5 text-center font-mono font-bold text-xs border border-slate-200 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+              />
+              <span>dari <strong class="text-slate-800 font-mono">{{ totalPages }}</strong></span>
+            </div>
+
             <button
-              v-for="page in totalPages"
-              :key="page"
-              @click="currentPage = page"
-              class="w-7 h-7 rounded-lg text-xs font-bold font-mono transition-all cursor-pointer"
-              :class="currentPage === page ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-700 hover:bg-slate-100'"
+              @click="goToPage(currentPage + 1)"
+              :disabled="currentPage >= totalPages"
+              class="px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-medium transition-colors"
             >
-              {{ page }}
-            </button>
-            <button
-              @click="currentPage++"
-              :disabled="currentPage === totalPages || totalPages === 0"
-              class="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-50 cursor-pointer"
-            >
-              Next
+              Next <span>&rarr;</span>
             </button>
           </div>
         </div>
@@ -954,7 +974,7 @@ const selectedStatus = ref('ALL');
 const sortBy = ref('mostReferenced');
 
 const currentPage = ref(1);
-const pageSize = 5;
+const pageSize = 10;
 
 const selectedRunbook = ref(null);
 const showPendingModal = ref(false);
@@ -1013,7 +1033,7 @@ const backupPlaybooksCount = computed(() => {
 
 const incidentReusabilityRate = computed(() => {
   const closedOrResolved = ticketStore.tickets.filter(t => ['RESOLVED', 'CLOSED'].includes(t.status));
-  if (closedOrResolved.length === 0) return 64;
+  if (closedOrResolved.length === 0) return 0;
   const withKb = closedOrResolved.filter(t => t.isProposeKb || (t.rootCause && t.rootCause.length > 10)).length;
   return Math.min(100, Math.round((withKb / closedOrResolved.length) * 100));
 });
@@ -1109,6 +1129,18 @@ const paginatedRunbooks = computed(() => {
   const start = (currentPage.value - 1) * pageSize;
   return filteredRunbooks.value.slice(start, start + pageSize);
 });
+
+const handleJumpPage = (e) => {
+  const val = parseInt(e.target.value, 10);
+  if (!isNaN(val)) {
+    currentPage.value = Math.max(1, Math.min(totalPages.value, val));
+  }
+  e.target.value = currentPage.value;
+};
+
+const goToPage = (page) => {
+  currentPage.value = Math.max(1, Math.min(totalPages.value, page));
+};
 
 // All pending proposals (from tickets and directly proposed articles)
 const allPendingItems = computed(() => {

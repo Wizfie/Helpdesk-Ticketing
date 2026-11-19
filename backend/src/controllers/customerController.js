@@ -44,20 +44,37 @@ export async function getCustomerById(req, res) {
 
 export async function createCustomer(req, res) {
   try {
-    const { name, code, industry, serviceContract, contractTier, contractSla, address, cluster, environment, picName, picPhone, picEmail, picDept } = req.body;
+    const { name, code, industry, serviceContract, slaTier, contractTier, contractSla, address, picName, picPhone, picEmail, picDept, ticketQuota, maintenanceStart, maintenanceEnd } = req.body;
     const actor = req.user;
+
+    let customerCode = code;
+    if (!customerCode || !customerCode.trim()) {
+      const cleanName = (name || 'CUST').replace(/^(PT|CV|UD|PD|TBK)\s+/i, '').trim();
+      const words = cleanName.split(/\s+/).filter(Boolean);
+      customerCode = words.length >= 2
+        ? words.slice(0, 4).map(w => w[0]).join('').toUpperCase()
+        : (words[0] ? words[0].slice(0, 4).toUpperCase() : 'CUST' + Date.now().toString().slice(-4));
+    }
+    const existingCode = await prisma.customer.findUnique({ where: { code: customerCode.toUpperCase() } });
+    if (existingCode) {
+      customerCode = `${customerCode.toUpperCase()}-${Math.floor(10 + Math.random() * 90)}`;
+    } else {
+      customerCode = customerCode.toUpperCase();
+    }
+
+    const assignedSlaTier = slaTier || contractTier || contractSla || '8x5 GOLD ENTERPRISE';
 
     const newCustomer = await prisma.customer.create({
       data: {
         name,
-        code: code.toUpperCase(),
-        industry,
+        code: customerCode,
+        industry: industry || null,
         serviceContract: serviceContract || 'PKS Layanan Managed Service 24x7',
-        contractTier: contractTier || '8x5 GOLD ENTERPRISE',
-        contractSla: contractSla || 'GOLD_8X5',
-        address,
-        cluster: cluster || 'PROD-CL01',
-        environment: environment || 'PROD-DC-01',
+        slaTier: assignedSlaTier,
+        address: address || '',
+        maintenanceStart: maintenanceStart || null,
+        maintenanceEnd: maintenanceEnd || null,
+        ticketQuota: ticketQuota ? String(ticketQuota) : 'Unlimited',
         isActive: true,
         pics: {
           create: [
@@ -92,21 +109,23 @@ export async function createCustomer(req, res) {
 export async function updateCustomer(req, res) {
   try {
     const { id } = req.params;
-    const { name, code, industry, serviceContract, contractTier, contractSla, address, cluster, environment, isActive } = req.body;
+    const { name, code, industry, serviceContract, slaTier, contractTier, contractSla, address, isActive, maintenanceStart, maintenanceEnd, ticketQuota } = req.body;
     const actor = req.user;
+
+    const assignedSlaTier = slaTier !== undefined ? slaTier : (contractTier !== undefined ? contractTier : contractSla);
 
     const updated = await prisma.customer.update({
       where: { id: Number(id) },
       data: {
         name,
         code: code ? code.toUpperCase() : undefined,
-        industry,
-        serviceContract,
-        contractTier,
-        contractSla: contractSla !== undefined ? contractSla : undefined,
+        industry: industry !== undefined ? industry : undefined,
+        serviceContract: serviceContract !== undefined ? serviceContract : undefined,
+        slaTier: assignedSlaTier !== undefined ? assignedSlaTier : undefined,
         address,
-        cluster,
-        environment,
+        maintenanceStart: maintenanceStart !== undefined ? maintenanceStart : undefined,
+        maintenanceEnd: maintenanceEnd !== undefined ? maintenanceEnd : undefined,
+        ticketQuota: ticketQuota !== undefined ? String(ticketQuota) : undefined,
         isActive
       },
       include: { pics: true }

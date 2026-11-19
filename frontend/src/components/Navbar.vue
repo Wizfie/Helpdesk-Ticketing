@@ -1,17 +1,17 @@
 <template>
   <header class="bg-white border-b border-slate-200 sticky top-0 z-30 px-3 sm:px-4 lg:px-6 py-2.5 shadow-sm">
     <div class="flex items-center justify-between gap-2">
-      <!-- Left: Hamburger Menu (Mobile) & Brand Logo -->
+      <!-- Left: Hamburger Menu & Brand Logo -->
       <div class="flex items-center space-x-2 sm:space-x-3">
-        <!-- Hamburger / Sidebar Toggle Button (Visible on Mobile & Desktop) -->
+        <!-- Hamburger / Sidebar Toggle Button (Standard Position: Far-Left) -->
         <button
           @click="uiStore.toggleSidebar()"
           type="button"
-          class="p-1.5 rounded-lg transition-colors focus:outline-none flex items-center justify-center"
+          class="p-1.5 sm:p-2 rounded-lg transition-colors focus:outline-none flex items-center justify-center cursor-pointer"
           :class="[
             uiStore.isSidebarCollapsed 
-              ? 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 hover:bg-blue-100' 
-              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+              ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100' 
+              : 'bg-blue-50 text-blue-700 ring-1 ring-blue-200 hover:bg-blue-100'
           ]"
           :title="uiStore.isSidebarCollapsed ? 'Tampilkan Sidebar (Klik)' : 'Sembunyikan Sidebar Menu (Klik)'"
         >
@@ -27,10 +27,9 @@
             alt="Glotra Technology" 
             class="h-8 sm:h-10 w-auto object-contain transition-transform group-hover:scale-105"
           />
-          <div class="hidden sm:block">
+          <div>
             <div class="flex items-center space-x-1.5">
-              <span class="font-bold text-slate-900 text-sm sm:text-base tracking-tight">GTT Helpdesk</span>
-              <span class="bg-blue-100 text-blue-800 text-[10px] sm:text-xs font-semibold px-1.5 py-0.5 rounded">v1.0</span>
+              <span class="font-bold text-slate-900 text-sm sm:text-base tracking-tight">PT Glotra Service Helpdesk</span>
             </div>
             <p class="text-[10px] sm:text-xs text-slate-500 font-medium italic">"Think it, Solve it"</p>
           </div>
@@ -39,41 +38,6 @@
 
       <!-- Right: User Actions, Notifications, & Profile -->
       <div class="flex items-center space-x-2 sm:space-x-3">
-
-        <!-- Simple Clean & Seed Database Buttons -->
-        <div class="flex items-center space-x-1 sm:space-x-1.5">
-          <!-- Button 1: Clean (0 Tiket) -->
-          <button
-            @click="handleCleanData"
-            :disabled="ticketStore.isSystemResetting"
-            type="button"
-            class="px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
-            :class="ticketStore.isCleanMode 
-              ? 'bg-amber-100 text-amber-900 border-amber-300 ring-1 ring-amber-200 shadow-2xs font-bold' 
-              : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'"
-            title="Bersihkan semua tiket (0 Tiket)"
-          >
-            <span>🧹</span>
-            <span class="hidden sm:inline">Clean</span>
-            <span class="text-[10px] px-1 py-0.2 rounded font-mono font-bold" :class="ticketStore.isCleanMode ? 'bg-amber-200 text-amber-900' : 'bg-slate-100 text-slate-500'">0</span>
-          </button>
-
-          <!-- Button 2: Seeding (156 Tiket) -->
-          <button
-            @click="handleSeedData"
-            :disabled="ticketStore.isSystemResetting"
-            type="button"
-            class="px-2 sm:px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all cursor-pointer flex items-center gap-1 disabled:opacity-50"
-            :class="!ticketStore.isCleanMode 
-              ? 'bg-emerald-100 text-emerald-900 border-emerald-300 ring-1 ring-emerald-200 shadow-2xs font-bold' 
-              : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'"
-            title="Muat ulang 156 tiket seeding"
-          >
-            <span>🌱</span>
-            <span class="hidden sm:inline">Seeding</span>
-            <span class="text-[10px] px-1 py-0.2 rounded font-mono font-bold" :class="!ticketStore.isCleanMode ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-100 text-slate-500'">156</span>
-          </button>
-        </div>
 
         <!-- Notification Bell & Badge Menu -->
         <div class="relative" ref="notificationDropdownRef">
@@ -281,7 +245,7 @@
           </div>
         </div>
 
-        <!-- Active User Profile & Logout -->
+        <!-- Active User Profile -->
         <div class="flex items-center space-x-2 sm:space-x-3 pl-2 sm:pl-3 border-l border-slate-200">
           <router-link 
             to="/profile"
@@ -306,19 +270,6 @@
               </div>
             </div>
           </router-link>
-
-          <!-- Logout Button -->
-          <button
-            @click="handleLogout"
-            type="button"
-            class="inline-flex items-center space-x-1 px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 rounded-lg transition-colors cursor-pointer"
-            title="Keluar dari akun (Logout)"
-          >
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-            </svg>
-            <span class="hidden md:inline">Keluar</span>
-          </button>
         </div>
       </div>
     </div>
@@ -364,22 +315,6 @@ let recheckInterval = null;
 
 const toggleNotificationDropdown = () => {
   isNotificationOpen.value = !isNotificationOpen.value;
-};
-
-const handleCleanData = async () => {
-  if (ticketStore.isCleanMode) return;
-  if (window.confirm('Bersihkan semua tiket? (Mode Bersih 0 Tiket)')) {
-    await ticketStore.switchToCleanMode();
-    router.push('/');
-  }
-};
-
-const handleSeedData = async () => {
-  if (!ticketStore.isCleanMode) return;
-  if (window.confirm('Muat ulang 156 tiket seeding ke database?')) {
-    await ticketStore.switchToFullMockMode();
-    router.push('/');
-  }
 };
 
 const handleNotificationClick = (notif) => {

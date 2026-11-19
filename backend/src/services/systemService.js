@@ -17,17 +17,56 @@ import {
  * Master data (roles, users, customers, categories, SLA policies) remain intact.
  */
 export async function cleanAllTransactionalData(actorUser = null) {
-  console.log('🧹 [SystemService] Membersihkan semua data tiket & transaksi (Mode Bersih 0 Tiket)...');
+  console.log('🧹 [SystemService] Membersihkan semua data tiket & transaksi (Mode Bersih 0 Tiket, 0 SOP, 1 Akun Admin)...');
 
   // Urutan penghapusan sesuai foreign key cascade
   await prisma.attachment.deleteMany({});
   await prisma.slaHoldLog.deleteMany({});
   await prisma.ticketMilestone.deleteMany({});
   await prisma.ticket.deleteMany({});
+  await prisma.customerPic.deleteMany({});
+  await prisma.customer.deleteMany({});
+  await prisma.knowledgeBase.deleteMany({});
   await prisma.auditLog.deleteMany({});
 
+  // Pastikan hanya tersisa 1 akun administrator
+  await prisma.user.deleteMany({
+    where: {
+      email: { not: 'admin@glotratech.com' }
+    }
+  });
+
+  const roleAdmin = await prisma.role.upsert({
+    where: { code: 'ADMIN' },
+    update: { name: 'ADMIN / CPIG' },
+    create: { code: 'ADMIN', name: 'ADMIN / CPIG' }
+  });
+
+  await prisma.user.upsert({
+    where: { email: 'admin@glotratech.com' },
+    update: {
+      roleId: roleAdmin.id,
+      name: 'Ahmad Fauzi',
+      roleTitle: 'System Administrator',
+      initials: 'AF',
+      phone: '0811-9988-771',
+      isActive: true
+    },
+    create: {
+      id: 1,
+      roleId: roleAdmin.id,
+      name: 'Ahmad Fauzi',
+      email: 'admin@glotratech.com',
+      password: '$2a$10$defaultPlaceholderHash2026',
+      roleTitle: 'System Administrator',
+      initials: 'AF',
+      phone: '0811-9988-771',
+      isActive: true
+    }
+  });
+
   // Catat event inisialisasi Mode Bersih di Audit Log
-  const userName = actorUser?.name || 'System Administrator';
+  const userName = actorUser?.name || 'Ahmad Fauzi';
   const roleName = actorUser?.role?.code || 'ADMIN';
 
   await prisma.auditLog.create({
@@ -37,7 +76,7 @@ export async function cleanAllTransactionalData(actorUser = null) {
       action: 'SYSTEM_CLEAN_INIT',
       entityType: 'SYSTEM',
       entityId: 'SYS-CLEAN',
-      description: 'Sistem Helpdesk dialihkan ke Mode Bersih (0 Tiket) via antarmuka UI. Database siap untuk pengujian alur tiket baru dari nol.',
+      description: 'Sistem Helpdesk dibersihkan penuh: 0 Tiket, 0 SOP Knowledge Base. Tersisa 1 akun Administrator (admin@glotratech.com) aktif untuk kelola.',
       ipAddress: '127.0.0.1',
       timestampUtc: new Date()
     }
@@ -47,7 +86,9 @@ export async function cleanAllTransactionalData(actorUser = null) {
     success: true,
     mode: 'CLEAN_DATA',
     ticketCount: 0,
-    message: 'Semua tiket berhasil dibersihkan! Database kini berada dalam Mode Bersih (0 Tiket) untuk pengujian alur tiket baru dari awal.'
+    kbCount: 0,
+    userCount: 1,
+    message: 'Semua tiket dan knowledge base berhasil dibersihkan! Database siap digunakan dengan 1 akun administrator (admin@glotratech.com).'
   };
 }
 
@@ -56,7 +97,7 @@ export async function cleanAllTransactionalData(actorUser = null) {
  * Re-populates the database with the complete canonical dataset.
  */
 export async function seedCompleteEnterpriseData(actorUser = null) {
-  console.log('🌱 [SystemService] Memulai seeding database Helpdesk PT Glotra (156 Tiket + Master Data)...');
+  console.log('🌱 [SystemService] Memulai inisialisasi master data Helpdesk PT Glotra...');
 
   // 1. Bersihkan semua data dengan urutan foreign key
   await prisma.attachment.deleteMany({});
@@ -65,7 +106,6 @@ export async function seedCompleteEnterpriseData(actorUser = null) {
   await prisma.ticket.deleteMany({});
   await prisma.customerPic.deleteMany({});
   await prisma.customer.deleteMany({});
-  await prisma.quickPreset.deleteMany({});
   await prisma.category.deleteMany({});
   await prisma.knowledgeBase.deleteMany({});
   await prisma.principal.deleteMany({});
@@ -84,14 +124,19 @@ export async function seedCompleteEnterpriseData(actorUser = null) {
   const roleAdmin = await prisma.role.findUnique({ where: { code: 'ADMIN' } });
   const roleEngineer = await prisma.role.findUnique({ where: { code: 'ENGINEER' } });
 
-  // 3. Users (9 Staff Users)
+  // 3. Users (Strictly 1 Admin User)
+  await prisma.user.deleteMany({
+    where: {
+      email: { not: 'admin@glotratech.com' }
+    }
+  });
+
   for (const u of MOCK_USERS) {
-    const roleId = u.roleCode === 'ADMIN' ? roleAdmin.id : roleEngineer.id;
+    const roleId = u.roleCode === 'ADMIN' ? roleAdmin.id : (roleEngineer ? roleEngineer.id : roleAdmin.id);
     await prisma.user.upsert({
-      where: { id: u.id },
+      where: { email: u.email },
       update: {
         name: u.name,
-        email: u.email,
         roleId,
         roleTitle: u.roleTitle,
         initials: u.initials,
@@ -152,15 +197,10 @@ export async function seedCompleteEnterpriseData(actorUser = null) {
       where: { code: cust.code },
       update: {
         name: cust.name,
-        industry: cust.industry,
-        serviceContract: cust.serviceContract,
-        contractTier: cust.slaTier || cust.contractTier || '8x5 GOLD ENTERPRISE',
-        contractSla: cust.contractSla || 'GOLD_8X5',
-        slaTier: cust.slaTier || '8x5 GOLD ENTERPRISE',
-        slaCoverage: cust.slaCoverage || 'First Touch: 30m • Resolusi: 8h',
-        address: cust.address,
-        cluster: cust.cluster || 'PROD-CL01',
-        environment: cust.environment || 'PROD-DC-01',
+        industry: cust.industry || null,
+        serviceContract: cust.serviceContract || 'PKS Layanan Managed Service 24x7',
+        slaTier: cust.slaTier || cust.contractTier || '8x5 GOLD ENTERPRISE',
+        address: cust.address || '',
         maintenanceStart: cust.maintenanceStart || null,
         maintenanceEnd: cust.maintenanceEnd || null,
         ticketQuota: cust.ticketQuota !== undefined ? String(cust.ticketQuota) : 'Unlimited',
@@ -172,15 +212,10 @@ export async function seedCompleteEnterpriseData(actorUser = null) {
         id: cust.id,
         name: cust.name,
         code: cust.code,
-        industry: cust.industry,
-        serviceContract: cust.serviceContract,
-        contractTier: cust.slaTier || cust.contractTier || '8x5 GOLD ENTERPRISE',
-        contractSla: cust.contractSla || 'GOLD_8X5',
-        slaTier: cust.slaTier || '8x5 GOLD ENTERPRISE',
-        slaCoverage: cust.slaCoverage || 'First Touch: 30m • Resolusi: 8h',
-        address: cust.address,
-        cluster: cust.cluster || 'PROD-CL01',
-        environment: cust.environment || 'PROD-DC-01',
+        industry: cust.industry || null,
+        serviceContract: cust.serviceContract || 'PKS Layanan Managed Service 24x7',
+        slaTier: cust.slaTier || cust.contractTier || '8x5 GOLD ENTERPRISE',
+        address: cust.address || '',
         maintenanceStart: cust.maintenanceStart || null,
         maintenanceEnd: cust.maintenanceEnd || null,
         ticketQuota: cust.ticketQuota !== undefined ? String(cust.ticketQuota) : 'Unlimited',
@@ -231,163 +266,7 @@ export async function seedCompleteEnterpriseData(actorUser = null) {
     });
   }
 
-  // 7. Seed All 156 Tickets with Milestones & Attachments
-  console.log(`  -> Seeding ${INITIAL_TICKETS.length} enterprise tickets...`);
-  
-  for (const t of INITIAL_TICKETS) {
-    // Validasi createdBy & assignedTo
-    const createdById = t.createdById || 1;
-    const assignedToId = t.assignedToId || null;
-    const customerId = t.customerId || 1;
-    const customerPicId = t.customerPicId || null;
-    const categoryId = t.categoryId || 1;
-
-    const createdAt = t.createdAt ? new Date(t.createdAt) : new Date();
-    const updatedAt = t.updatedAt ? new Date(t.updatedAt) : createdAt;
-    const responseDeadline = t.responseDeadline ? new Date(t.responseDeadline) : new Date(createdAt.getTime() + 30 * 60 * 1000);
-    const resolutionDeadline = t.resolutionDeadline ? new Date(t.resolutionDeadline) : new Date(createdAt.getTime() + 8 * 3600 * 1000);
-    const respondedAt = t.respondedAt ? new Date(t.respondedAt) : null;
-    const resolvedAt = t.resolvedAt ? new Date(t.resolvedAt) : null;
-    const closedAt = t.closedAt ? new Date(t.closedAt) : null;
-    const pausedAt = t.pausedAt ? new Date(t.pausedAt) : null;
-
-    const createdTicket = await prisma.ticket.upsert({
-      where: { ticketNumber: t.ticketNumber },
-      update: {
-        customerId,
-        customerPicId,
-        categoryId,
-        severity: t.severity || 'MEDIUM',
-        channel: t.channel || 'EMAIL',
-        title: t.title,
-        description: t.description || t.scopeSubtitle || 'Laporan insiden sistem',
-        status: t.status || 'OPEN',
-        trackingToken: t.trackingToken || `sec_${t.ticketNumber}`,
-        createdById,
-        assignedToId,
-        contractSla: t.contractSla || 'GOLD_8X5',
-        contractTier: t.contractTier || '8x5 GOLD ENTERPRISE',
-        cluster: t.cluster || 'PROD-CL01',
-        environment: t.environment || 'PROD-DC-01',
-        impactScope: t.impactScope || 'Standard Operational',
-        isEmailSync: t.isEmailSync !== undefined ? t.isEmailSync : true,
-        isProposeKb: t.isProposeKb !== undefined ? t.isProposeKb : false,
-        escalationTier: t.escalationTier || 'INTERNAL',
-        principalVendor: t.principalVendor || null,
-        principalCaseId: t.principalCaseId || null,
-        principalSpecialist: t.principalSpecialist || null,
-        principalBridgeStatus: t.principalBridgeStatus || null,
-        createdAt,
-        updatedAt,
-        responseDeadline,
-        resolutionDeadline,
-        respondedAt,
-        resolvedAt,
-        closedAt,
-        isPaused: Boolean(t.isPaused),
-        pausedAt,
-        totalPausedDurationSec: t.totalPausedDurationSec || 0,
-        isSlaResponseBreached: Boolean(t.isSlaResponseBreached),
-        isSlaResolutionBreached: Boolean(t.isSlaResolutionBreached),
-        isNearBreachFlag: Boolean(t.isNearBreachFlag),
-        rootCause: t.rootCause || null,
-        resolutionStrategy: t.resolutionStrategy || null,
-        actionTaken: t.actionTaken || null
-      },
-      create: {
-        ticketNumber: t.ticketNumber,
-        customerId,
-        customerPicId,
-        categoryId,
-        severity: t.severity || 'MEDIUM',
-        channel: t.channel || 'EMAIL',
-        title: t.title,
-        description: t.description || t.scopeSubtitle || 'Laporan insiden sistem',
-        status: t.status || 'OPEN',
-        trackingToken: t.trackingToken || `sec_${t.ticketNumber}`,
-        createdById,
-        assignedToId,
-        contractSla: t.contractSla || 'GOLD_8X5',
-        contractTier: t.contractTier || '8x5 GOLD ENTERPRISE',
-        cluster: t.cluster || 'PROD-CL01',
-        environment: t.environment || 'PROD-DC-01',
-        impactScope: t.impactScope || 'Standard Operational',
-        isEmailSync: t.isEmailSync !== undefined ? t.isEmailSync : true,
-        isProposeKb: t.isProposeKb !== undefined ? t.isProposeKb : false,
-        escalationTier: t.escalationTier || 'INTERNAL',
-        principalVendor: t.principalVendor || null,
-        principalCaseId: t.principalCaseId || null,
-        principalSpecialist: t.principalSpecialist || null,
-        principalBridgeStatus: t.principalBridgeStatus || null,
-        createdAt,
-        updatedAt,
-        responseDeadline,
-        resolutionDeadline,
-        respondedAt,
-        resolvedAt,
-        closedAt,
-        isPaused: Boolean(t.isPaused),
-        pausedAt,
-        totalPausedDurationSec: t.totalPausedDurationSec || 0,
-        isSlaResponseBreached: Boolean(t.isSlaResponseBreached),
-        isSlaResolutionBreached: Boolean(t.isSlaResolutionBreached),
-        isNearBreachFlag: Boolean(t.isNearBreachFlag),
-        rootCause: t.rootCause || null,
-        resolutionStrategy: t.resolutionStrategy || null,
-        actionTaken: t.actionTaken || null
-      }
-    });
-
-    // Milestones
-    if (t.milestones && t.milestones.length > 0) {
-      for (const m of t.milestones) {
-        await prisma.ticketMilestone.create({
-          data: {
-            ticketId: createdTicket.id,
-            stepName: m.stepName,
-            status: m.status || 'OPEN',
-            actorName: m.actorName || 'Helpdesk Admin',
-            actorRole: m.actorRole || 'ADMIN',
-            notes: m.notes || 'Pembaruan milestone penanganan tiket.',
-            proofFile: m.proofFile || null,
-            timestampUtc: m.timestampUtc ? new Date(m.timestampUtc) : createdAt
-          }
-        });
-      }
-    }
-
-    // Attachments
-    if (t.attachments && t.attachments.length > 0) {
-      for (const att of t.attachments) {
-        await prisma.attachment.create({
-          data: {
-            ticketId: createdTicket.id,
-            name: att.name,
-            originalName: att.name,
-            fileType: att.fileType || 'application/pdf',
-            size: att.size || '45 KB',
-            uploadedBy: att.uploadedBy || 'Monitoring System',
-            source: att.source || 'Laporan Insiden'
-          }
-        });
-      }
-    }
-
-    // SLA Hold Log jika status paused
-    if (t.isPaused) {
-      await prisma.slaHoldLog.create({
-        data: {
-          ticketId: createdTicket.id,
-          reasonType: t.escalationTier === 'PARTNER' ? 'PART_INDENT' : 'VENDOR_DEPENDENCY',
-          reasonDetail: t.description || 'Menunggu sparepart dan eskalasi teknis vendor.',
-          principalCaseId: t.principalCaseId || 'CASE-PAUSED-001',
-          pausedAt: pausedAt || new Date(createdAt.getTime() + 3600000),
-          durationSec: t.totalPausedDurationSec || 3600,
-          actorName: 'Budi Santoso'
-        }
-      });
-    }
-  }
+  // 7. No mock tickets seeded (Clean State)
 
   // 8. Knowledge Base
   console.log(`  -> Seeding ${MOCK_KNOWLEDGE_BASE.length} knowledge base runbooks...`);
@@ -460,8 +339,8 @@ export async function seedCompleteEnterpriseData(actorUser = null) {
       role: actorRole,
       action: 'SYSTEM_SEED_COMPLETE',
       entityType: 'SYSTEM',
-      entityId: 'SYS-SEED-156',
-      description: `Database berhasil di-reset dan dimuat ulang dengan ${INITIAL_TICKETS.length} tiket realistis dan master data lengkap via UI.`,
+      entityId: 'SYS-INIT-MASTER',
+      description: 'Master data database (Users, Customers, Categories, SLA Policies) berhasil diinisialisasi.',
       ipAddress: '127.0.0.1',
       timestampUtc: new Date()
     }
@@ -472,7 +351,7 @@ export async function seedCompleteEnterpriseData(actorUser = null) {
   return {
     success: true,
     mode: 'FULL_DATA',
-    ticketCount: INITIAL_TICKETS.length,
+    ticketCount: 0,
     customerCount: MOCK_CUSTOMERS.length,
     message: `Database berhasil dimuat ulang dengan ${INITIAL_TICKETS.length} tiket realistis dan master data lengkap!`
   };

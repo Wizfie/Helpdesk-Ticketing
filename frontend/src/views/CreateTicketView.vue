@@ -88,19 +88,34 @@
               </div>
             </div>
 
-            <!-- Live Contract SLA Badge -->
-            <div v-if="selectedCustomer" class="p-3 rounded-xl bg-blue-50/70 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <!-- Live Contract SLA & Quota Badge -->
+            <div v-if="selectedCustomer" class="p-3 rounded-xl bg-blue-50/70 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
               <div class="flex items-center space-x-2">
                 <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
                 <span class="font-mono font-bold text-blue-900 text-[11px] uppercase tracking-wider">
-                  ACTIVE CONTRACT SLA: {{ selectedCustomer.contractSla || 'SLA-GOLD-2026' }}
+                  ACTIVE CONTRACT SLA: {{ selectedCustomer.contractSla || selectedCustomer.slaTier || '-' }}
                 </span>
-                <span class="bg-blue-200/80 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">
-                  {{ selectedCustomer.slaTier || '24x7 Mission Critical' }}
+                <span v-if="selectedCustomer.slaTier && selectedCustomer.slaTier !== selectedCustomer.contractSla" class="bg-blue-200/80 text-blue-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                  {{ selectedCustomer.slaTier }}
                 </span>
               </div>
-              <div class="text-[11px] font-medium text-blue-800">
-                {{ selectedCustomer.slaCoverage || 'First Touch ≤ 30m • Resolusi ≤ 4h' }}
+              <div class="flex items-center space-x-3 text-[11px]">
+                <div v-if="selectedCustomer.slaCoverage" class="font-medium text-blue-800">
+                  {{ selectedCustomer.slaCoverage }}
+                </div>
+                <div class="flex items-center space-x-1.5 pl-2 border-l border-blue-200">
+                  <span class="text-slate-500 font-semibold">Sisa Kuota:</span>
+                  <span v-if="customerQuotaInfo.quota === 'Unlimited'" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-white text-slate-700 border border-slate-200">
+                    Unlimited
+                  </span>
+                  <span v-else class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border" :class="[
+                    customerQuotaInfo.isCritical ? 'bg-rose-100 text-rose-800 border-rose-300' :
+                    customerQuotaInfo.isNearLimit ? 'bg-amber-100 text-amber-800 border-amber-300' :
+                    'bg-emerald-100 text-emerald-800 border-emerald-300'
+                  ]">
+                    {{ customerQuotaInfo.remaining }} / {{ customerQuotaInfo.quota }} ({{ customerQuotaInfo.percentage }}%)
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -627,11 +642,15 @@
             </span>
           </div>
 
-          <p class="text-[11px] text-slate-500 leading-relaxed">
+          <p v-if="recommendedKbs.length > 0" class="text-[11px] text-slate-500 leading-relaxed">
             Berdasarkan judul, kategori, dan deskripsi, ditemukan case yang mirip:
           </p>
 
-          <div class="space-y-3">
+          <div v-if="recommendedKbs.length === 0" class="p-6 text-center text-xs text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+            Belum ada referensi Knowledge Base runbook yang terkait. Basis pengetahuan akan terisi seiring tim menyelesaikan insiden operasional.
+          </div>
+
+          <div v-else class="space-y-3">
             <div 
               v-for="kb in recommendedKbs" 
               :key="kb.code"
@@ -922,6 +941,10 @@ const selectedCustomer = computed(() => {
   return ticketStore.customers.find(item => item.id === Number(form.value.customerId));
 });
 
+const customerQuotaInfo = computed(() => {
+  return ticketStore.getCustomerQuotaInfo(selectedCustomer.value);
+});
+
 const availablePics = computed(() => {
   return selectedCustomer.value ? selectedCustomer.value.pics : [];
 });
@@ -949,45 +972,29 @@ const availableEngineers = computed(() => {
   return authStore.users.filter(u => u.roleCode === 'ENGINEER');
 });
 
-// Knowledge Base Recommendations matching exact cases from specification
-const defaultKbs = [
-  {
-    code: 'KB-00012',
-    title: 'Server Tidak Dapat Diakses (VMware)',
-    similarityScore: 92,
-    excerpt: 'Langkah-langkah pengecekan saat server VMware tidak dapat diakses atau status host disconnected dari vCenter Server cluster.',
-    solution: '1. Verifikasi connectivity vCenter ke ESXi host (ping IP management).\n2. Cek service hostd & vpxa via SSH: /etc/init.d/hostd status\n3. Restart hostd & vpxa jika service hang.\n4. Periksa datastore storage lock & SAN zoning status.',
-    tags: ['Server', 'VMware', 'Service Unreachable']
-  },
-  {
-    code: 'KB-00008',
-    title: 'Network Timeout ke Server',
-    similarityScore: 78,
-    excerpt: 'Troubleshooting koneksi jaringan, routing switch core, MTU mismatch, dan latency tinggi antar subnet VLAN produksi.',
-    solution: '1. Traceroute dari gateway klien ke server tujuan.\n2. Cek port-channel flapping pada switch Cisco/Nexus core.\n3. Verifikasi status firewall rule & NAT address table.',
-    tags: ['Network', 'Connectivity', 'Timeout']
-  },
-  {
-    code: 'KB-00005',
-    title: 'VM Tidak Merespon di Cluster',
-    similarityScore: 65,
-    excerpt: 'Panduan pengecekan status VM pada cluster vCenter saat freeze, high CPU lock, atau storage I/O latency spike.',
-    solution: '1. Buka VMware web console untuk mengecek kernel panic atau BSOD.\n2. Lakukan soft reset VM via vCenter action.\n3. Jika host tidak merespon, trigger vSphere HA failover ke host sehat.',
-    tags: ['VMware', 'Cluster', 'vCenter']
-  }
-];
-
+// Knowledge Base Recommendations based on real published runbooks
 const recommendedKbs = computed(() => {
-  // If title or description mentions network, show network first
-  const query = (form.value.title + ' ' + form.value.description).toLowerCase();
-  if (query.includes('network') || query.includes('timeout') || query.includes('ping') || query.includes('cisco')) {
-    return [
-      defaultKbs[1], // KB-00008
-      defaultKbs[0], // KB-00012
-      defaultKbs[2]  // KB-00005
-    ];
-  }
-  return defaultKbs;
+  const kbList = (ticketStore.knowledgeBase || []).filter(k => k.status === 'PUBLISHED');
+  if (kbList.length === 0) return [];
+
+  const query = `${form.value.title || ''} ${form.value.description || ''}`.toLowerCase().trim();
+  return kbList
+    .map(k => {
+      const matchTitle = query && (k.title || '').toLowerCase().includes(query) ? 35 : 0;
+      const matchCat = query && (k.category || '').toLowerCase().includes(query) ? 20 : 0;
+      const matchPrin = query && (k.technologyPrincipal || '').toLowerCase().includes(query) ? 25 : 0;
+      return {
+        id: k.id,
+        code: k.kbCode || `KB-${k.id}`,
+        title: k.title,
+        similarityScore: Math.min(95, 55 + matchTitle + matchCat + matchPrin),
+        excerpt: k.symptom || k.title,
+        solution: k.recommendation || k.rootCause || '',
+        tags: [k.category, k.technologyPrincipal].filter(Boolean)
+      };
+    })
+    .sort((a, b) => b.similarityScore - a.similarityScore)
+    .slice(0, 3);
 });
 
 const viewKbDetail = (kb) => {
@@ -1017,20 +1024,13 @@ const targetFirstTouchHours = computed(() => {
     if (form.value.severity === 'LOW') return formatHoursToHms(matched.p3ResponseHours || matched.p4ResponseHours || 4);
     return formatHoursToHms(matched.p2ResponseHours);
   }
-  if (contract.includes('PLATINUM')) {
-    if (form.value.severity === 'HIGH') return '00:30:00';
-    if (form.value.severity === 'MEDIUM') return '01:00:00';
-    return '01:30:00';
+  const defaultPolicy = (ticketStore.slaPolicies || [])[0];
+  if (defaultPolicy) {
+    if (form.value.severity === 'HIGH') return formatHoursToHms(defaultPolicy.p1ResponseHours);
+    if (form.value.severity === 'LOW') return formatHoursToHms(defaultPolicy.p3ResponseHours || defaultPolicy.p4ResponseHours || 4);
+    return formatHoursToHms(defaultPolicy.p2ResponseHours);
   }
-  if (contract.includes('SILVER')) {
-    if (form.value.severity === 'HIGH') return '01:00:00';
-    if (form.value.severity === 'MEDIUM') return '02:00:00';
-    return '04:00:00';
-  }
-  // Default / GOLD
-  if (form.value.severity === 'HIGH') return '00:30:00';
-  if (form.value.severity === 'MEDIUM') return '01:00:00';
-  return '02:00:00';
+  return form.value.severity === 'HIGH' ? '01:00:00' : (form.value.severity === 'LOW' ? '04:00:00' : '02:00:00');
 });
 
 const targetResolutionHours = computed(() => {
@@ -1041,20 +1041,13 @@ const targetResolutionHours = computed(() => {
     if (form.value.severity === 'LOW') return formatHoursToHms(matched.p3ResolutionHours || matched.p4ResolutionHours || 24);
     return formatHoursToHms(matched.p2ResolutionHours);
   }
-  if (contract.includes('PLATINUM')) {
-    if (form.value.severity === 'HIGH') return '04:00:00';
-    if (form.value.severity === 'MEDIUM') return '06:00:00';
-    return '12:00:00';
+  const defaultPolicy = (ticketStore.slaPolicies || [])[0];
+  if (defaultPolicy) {
+    if (form.value.severity === 'HIGH') return formatHoursToHms(defaultPolicy.p1ResolutionHours);
+    if (form.value.severity === 'LOW') return formatHoursToHms(defaultPolicy.p3ResolutionHours || defaultPolicy.p4ResolutionHours || 24);
+    return formatHoursToHms(defaultPolicy.p2ResolutionHours);
   }
-  if (contract.includes('SILVER')) {
-    if (form.value.severity === 'HIGH') return '12:00:00';
-    if (form.value.severity === 'MEDIUM') return '16:00:00';
-    return '24:00:00';
-  }
-  // Default / GOLD
-  if (form.value.severity === 'HIGH') return '08:00:00';
-  if (form.value.severity === 'MEDIUM') return '12:00:00';
-  return '24:00:00';
+  return form.value.severity === 'HIGH' ? '08:00:00' : (form.value.severity === 'LOW' ? '24:00:00' : '16:00:00');
 });
 
 const handleCustomerChange = () => {
@@ -1133,8 +1126,8 @@ const handleSubmitTicket = async () => {
   try {
     const payload = {
       ...form.value,
-      contractSla: selectedCustomer.value?.contractSla || 'SLA-GOLD-2026',
-      contractTier: selectedCustomer.value?.slaTier || '24x7 GOLD ENTERPRISE',
+      contractSla: selectedCustomer.value?.contractSla || '',
+      contractTier: selectedCustomer.value?.slaTier || selectedCustomer.value?.contractSla || '',
       environment: selectedCustomer.value?.environment || 'PROD-DC-01',
       impactScope: form.value.businessImpact,
       principalVendor: isPrincipalEscalation.value ? form.value.principalVendor : null,

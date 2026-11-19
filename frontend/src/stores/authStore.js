@@ -6,7 +6,7 @@ const STORAGE_KEY_ROLE = 'gtt_current_role';
 const STORAGE_KEY_USERS = 'gtt_mock_users';
 
 const USER_DATA_VERSION_KEY = 'gtt_user_data_version';
-const CURRENT_USER_DATA_VERSION = 'v3.1-with-andi-wijaya';
+const CURRENT_USER_DATA_VERSION = 'v6.0-single-admin';
 
 function getStoredUsers() {
   if (typeof window === 'undefined' || !window.localStorage) {
@@ -17,12 +17,14 @@ function getStoredUsers() {
     if (ver !== CURRENT_USER_DATA_VERSION) {
       localStorage.setItem(USER_DATA_VERSION_KEY, CURRENT_USER_DATA_VERSION);
       localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(MOCK_USERS));
+      localStorage.setItem(STORAGE_KEY_USER_ID, '1');
+      localStorage.setItem(STORAGE_KEY_ROLE, 'ADMIN');
       return MOCK_USERS;
     }
     const raw = localStorage.getItem(STORAGE_KEY_USERS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length >= 8) {
+      if (Array.isArray(parsed) && parsed.length > 0) {
         return parsed;
       }
     }
@@ -34,7 +36,7 @@ function getStoredUsers() {
 
 function getStoredCurrentUser(users) {
   if (typeof window === 'undefined' || !window.localStorage) {
-    return users[1] || users[0];
+    return users[0] || null;
   }
   try {
     const storedUserId = localStorage.getItem(STORAGE_KEY_USER_ID);
@@ -46,8 +48,7 @@ function getStoredCurrentUser(users) {
     console.error('Failed to load current user from localStorage:', e);
   }
 
-  // Default to null so user can login, or Budi Santoso if testing
-  return null;
+  return users[0] || null;
 }
 
 function saveCurrentAuthState(user) {

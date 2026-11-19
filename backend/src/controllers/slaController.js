@@ -27,7 +27,8 @@ export async function createSlaPolicy(req, res) {
       p3ResolutionHours,
       p4ResponseHours,
       p4ResolutionHours,
-      notes
+      notes,
+      isActive
     } = req.body;
 
     if (!tierCode || !tierName || !operatingHours) {
@@ -52,7 +53,8 @@ export async function createSlaPolicy(req, res) {
         p3ResolutionHours: parseFloat(p3ResolutionHours) || 24,
         p4ResponseHours: parseFloat(p4ResponseHours) || 4,
         p4ResolutionHours: parseFloat(p4ResolutionHours) || 72,
-        notes: notes || null
+        notes: notes || null,
+        isActive: isActive !== undefined ? Boolean(isActive) : true
       }
     });
 
@@ -87,7 +89,8 @@ export async function updateSlaPolicy(req, res) {
       p3ResolutionHours,
       p4ResponseHours,
       p4ResolutionHours,
-      notes
+      notes,
+      isActive
     } = req.body;
 
     const oldPolicy = await prisma.slaPolicy.findUnique({
@@ -108,7 +111,8 @@ export async function updateSlaPolicy(req, res) {
         p3ResolutionHours: p3ResolutionHours !== undefined ? parseFloat(p3ResolutionHours) : oldPolicy.p3ResolutionHours,
         p4ResponseHours: p4ResponseHours !== undefined ? parseFloat(p4ResponseHours) : oldPolicy.p4ResponseHours,
         p4ResolutionHours: p4ResolutionHours !== undefined ? parseFloat(p4ResolutionHours) : oldPolicy.p4ResolutionHours,
-        notes: notes !== undefined ? notes : oldPolicy.notes
+        notes: notes !== undefined ? notes : oldPolicy.notes,
+        isActive: isActive !== undefined ? Boolean(isActive) : oldPolicy.isActive
       }
     });
 

@@ -39,39 +39,6 @@
       </div>
     </div>
 
-    <!-- Clean Mode Notification Banner -->
-    <div 
-      v-if="ticketStore.isCleanMode" 
-      class="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-2xs animate-in fade-in duration-200"
-    >
-      <div class="flex items-center space-x-3">
-        <span class="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-sm shrink-0">
-          🧪
-        </span>
-        <div>
-          <strong class="font-bold text-amber-950 block">Mode Bersih Aktif (Testing Alur dari Nol)</strong>
-          <span class="text-amber-800 text-[11px]">
-            Antrean tiket kosong. Buat tiket baru melalui akun Admin (+ Buat Tiket) untuk menguji alur penugasan teknisi, SLA hitung mundur, investigasi, hingga penutupan.
-          </span>
-        </div>
-      </div>
-      <div class="flex items-center gap-2">
-        <router-link
-          v-if="authStore.isAdmin"
-          to="/tickets/create"
-          class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-xs transition-all flex items-center space-x-1.5 shrink-0"
-        >
-          <span>+ Buat Tiket Pertama</span>
-        </router-link>
-        <button
-          @click="ticketStore.switchToFullMockMode()"
-          class="px-3 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold rounded-xl transition-all shrink-0 cursor-pointer"
-        >
-          Beralih ke Mode Demo (156 Tiket)
-        </button>
-      </div>
-    </div>
-
     <!-- 2. 6 Executive KPI Metric Cards (Grid 6 Columns) -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
       <!-- 1. Total Tickets -->
@@ -79,9 +46,10 @@
         <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">TOTAL TIKET ({{ periodLabel }})</span>
         <div class="flex items-baseline justify-between mt-2">
           <span class="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">{{ kpiData.total }}</span>
-          <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+          <span v-if="kpiData.total > 0" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
             <span>&uarr;</span> 12%
           </span>
+          <span v-else class="text-[10px] font-mono text-slate-400">-</span>
         </div>
         <span class="text-[11px] text-slate-400 mt-2 block leading-snug">Akumulasi seluruh insiden</span>
       </div>
@@ -91,9 +59,10 @@
         <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">OPEN (BARU)</span>
         <div class="flex items-baseline justify-between mt-2">
           <span class="text-2xl sm:text-3xl font-black text-rose-600 font-mono tracking-tight">{{ kpiData.open }}</span>
-          <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+          <span v-if="kpiData.total > 0" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
             <span>&uarr;</span> 20%
           </span>
+          <span v-else class="text-[10px] font-mono text-slate-400">-</span>
         </div>
         <span class="text-[11px] text-slate-400 mt-2 block leading-snug">Menunggu alokasi teknisi</span>
       </div>
@@ -103,9 +72,10 @@
         <span class="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">IN PROGRESS</span>
         <div class="flex items-baseline justify-between mt-2">
           <span class="text-2xl sm:text-3xl font-black text-blue-600 font-mono tracking-tight">{{ kpiData.inProgress }}</span>
-          <span class="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+          <span v-if="kpiData.total > 0" class="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
             <span>&darr;</span> 10%
           </span>
+          <span v-else class="text-[10px] font-mono text-slate-400">-</span>
         </div>
         <span class="text-[11px] text-slate-400 mt-2 block leading-snug">Investigasi &amp; penanganan</span>
       </div>
@@ -115,9 +85,10 @@
         <span class="text-[10px] font-bold text-orange-700 uppercase tracking-wider block">MENUNGGU (HOLD)</span>
         <div class="flex items-baseline justify-between mt-2">
           <span class="text-2xl sm:text-3xl font-black text-amber-800 font-mono tracking-tight">{{ kpiData.waiting }}</span>
-          <span class="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+          <span v-if="kpiData.total > 0" class="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
             <span>&rarr;</span> 0%
           </span>
+          <span v-else class="text-[10px] font-mono text-slate-400">-</span>
         </div>
         <span class="text-[11px] text-slate-400 mt-2 block leading-snug">Part Indent &amp; Customer</span>
       </div>
@@ -127,9 +98,10 @@
         <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">CLOSED / SOLVED</span>
         <div class="flex items-baseline justify-between mt-2">
           <span class="text-2xl sm:text-3xl font-black text-emerald-600 font-mono tracking-tight">{{ kpiData.solved }}</span>
-          <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
+          <span v-if="kpiData.total > 0" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
             <span>&uarr;</span> 18%
           </span>
+          <span v-else class="text-[10px] font-mono text-slate-400">-</span>
         </div>
         <span class="text-[11px] text-slate-400 mt-2 block leading-snug">Pemulihan tuntas tercapai</span>
       </div>
@@ -138,9 +110,9 @@
       <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
         <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">SLA COMPLIANCE</span>
         <div class="flex items-baseline justify-between mt-2">
-          <span class="text-2xl sm:text-3xl font-black text-blue-600 font-mono tracking-tight">{{ kpiData.slaRate }}%</span>
+          <span class="text-2xl sm:text-3xl font-black text-blue-600 font-mono tracking-tight">{{ kpiData.slaRate !== null ? `${kpiData.slaRate}%` : '-' }}</span>
         </div>
-        <span class="text-[11px] text-slate-400 mt-2 block leading-snug">Target 100% Terlaksana</span>
+        <span class="text-[11px] text-slate-400 mt-2 block leading-snug">{{ kpiData.slaRate !== null ? 'Target 100% Terlaksana' : 'Belum ada tiket insiden' }}</span>
       </div>
     </div>
 
@@ -161,6 +133,10 @@
 
           <!-- SVG Multi-line Chart -->
           <div class="flex-1 w-full min-h-[220px] relative pt-2">
+            <div v-if="ticketStore.totalTickets === 0" class="absolute inset-0 flex flex-col items-center justify-center bg-white/75 backdrop-blur-[1px] z-10">
+              <span class="text-xs font-semibold text-slate-500">Belum ada aktivitas tiket pada periode ini</span>
+              <span class="text-[11px] text-slate-400 mt-0.5">Grafik trend akan otomatis terbentuk saat tiket baru dibuat</span>
+            </div>
             <svg class="w-full h-48 overflow-visible" viewBox="0 0 600 180" preserveAspectRatio="none">
               <defs>
                 <!-- Area Fill Gradient for Tiket Baru (Blue) -->
@@ -448,8 +424,8 @@
               </svg>
               <!-- Center Text -->
               <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span class="text-3xl font-black text-slate-900 font-mono tracking-tight">{{ kpiData.slaRate }}%</span>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">Within SLA</span>
+                <span class="text-3xl font-black text-slate-900 font-mono tracking-tight">{{ slaPerformanceData.rate !== null ? `${slaPerformanceData.rate}%` : '-' }}</span>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{{ slaPerformanceData.rate !== null ? 'Within SLA' : 'Belum Ada Data' }}</span>
               </div>
             </div>
 
@@ -585,6 +561,11 @@
                     <span class="font-mono font-black text-slate-900 text-sm">{{ eng.total }}</span>
                   </td>
                 </tr>
+                <tr v-if="engineerRoster.length === 0">
+                  <td colspan="6" class="py-8 text-center text-slate-400">
+                    Belum ada akun teknisi / penugasan insiden aktif.
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -611,7 +592,12 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                <tr v-for="cat in topCategories" :key="cat.name" class="hover:bg-slate-50/60 transition-colors">
+                <tr v-if="ticketStore.tickets.length === 0">
+                  <td colspan="3" class="py-8 text-center text-slate-400">
+                    Belum ada insiden tercatat pada kategori operasional.
+                  </td>
+                </tr>
+                <tr v-else v-for="cat in topCategories" :key="cat.name" class="hover:bg-slate-50/60 transition-colors">
                   <td class="py-3 px-4 font-semibold text-slate-800 whitespace-nowrap">
                     {{ cat.name }}
                   </td>
@@ -704,34 +690,54 @@ const periodFilteredTickets = computed(() => {
 
 // KPI Metrics: Reacts to selectedPeriod
 const kpiData = computed(() => {
-  const isClean = ticketStore.isCleanMode;
+  const storeTotal = ticketStore.totalTickets;
+  if (storeTotal === 0) {
+    return {
+      total: 0,
+      open: 0,
+      inProgress: 0,
+      waiting: 0,
+      solved: 0,
+      slaRate: null
+    };
+  }
 
   if (selectedPeriod.value === '30d') {
-    const storeTotal = ticketStore.totalTickets;
     const open = ticketStore.openCount;
     const inProgress = ticketStore.inProgressCount;
     const waiting = ticketStore.holdCount;
     const solved = ticketStore.resolvedCount + ticketStore.closedCount;
-    const slaRate = ticketStore.slaComplianceRate !== null ? ticketStore.slaComplianceRate : 100;
+    const slaRate = ticketStore.slaComplianceRate;
 
     return {
       total: storeTotal,
-      open: open,
-      inProgress: inProgress,
-      waiting: waiting,
-      solved: solved,
-      slaRate: slaRate
+      open,
+      inProgress,
+      waiting,
+      solved,
+      slaRate
     };
   }
 
   const list = periodFilteredTickets.value;
   const total = list.length;
+  if (total === 0) {
+    return {
+      total: 0,
+      open: 0,
+      inProgress: 0,
+      waiting: 0,
+      solved: 0,
+      slaRate: null
+    };
+  }
+
   const open = list.filter(t => t.status === 'OPEN').length;
   const inProgress = list.filter(t => ['IN_PROGRESS', 'ASSIGNED'].includes(t.status) && !t.isPaused).length;
   const waiting = list.filter(t => t.isPaused || ['HOLD', 'PENDING_VENDOR', 'PENDING_CUSTOMER'].includes(t.status)).length;
   const solved = list.filter(t => ['RESOLVED', 'CLOSED'].includes(t.status)).length;
   const withinSla = list.filter(t => !t.isSlaResolutionBreached).length;
-  const slaRate = total > 0 ? Math.round((withinSla / total) * 100) : 100;
+  const slaRate = Math.round((withinSla / total) * 100);
 
   return {
     total,
@@ -747,10 +753,7 @@ const kpiData = computed(() => {
 const severityCounts = computed(() => {
   const all = selectedPeriod.value === '30d' ? ticketStore.tickets : periodFilteredTickets.value;
   if (!all || all.length === 0) {
-    if (ticketStore.isCleanMode) {
-      return { p1: 0, p2: 0, p3: 0, p4: 0 };
-    }
-    return { p1: 12, p2: 24, p3: 58, p4: 62 };
+    return { p1: 0, p2: 0, p3: 0, p4: 0 };
   }
   const p1 = all.filter(t => t.severity === 'CRITICAL' || (t.severity === 'HIGH' && t.categoryId === 1)).length;
   const p2 = all.filter(t => t.severity === 'HIGH' && t.categoryId !== 1).length;
@@ -767,7 +770,15 @@ const severityCounts = computed(() => {
 // Dynamic SVG Arc geometry for Severity Donut
 const severityDonutArcs = computed(() => {
   const { p1, p2, p3, p4 } = severityCounts.value;
-  const total = p1 + p2 + p3 + p4 || 1;
+  const total = p1 + p2 + p3 + p4;
+  if (total === 0) {
+    return {
+      p1: { dasharray: `0 351.86`, offset: '0' },
+      p2: { dasharray: `0 351.86`, offset: '0' },
+      p3: { dasharray: `0 351.86`, offset: '0' },
+      p4: { dasharray: `0 351.86`, offset: '0' }
+    };
+  }
   const c = 351.86;
   const l1 = (p1 / total) * c;
   const l2 = (p2 / total) * c;
@@ -784,7 +795,19 @@ const severityDonutArcs = computed(() => {
 // Dynamic SLA Performance Gauge & Breakdown (Reacts to selectedPeriod)
 const slaPerformanceData = computed(() => {
   const list = selectedPeriod.value === '30d' ? (ticketStore.tickets || []) : periodFilteredTickets.value;
-  const total = list.length || 1;
+  if (!list || list.length === 0) {
+    return {
+      rate: null,
+      within: 0,
+      nearBreach: 0,
+      risk: 0,
+      breached: 0,
+      greenDasharray: `0 351.86`,
+      redDasharray: `0 351.86`,
+      redOffset: '0'
+    };
+  }
+  const total = list.length;
   const breached = list.filter(t => t.isSlaResolutionBreached).length;
   const within = list.filter(t => !t.isSlaResolutionBreached).length;
   const risk = list.filter(t => {
@@ -801,20 +824,18 @@ const slaPerformanceData = computed(() => {
     return diffSec >= 3600 && diffSec < 3 * 3600;
   }).length;
 
-  const rate = total > 0 ? Math.round((within / total) * 100) : 100;
+  const rate = Math.round((within / total) * 100);
   const c = 351.86;
   const greenLen = ((rate / 100) * c).toFixed(2);
   const redLen = (((100 - rate) / 100) * c).toFixed(2);
   const redOffset = (-((rate / 100) * c)).toFixed(2);
 
-  const isCleanEmpty = ticketStore.isCleanMode && (ticketStore.tickets.length === 0);
-
   return {
     rate,
-    within: isCleanEmpty ? 0 : (selectedPeriod.value === '30d' ? 153 : within),
-    nearBreach: isCleanEmpty ? 0 : (selectedPeriod.value === '30d' ? 2 : nearBreach),
-    risk: isCleanEmpty ? 0 : (selectedPeriod.value === '30d' ? 1 : risk),
-    breached: isCleanEmpty ? 0 : (selectedPeriod.value === '30d' ? 0 : breached),
+    within,
+    nearBreach,
+    risk,
+    breached,
     greenDasharray: `${greenLen} ${c}`,
     redDasharray: `${redLen} ${c}`,
     redOffset
@@ -823,7 +844,7 @@ const slaPerformanceData = computed(() => {
 
 // Trend Chart Data: Reacts dynamically to selectedPeriod across 4 ranges
 const trendData = computed(() => {
-  if (ticketStore.isCleanMode && ticketStore.tickets.length === 0) {
+  if (!ticketStore.tickets || ticketStore.tickets.length === 0) {
     return {
       yLabels: ['0', '1', '2', '3', '4'],
       labels: ['29 Sep', '30 Sep', '01 Okt', '02 Okt', '03 Okt', '04 Okt', '05 Okt', 'Hari Ini'],
@@ -999,7 +1020,7 @@ const liveSlaWatchTickets = computed(() => {
     return {
       id: t.id,
       ticketNumber: t.ticketNumber,
-      customerName: customer ? customer.name : 'PT Astra',
+      customerName: customer ? customer.name : (t.customerName || 'Mitra Korporat'),
       title: t.title,
       remainingTimeStr,
       statusLabel,
@@ -1020,44 +1041,11 @@ const openTicketDetail = (ticketItem) => {
 
 // Engineer Workload Roster (Matches mockup Frame 09 + live store calculation)
 const engineerRoster = computed(() => {
-  const defaultRoster = [
-    { id: 1, name: 'Ahmad Fauzi', initials: 'AF', avatarBg: 'bg-blue-600', assigned: 6, inProgress: 4, hold: 1, slaRisk: 1, total: 12 },
-    { id: 4, name: 'Budi Santoso', initials: 'BS', avatarBg: 'bg-blue-600', assigned: 5, inProgress: 3, hold: 1, slaRisk: 1, total: 10 },
-    { id: 9, name: 'Andi Wijaya', initials: 'AW', avatarBg: 'bg-blue-600', assigned: 4, inProgress: 2, hold: 2, slaRisk: 0, total: 8 },
-    { id: 6, name: 'Rizky Pratama', initials: 'RP', avatarBg: 'bg-emerald-600', assigned: 3, inProgress: 2, hold: 1, slaRisk: 0, total: 6 },
-    { id: 5, name: 'Dwi Prasetyo', initials: 'DP', avatarBg: 'bg-indigo-600', assigned: 3, inProgress: 2, hold: 0, slaRisk: 0, total: 5 },
-    { id: 7, name: 'Hendra Kusuma', initials: 'HK', avatarBg: 'bg-purple-600', assigned: 2, inProgress: 1, hold: 1, slaRisk: 0, total: 4 },
-    { id: 8, name: 'Siti Nurhaliza', initials: 'SN', avatarBg: 'bg-pink-600', assigned: 2, inProgress: 1, hold: 0, slaRisk: 0, total: 3 }
-  ];
+  const engineers = authStore.users.filter(u => u.roleCode === 'ENGINEER');
+  const bgPalette = ['bg-blue-600', 'bg-indigo-600', 'bg-emerald-600', 'bg-purple-600', 'bg-pink-600'];
 
-  return defaultRoster.map(item => {
-    const user = authStore.users.find(u => u.name === item.name);
-    const userId = user ? user.id : item.id;
-    const userTickets = ticketStore.tickets.filter(t => t.assignedToId === userId && !['RESOLVED', 'CLOSED'].includes(t.status));
-    
-    if (ticketStore.isCleanMode) {
-      const assigned = userTickets.filter(t => ['ASSIGNED', 'OPEN'].includes(t.status)).length;
-      const inProgress = userTickets.filter(t => t.status === 'IN_PROGRESS' && !t.isPaused).length;
-      const hold = userTickets.filter(t => ['PENDING_VENDOR', 'PENDING_CUSTOMER', 'PENDING'].includes(t.status) || t.isPaused).length;
-      const slaRisk = userTickets.filter(t => {
-        if (!t.resolutionDeadline || t.isPaused) return false;
-        const diffSec = (new Date(t.resolutionDeadline).getTime() - nowTimestamp.value) / 1000;
-        return diffSec > 0 && diffSec < 3600;
-      }).length;
-
-      return {
-        ...item,
-        id: userId,
-        assigned,
-        inProgress,
-        hold,
-        slaRisk,
-        total: userTickets.length
-      };
-    }
-
-    if (userTickets.length === 0) return item;
-
+  return engineers.map((user, idx) => {
+    const userTickets = ticketStore.tickets.filter(t => t.assignedToId === user.id && !['RESOLVED', 'CLOSED'].includes(t.status));
     const assigned = userTickets.filter(t => ['ASSIGNED', 'OPEN'].includes(t.status)).length;
     const inProgress = userTickets.filter(t => t.status === 'IN_PROGRESS' && !t.isPaused).length;
     const hold = userTickets.filter(t => ['PENDING_VENDOR', 'PENDING_CUSTOMER', 'PENDING'].includes(t.status) || t.isPaused).length;
@@ -1068,13 +1056,15 @@ const engineerRoster = computed(() => {
     }).length;
 
     return {
-      ...item,
-      id: userId,
-      assigned: assigned || item.assigned,
-      inProgress: inProgress || item.inProgress,
-      hold: hold || item.hold,
-      slaRisk: slaRisk !== undefined ? slaRisk : item.slaRisk,
-      total: userTickets.length || item.total
+      id: user.id,
+      name: user.name,
+      initials: user.initials || user.name.slice(0, 2).toUpperCase(),
+      avatarBg: bgPalette[idx % bgPalette.length],
+      assigned,
+      inProgress,
+      hold,
+      slaRisk,
+      total: userTickets.length
     };
   });
 });
@@ -1082,8 +1072,7 @@ const engineerRoster = computed(() => {
 // Top 5 Incident Categories (Matches mockup Frame 09 + live store calculation)
 const topCategories = computed(() => {
   const allTickets = selectedPeriod.value === '30d' ? (ticketStore.tickets || []) : periodFilteredTickets.value;
-  const isClean = ticketStore.isCleanMode;
-  const total = allTickets.length || (isClean ? 0 : (selectedPeriod.value === '30d' ? 156 : 1));
+  const total = allTickets.length || 1;
 
   const countServer = allTickets.filter(t => t.categoryName === 'Server' || t.categoryName === 'VMware' || (t.categoryId === 1 && !['Storage', 'Backup'].includes(t.categoryName))).length;
   const countNetwork = allTickets.filter(t => t.categoryName === 'Network' || t.categoryId === 2).length;
@@ -1092,16 +1081,16 @@ const topCategories = computed(() => {
   const countApp = allTickets.filter(t => ['Application', 'Database'].includes(t.categoryName) || t.categoryId === 3).length;
 
   const items = [
-    { name: 'Server / Infrastructure', count: (!isClean && selectedPeriod.value === '30d' && allTickets.length === 0) ? 42 : countServer, barColor: 'bg-blue-600' },
-    { name: 'Jaringan / Network', count: (!isClean && selectedPeriod.value === '30d' && allTickets.length === 0) ? 30 : countNetwork, barColor: 'bg-cyan-500' },
-    { name: 'Storage', count: (!isClean && selectedPeriod.value === '30d' && allTickets.length === 0) ? 24 : countStorage, barColor: 'bg-amber-500' },
-    { name: 'Backup', count: (!isClean && selectedPeriod.value === '30d' && allTickets.length === 0) ? 18 : countBackup, barColor: 'bg-rose-500' },
-    { name: 'Aplikasi / System', count: (!isClean && selectedPeriod.value === '30d' && allTickets.length === 0) ? 12 : countApp, barColor: 'bg-purple-600' }
+    { name: 'Server / Infrastructure', count: countServer, barColor: 'bg-blue-600' },
+    { name: 'Jaringan / Network', count: countNetwork, barColor: 'bg-cyan-500' },
+    { name: 'Storage', count: countStorage, barColor: 'bg-amber-500' },
+    { name: 'Backup', count: countBackup, barColor: 'bg-rose-500' },
+    { name: 'Aplikasi / System', count: countApp, barColor: 'bg-purple-600' }
   ];
 
   return items.map(cat => ({
     ...cat,
-    percent: total > 0 ? Number(((cat.count / total) * 100).toFixed(1)) : 0
+    percent: allTickets.length > 0 ? Number(((cat.count / total) * 100).toFixed(1)) : 0
   }));
 });
 </script>

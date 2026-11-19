@@ -1,30 +1,37 @@
 import prisma from '../lib/prisma.js';
 
 export async function calculateSlaDeadlines({ customerId, severity = 'MEDIUM', createdAt = new Date() }) {
-  // 1. Fetch customer with contract tier and SLA code
+  // 1. Fetch customer with SLA tier
   const customer = await prisma.customer.findUnique({
     where: { id: Number(customerId) }
   });
 
-  const contractTier = (customer?.contractTier || '8x5 GOLD ENTERPRISE').toUpperCase();
-  const contractSla = customer?.contractSla;
+  const slaTier = customer?.slaTier || '8x5 GOLD ENTERPRISE';
   
   // 2. Fetch or match corresponding SLA policy
-  let policy = null;
-  if (contractSla) {
-    policy = await prisma.slaPolicy.findUnique({
-      where: { tierCode: contractSla }
-    });
-  }
+  let policy = await prisma.slaPolicy.findFirst({
+    where: {
+      OR: [
+        { tierCode: slaTier },
+        { tierName: slaTier }
+      ]
+    }
+  });
 
   if (!policy) {
     let tierCode = 'GOLD_8X5';
-    if (contractSla?.includes('PLATINUM') || contractTier.includes('PLATINUM')) tierCode = 'PLATINUM_24X7';
-    else if (contractSla?.includes('SILVER') || contractTier.includes('SILVER')) tierCode = 'SILVER_8X5';
-    else if (contractSla?.includes('GOV') || contractTier.includes('GOV')) tierCode = 'GOV_TIER1';
+    const upper = slaTier.toUpperCase();
+    if (upper.includes('PLATINUM')) tierCode = 'PLATINUM_24X7';
+    else if (upper.includes('SILVER')) tierCode = 'SILVER_8X5';
+    else if (upper.includes('GOV')) tierCode = 'GOV_TIER1';
 
-    policy = await prisma.slaPolicy.findUnique({
-      where: { tierCode }
+    policy = await prisma.slaPolicy.findFirst({
+      where: {
+        OR: [
+          { tierCode },
+          { tierName: { contains: tierCode.split('_')[0] } }
+        ]
+      }
     });
   }
 

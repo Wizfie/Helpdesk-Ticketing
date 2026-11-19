@@ -51,15 +51,10 @@ model Customer {
   id                 Int           @id @default(autoincrement())
   name               String
   code               String        @unique // 'AHM', 'BCA', 'SLM', 'KMN'
-  industry           String
-  serviceContract    String        @default("PKS Layanan Managed Service 24x7")
-  contractTier       String        @default("8x5 GOLD ENTERPRISE")
-  contractSla        String?       @default("GOLD_8X5")
+  industry           String?
+  serviceContract    String?       @default("PKS Layanan Managed Service 24x7")
   slaTier            String?       @default("8x5 GOLD ENTERPRISE")
-  slaCoverage        String?       @default("First Touch: 30m • Resolusi: 8h")
   address            String?       @db.Text
-  cluster            String?       @default("PROD-CL01")
-  environment        String?       @default("PROD-DC-01")
   maintenanceStart   String?
   maintenanceEnd     String?
   ticketQuota        String?       @default("Unlimited")
@@ -95,14 +90,13 @@ model CustomerPic {
 // 3. Ticket Categories & Master SLA Policies
 // ----------------------------------------------------
 model Category {
-  id           Int           @id @default(autoincrement())
-  name         String
-  code         String        @unique
-  desc         String?       @db.Text
-  tickets      Ticket[]
-  quickPresets QuickPreset[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  id        Int      @id @default(autoincrement())
+  name      String
+  code      String   @unique
+  desc      String?  @db.Text
+  tickets   Ticket[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("categories")
 }
@@ -127,24 +121,8 @@ model Principal {
 }
 
 // ----------------------------------------------------
-// 3c. Master Quick Presets & SLA Hold Reasons
+// 3c. Master SLA Hold Reasons & Policies
 // ----------------------------------------------------
-model QuickPreset {
-  id              Int      @id @default(autoincrement())
-  title           String
-  categoryId      Int
-  category        Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  severity        String   @default("HIGH") // 'HIGH', 'MEDIUM', 'LOW'
-  responseHours   Float    @default(0.5)
-  resolutionHours Float    @default(4.0)
-  description     String   @db.Text
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  @@map("quick_presets")
-}
-
 model SlaHoldReason {
   id             Int      @id @default(autoincrement())
   code           String   @unique // 'PART_INDENT', 'CUSTOMER', 'VENDOR', 'OTHER'
@@ -172,6 +150,7 @@ model SlaPolicy {
   p4ResponseHours      Float    // Low Response
   p4ResolutionHours    Float    // Low Resolution
   notes                String?  @db.Text
+  isActive             Boolean  @default(true)
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
 
@@ -202,7 +181,6 @@ model Ticket {
   assignedToId             Int?
   assignedTo               User?             @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
 
-  contractSla              String?           @default("SLA-GOLD-2026")
   contractTier             String?           @default("8x5 GOLD ENTERPRISE")
   cluster                  String?           @default("PROD-CL01")
   environment              String?           @default("PROD-DC-01")

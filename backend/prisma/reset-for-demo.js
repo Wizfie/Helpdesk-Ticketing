@@ -45,11 +45,7 @@ async function resetForDemo() {
   const kbCount = await prisma.knowledgeBase.deleteMany({});
   console.log(`✅ KnowledgeBase : ${kbCount.count} baris dihapus`);
 
-  // 9. Quick Presets (FK ke Category)
-  const presetCount = await prisma.quickPreset.deleteMany({});
-  console.log(`✅ QuickPreset   : ${presetCount.count} baris dihapus`);
-
-  // 10. Categories
+  // 9. Categories
   const catCount = await prisma.category.deleteMany({});
   console.log(`✅ Category      : ${catCount.count} baris dihapus`);
 

@@ -60,9 +60,9 @@
 
 
 
-    <!-- 4 Summary Metric KPI Cards -->
+    <!-- 3 Summary Metric KPI Cards -->
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
       <!-- Card 1: Total Kebijakan SLA -->
 
@@ -135,34 +135,6 @@
           <span class="text-2xl font-black text-slate-900 leading-none block font-mono">{{ inactiveCount }}</span>
 
           <span class="text-xs text-slate-500 font-medium mt-1 block">Inactive</span>
-
-        </div>
-
-      </div>
-
-
-
-      <!-- Card 4: Digunakan oleh Mitra -->
-
-      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex items-center space-x-3.5">
-
-        <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-
-          </svg>
-
-        </div>
-
-        <div>
-
-          <span class="text-2xl font-black text-slate-900 leading-none block font-mono">{{ totalMitraCount }}</span>
-
-          <span class="text-xs text-slate-500 font-medium mt-1 block">Digunakan oleh Mitra</span>
 
         </div>
 
@@ -515,75 +487,44 @@
 
 
       <!-- Pagination Footer -->
-
       <div class="px-5 py-3.5 bg-white border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
-
         <div>
-
           Menampilkan <span class="font-bold text-slate-800">{{ paginationStart }}</span> - 
-
           <span class="font-bold text-slate-800">{{ paginationEnd }}</span> dari 
-
           <span class="font-bold text-slate-800">{{ filteredPolicies.length }}</span> kebijakan SLA
-
         </div>
 
-
-
-        <div v-if="totalPages > 1" class="flex items-center space-x-1 self-end sm:self-auto">
-
+        <div class="flex items-center space-x-2">
           <button
-
-            @click="currentPage > 1 && currentPage--"
-
-            :disabled="currentPage === 1"
-
-            class="px-2.5 py-1 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-
+            @click="goToPage(currentPage - 1)"
+            :disabled="currentPage <= 1"
+            class="px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-medium transition-colors"
           >
-
-            &lt;
-
+            <span>&larr;</span> Prev
           </button>
 
-          
+          <div class="flex items-center space-x-1.5 text-xs text-slate-600">
+            <span>Halaman</span>
+            <input
+              type="number"
+              min="1"
+              :max="totalPages"
+              :value="currentPage"
+              @keydown.enter="handleJumpPage($event)"
+              @blur="handleJumpPage($event)"
+              class="w-12 py-1 px-1.5 text-center font-mono font-bold text-xs border border-slate-200 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+            <span>dari <strong class="text-slate-800 font-mono">{{ totalPages }}</strong></span>
+          </div>
 
           <button
-
-            v-for="page in totalPages"
-
-            :key="page"
-
-            @click="currentPage = page"
-
-            class="w-7 h-7 rounded-lg text-xs font-bold transition-colors flex items-center justify-center"
-
-            :class="currentPage === page ? 'bg-blue-600 text-white' : 'border border-slate-200 text-slate-700 hover:bg-slate-50'"
-
+            @click="goToPage(currentPage + 1)"
+            :disabled="currentPage >= totalPages"
+            class="px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-medium transition-colors"
           >
-
-            {{ page }}
-
+            Next <span>&rarr;</span>
           </button>
-
-
-
-          <button
-
-            @click="currentPage < totalPages && currentPage++"
-
-            :disabled="currentPage === totalPages || totalPages === 0"
-
-            class="px-2.5 py-1 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed"
-
-          >
-
-            &gt;
-
-          </button>
-
         </div>
-
       </div>
 
     </div>
@@ -1002,29 +943,36 @@
 
     >
 
-      <div class="bg-white border border-slate-200 rounded-2xl max-w-4xl w-full p-6 shadow-2xl space-y-6 max-h-[92vh] overflow-y-auto">
+      <div class="bg-white border border-slate-200 rounded-2xl max-w-5xl w-full p-6 shadow-2xl space-y-4 my-auto animate-in fade-in zoom-in-95 duration-150">
 
         <!-- Header -->
 
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
 
-          <h3 class="font-bold text-slate-900 text-base">
+          <div>
+            <h3 class="font-bold text-slate-900 text-base">
 
-            {{ isEditing ? 'Edit Parameter Kebijakan SLA' : 'Tambah Kebijakan SLA Baru' }}
+              {{ isEditing ? 'Edit Parameter Kebijakan SLA' : 'Tambah Kebijakan SLA Baru' }}
 
-          </h3>
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">
+              Konfigurasi jam operasional dan batas waktu respon serta resolusi insiden secara horizontal.
+            </p>
+          </div>
 
-          <button @click="showModal = false" class="text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+          <button @click="showModal = false" class="text-slate-400 hover:text-slate-600 text-2xl leading-none cursor-pointer">&times;</button>
 
         </div>
 
 
 
-        <form @submit.prevent="savePolicy" class="space-y-6 text-xs">
+        <form @submit.prevent="savePolicy" class="space-y-4 text-xs">
 
-          <!-- Section 1: Informasi Kebijakan SLA -->
+          <!-- Horizontal 2-Column Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          <div class="space-y-3">
+            <!-- Kolom Kiri: Informasi Kebijakan SLA (5 cols) -->
+            <div class="lg:col-span-5 space-y-3">
 
             <div class="flex items-center space-x-2.5">
 
@@ -1116,23 +1064,18 @@
 
             </div>
 
-          </div>
-
-
-
-          <!-- Section 2: Matriks Batas Waktu SLA (dalam jam) -->
-
-          <div class="space-y-3">
-
-            <div class="flex items-center space-x-2.5">
-
-              <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">2</span>
-
-              <h4 class="font-bold text-slate-900 text-sm">Matriks Batas Waktu SLA (dalam jam)</h4>
-
             </div>
 
+            <!-- Kolom Kanan: Matriks Batas Waktu SLA (7 cols) -->
+            <div class="lg:col-span-7 space-y-3">
 
+              <div class="flex items-center space-x-2.5">
+
+                <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">2</span>
+
+                <h4 class="font-bold text-slate-900 text-sm">Matriks Batas Waktu SLA (dalam jam)</h4>
+
+              </div>
 
             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
 
@@ -1477,6 +1420,8 @@
                 </tbody>
 
               </table>
+
+            </div>
 
             </div>
 
@@ -1848,19 +1793,7 @@ const inactiveCount = computed(() => {
 
 
 
-const totalMitraCount = computed(() => {
 
-  const allMitra = new Set();
-
-  policies.value.forEach(p => {
-
-    getPolicyMitra(p).forEach(m => allMitra.add(m));
-
-  });
-
-  return allMitra.size;
-
-});
 
 
 
@@ -1959,12 +1892,21 @@ const paginationStart = computed(() => {
 
 
 const paginationEnd = computed(() => {
-
   const end = currentPage.value * itemsPerPage;
-
   return Math.min(end, filteredPolicies.value.length);
-
 });
+
+const handleJumpPage = (e) => {
+  const val = parseInt(e.target.value, 10);
+  if (!isNaN(val)) {
+    currentPage.value = Math.max(1, Math.min(totalPages.value, val));
+  }
+  e.target.value = currentPage.value;
+};
+
+const goToPage = (page) => {
+  currentPage.value = Math.max(1, Math.min(totalPages.value, page));
+};
 
 
 
@@ -2017,7 +1959,7 @@ async function loadData() {
 
     customers.value = custs || [];
 
-    ticketStore.slaPolicies = policies.value;
+    ticketStore.setSlaPolicies(policies.value);
 
   } catch (err) {
 
@@ -2026,7 +1968,7 @@ async function loadData() {
 
     customers.value = ticketStore.customers || [];
 
-    ticketStore.slaPolicies = policies.value;
+    ticketStore.setSlaPolicies(policies.value);
 
   } finally {
 
@@ -2293,7 +2235,7 @@ const savePolicy = async () => {
 
       }
 
-      ticketStore.slaPolicies = [...policies.value];
+      ticketStore.setSlaPolicies([...policies.value]);
 
     } else {
 
@@ -2311,7 +2253,7 @@ const savePolicy = async () => {
 
       policies.value.push(created);
 
-      ticketStore.slaPolicies = [...policies.value];
+      ticketStore.setSlaPolicies([...policies.value]);
 
     }
 
@@ -2387,6 +2329,8 @@ const togglePolicyStatus = async (policy) => {
 
     }
 
+    ticketStore.setSlaPolicies([...policies.value]);
+
   } catch (err) {
 
     console.error('Gagal memperbarui status SLA:', err);
@@ -2427,7 +2371,7 @@ const doDelete = async () => {
 
     policies.value = policies.value.filter(p => p.id !== policyToDelete.value.id);
 
-    ticketStore.slaPolicies = [...policies.value];
+    ticketStore.setSlaPolicies([...policies.value]);
 
     showDeleteConfirm.value = false;
 
@@ -2458,9 +2402,7 @@ onMounted(() => {
   if (typeof window !== 'undefined' && window.localStorage) {
     localStorage.removeItem('gtt_sla_policies_data');
     localStorage.removeItem('helpdesk_sla_policies');
-    localStorage.removeItem('gtt_sla_policies_clean_v1');
   }
-  ticketStore.slaPolicies = [];
 
   loadData();
 

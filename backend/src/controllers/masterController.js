@@ -92,16 +92,8 @@ export async function createPrincipal(req, res) {
 // 3. Quick Presets & Hold Reasons Master
 // ==========================================
 export async function getQuickPresets(req, res) {
-  try {
-    const presets = await prisma.quickPreset.findMany({
-      where: { isActive: true },
-      include: { category: true },
-      orderBy: { id: 'asc' }
-    });
-    res.json({ success: true, data: presets });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+  // Quick presets has been deprecated and cleaned
+  return res.json({ success: true, data: [] });
 }
 
 export async function getHoldReasons(req, res) {

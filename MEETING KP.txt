@@ -8,7 +8,7 @@ Table digunakan oleh Remove
 Customer & Pic : 
 
 - Kode Singkat Hapus
-- Sektor Optional Custom bisa delete
+- Sektor Optional Custom bisa delete 
 - Jumlah tiket buat di buat input free
 - production cluster hapus 
 - kode SLA remove

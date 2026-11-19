@@ -102,7 +102,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-100">
-            <tr v-for="log in filteredLogs" :key="log.id" class="hover:bg-slate-50/70 transition-colors">
+            <tr v-for="log in paginatedLogs" :key="log.id" class="hover:bg-slate-50/70 transition-colors">
               <!-- Timestamp -->
               <td class="py-3 px-4 font-mono text-[11px] whitespace-nowrap">
                 <span class="font-semibold text-slate-800">{{ formatTime(log.timestampUtc).local }}</span>
@@ -147,6 +147,55 @@
             </tr>
           </tbody>
         </table>
+      </div>
+
+      <!-- Pagination Toolbar -->
+      <div
+        class="px-4 py-3 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
+      >
+        <span class="text-slate-500 font-medium">
+          Menampilkan
+          <strong class="text-slate-800">
+            {{ filteredLogs.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0 }}
+          </strong>
+          -
+          <strong class="text-slate-800">
+            {{ Math.min(currentPage * itemsPerPage, filteredLogs.length) }}
+          </strong>
+          dari <strong class="text-slate-800">{{ filteredLogs.length }}</strong> log aktivitas
+        </span>
+
+        <div class="flex items-center space-x-2">
+          <button
+            @click="goToPage(currentPage - 1)"
+            :disabled="currentPage <= 1"
+            class="px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-medium transition-colors"
+          >
+            <span>&larr;</span> Prev
+          </button>
+
+          <div class="flex items-center space-x-1.5 text-xs text-slate-600">
+            <span>Halaman</span>
+            <input
+              type="number"
+              min="1"
+              :max="totalPages"
+              :value="currentPage"
+              @keydown.enter="handleJumpPage($event)"
+              @blur="handleJumpPage($event)"
+              class="w-12 py-1 px-1.5 text-center font-mono font-bold text-xs border border-slate-200 rounded-md bg-white text-slate-800 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            />
+            <span>dari <strong class="text-slate-800 font-mono">{{ totalPages }}</strong></span>
+          </div>
+
+          <button
+            @click="goToPage(currentPage + 1)"
+            :disabled="currentPage >= totalPages"
+            class="px-2.5 py-1 text-xs border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer flex items-center gap-1 font-medium transition-colors"
+          >
+            Next <span>&rarr;</span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -199,6 +248,27 @@ const filteredLogs = computed(() => {
     return true;
   });
 });
+
+// Standard Pagination
+const currentPage = ref(1);
+const itemsPerPage = 10;
+const totalPages = computed(() => Math.ceil(filteredLogs.value.length / itemsPerPage) || 1);
+const paginatedLogs = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  return filteredLogs.value.slice(start, start + itemsPerPage);
+});
+
+const handleJumpPage = (e) => {
+  const val = parseInt(e.target.value, 10);
+  if (!isNaN(val)) {
+    currentPage.value = Math.max(1, Math.min(totalPages.value, val));
+  }
+  e.target.value = currentPage.value;
+};
+
+const goToPage = (page) => {
+  currentPage.value = Math.max(1, Math.min(totalPages.value, page));
+};
 
 // Export CSV Feature (RFC-4180 with UTF-8 BOM for Microsoft Excel compatibility)
 const exportCsv = () => {
