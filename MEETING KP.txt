@@ -1,0 +1,55 @@
+SLA : 
+Set Default SLA setelah response 
+
+FORM 4,5,6 Remove
+SLA Summary Remove
+Table digunakan oleh Remove
+
+Customer & Pic : 
+
+- Kode Singkat Hapus
+- Sektor Optional Custom bisa delete
+- Jumlah tiket buat di buat input free
+- production cluster hapus 
+- kode SLA remove
+
+Kelola Staff : 
+Subtitle 
+Role Custom kosong
+SLA summary remove
+
+
+Tiket : 
+
+- Jenis Ticket Custom
+- Customer nonaktif masih dalam list
+- Chanel Remove
+- Affetive Service Remove
+- Dampak hapus
+- Serial Number
+- Severinity deskripsi tidak perlu
+- lampiran optional 5Mb
+- notif email setelah terbit
+- related tidaket hapus
+- Eskalasi hapus 
+
+Ticket Detail : 
+- Ticket Format : TK-26001
+- Serial number di ringkasan Informasi Sistem
+- Lampiran dibawah initial report
+- Catatan tambahan remove
+- Penahan SLA (Part/Hardware,Partner/Customer) -> Action
+- Catatan
+- SLA Response Table Ticket remove
+
+Report 
+
+ticket - open - closed - device - serial - severinity - 
+Export , 
+
+Dashboard 
+link redirect to , Ring Ticket 
+
+
+
+

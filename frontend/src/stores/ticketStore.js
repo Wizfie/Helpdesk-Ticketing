@@ -26,7 +26,7 @@ const STORAGE_KEYS = {
   TICKETS: 'gtt_tickets_data',
   CUSTOMERS: 'gtt_customers_data',
   CATEGORIES: 'gtt_categories_data',
-  SLA_POLICIES: 'gtt_sla_policies_data',
+  SLA_POLICIES: 'gtt_sla_policies_clean_v1',
   QUICK_PRESETS: 'gtt_quick_presets_data',
   AUDIT_LOGS: 'gtt_audit_logs_data',
   KNOWLEDGE_BASE: 'gtt_knowledge_base_data',
@@ -160,7 +160,7 @@ export const useTicketStore = defineStore('tickets', {
         : ensureCanonicalTickets(loadStoredData(STORAGE_KEYS.TICKETS, INITIAL_TICKETS)),
       customers: loadStoredData(STORAGE_KEYS.CUSTOMERS, MOCK_CUSTOMERS),
       categories: loadStoredData(STORAGE_KEYS.CATEGORIES, MOCK_CATEGORIES),
-      slaPolicies: loadStoredData(STORAGE_KEYS.SLA_POLICIES, MOCK_SLA_POLICIES),
+      slaPolicies: loadStoredData(STORAGE_KEYS.SLA_POLICIES, [], true),
       quickPresets: loadStoredData(STORAGE_KEYS.QUICK_PRESETS, QUICK_PRESETS),
       auditLogs: isClean
         ? loadStoredData(STORAGE_KEYS.AUDIT_LOGS, [
@@ -236,7 +236,16 @@ export const useTicketStore = defineStore('tickets', {
     },
     slaComplianceRate(state) {
       if (state.tickets.length === 0) return null; // null = belum ada data
-      const breachedCount = state.tickets.filter(t => t.isSlaResponseBreached || t.isSlaResolutionBreached).length;
+      const now = Date.now();
+      const breachedCount = state.tickets.filter(t => {
+        const isResBreach = t.isSlaResolutionBreached === true || 
+          (!['RESOLVED', 'CLOSED'].includes(t.status) && !t.isPaused && t.resolutionDeadline && new Date(t.resolutionDeadline).getTime() < now) || 
+          (t.resolvedAt && t.resolutionDeadline && new Date(t.resolvedAt).getTime() > new Date(t.resolutionDeadline).getTime());
+        const isRespBreach = t.isSlaResponseBreached === true || 
+          (!t.respondedAt && t.responseDeadline && new Date(t.responseDeadline).getTime() < now) || 
+          (t.respondedAt && t.responseDeadline && new Date(t.respondedAt).getTime() > new Date(t.responseDeadline).getTime());
+        return isResBreach || isRespBreach;
+      }).length;
       return Math.round(((state.tickets.length - breachedCount) / state.tickets.length) * 100);
     },
     getCustomerQuotaInfo(state) {
@@ -409,7 +418,12 @@ export const useTicketStore = defineStore('tickets', {
 
       // 3. Active Breached SLA Tickets
       state.tickets.forEach(t => {
-        if ((t.isSlaResolutionBreached || t.isSlaResponseBreached) && !['RESOLVED', 'CLOSED'].includes(t.status)) {
+        const isResBreach = t.isSlaResolutionBreached === true || 
+          (!['RESOLVED', 'CLOSED'].includes(t.status) && !t.isPaused && t.resolutionDeadline && new Date(t.resolutionDeadline).getTime() < Date.now());
+        const isRespBreach = t.isSlaResponseBreached === true || 
+          (!t.respondedAt && t.responseDeadline && new Date(t.responseDeadline).getTime() < Date.now());
+
+        if ((isResBreach || isRespBreach) && !['RESOLVED', 'CLOSED'].includes(t.status)) {
           notifs.push({
             id: `sla-breach-${t.id}`,
             category: 'SLA',
@@ -430,7 +444,11 @@ export const useTicketStore = defineStore('tickets', {
 
       // 4. SLA Near Breach (< 30m / near limit flag)
       state.tickets.forEach(t => {
-        if (t.isNearBreachFlag && !t.isSlaResolutionBreached && !['RESOLVED', 'CLOSED'].includes(t.status)) {
+        const isResBreach = t.isSlaResolutionBreached === true || 
+          (!['RESOLVED', 'CLOSED'].includes(t.status) && !t.isPaused && t.resolutionDeadline && new Date(t.resolutionDeadline).getTime() < Date.now());
+        const isNear = t.isNearBreachFlag || (!isResBreach && !['RESOLVED', 'CLOSED'].includes(t.status) && !t.isPaused && t.resolutionDeadline && (new Date(t.resolutionDeadline).getTime() - Date.now() < 30 * 60 * 1000) && (new Date(t.resolutionDeadline).getTime() - Date.now() > 0));
+
+        if (isNear && !isResBreach && !['RESOLVED', 'CLOSED'].includes(t.status)) {
           notifs.push({
             id: `sla-near-${t.id}`,
             category: 'SLA',
@@ -720,11 +738,11 @@ export const useTicketStore = defineStore('tickets', {
 
         // Master SLA Policies from Database
         const slaPoliciesList = Array.isArray(slaPoliciesRes) ? slaPoliciesRes : (slaPoliciesRes?.data || null);
-        if (slaPoliciesList !== null && slaPoliciesList.length > 0) {
+        if (slaPoliciesList !== null) {
           this.slaPolicies = slaPoliciesList;
           saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
-        } else if (!this.slaPolicies || this.slaPolicies.length === 0) {
-          this.slaPolicies = cloneDeep(MOCK_SLA_POLICIES);
+        } else if (!this.slaPolicies) {
+          this.slaPolicies = [];
           saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
         }
       } catch (e) {
@@ -736,18 +754,18 @@ export const useTicketStore = defineStore('tickets', {
       try {
         const res = await api.getSlaPolicies();
         const list = Array.isArray(res) ? res : (res?.data || null);
-        if (list !== null && list.length > 0) {
+        if (list !== null) {
           this.slaPolicies = list;
           saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
-        } else if (!this.slaPolicies || this.slaPolicies.length === 0) {
-          this.slaPolicies = cloneDeep(MOCK_SLA_POLICIES);
+        } else if (!this.slaPolicies) {
+          this.slaPolicies = [];
           saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
         }
         return this.slaPolicies;
       } catch (err) {
         console.warn('[TicketStore] Gagal fetch SLA policies:', err.message);
-        if (!this.slaPolicies || this.slaPolicies.length === 0) {
-          this.slaPolicies = cloneDeep(MOCK_SLA_POLICIES);
+        if (!this.slaPolicies) {
+          this.slaPolicies = [];
         }
         return this.slaPolicies;
       }

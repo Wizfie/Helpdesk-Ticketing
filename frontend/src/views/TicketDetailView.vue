@@ -236,9 +236,13 @@
             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">RESPONSE SLA</span>
             <span 
               class="font-bold text-[11px] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs"
-              :class="ticket.isSlaResponseBreached ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'"
+              :class="isResponseBreached ? 'bg-rose-100 text-rose-800 animate-pulse' 
+                    : ticket.respondedAt ? 'bg-emerald-100 text-emerald-800' 
+                    : 'bg-blue-50 text-blue-700'"
             >
-              {{ ticket.isSlaResponseBreached ? '✕ Breached' : '✓ Met' }}
+              {{ isResponseBreached ? '✕ Breached' 
+               : ticket.respondedAt ? '✓ Met' 
+               : '⏱ Menunggu' }}
             </span>
           </div>
           <div class="text-[11px] text-slate-500 mt-1">
@@ -265,18 +269,33 @@
             <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">RESOLUTION SLA</span>
             <span 
               class="font-bold text-[11px] px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-2xs"
-              :class="ticket.isSlaResolutionBreached ? 'bg-rose-100 text-rose-800 animate-pulse' : (ticket.isPaused ? 'bg-amber-100 text-amber-800' : 'bg-amber-100 text-amber-800')"
+              :class="isResolutionBreached ? 'bg-rose-100 text-rose-800 animate-pulse' 
+                    : ticket.resolvedAt ? 'bg-emerald-100 text-emerald-800'
+                    : ticket.isPaused ? 'bg-amber-100 text-amber-800' 
+                    : isNearResolutionBreach ? 'bg-orange-100 text-orange-800'
+                    : 'bg-blue-50 text-blue-700'"
             >
-              {{ ticket.isSlaResolutionBreached ? '✕ Breached' : (ticket.isPaused ? '⏸ Paused' : '✦ Near Breach') }}
+              {{ isResolutionBreached ? '✕ Breached' 
+               : ticket.resolvedAt ? '✓ Met'
+               : ticket.isPaused ? '⏸ Dijeda'
+               : isNearResolutionBreach ? '⚠ Near Breach'
+               : '⏱ Berjalan' }}
             </span>
           </div>
           <div class="text-[11px] text-slate-500 mt-1 flex items-center justify-between">
             <span>Target: &le; {{ resolutionTargetText }}</span>
-            <span class="text-[10px] font-bold text-amber-700 font-mono">{{ slaProgressPercent }}% berlalu</span>
+            <span 
+              class="text-[10px] font-bold font-mono"
+              :class="isResolutionBreached || slaProgressPercent >= 90 ? 'text-rose-600' : slaProgressPercent >= 75 ? 'text-amber-700' : 'text-slate-500'"
+            >{{ slaProgressPercent }}% berlalu</span>
           </div>
           <div 
             class="text-2xl font-black font-mono mt-1 flex items-baseline gap-1"
-            :class="ticket.isSlaResolutionBreached ? 'text-rose-600' : (ticket.isPaused ? 'text-amber-700' : 'text-amber-500')"
+            :class="isResolutionBreached ? 'text-rose-600' 
+                  : ticket.resolvedAt ? 'text-emerald-600'
+                  : ticket.isPaused ? 'text-amber-700' 
+                  : isNearResolutionBreach ? 'text-orange-600'
+                  : 'text-blue-600'"
           >
             <span>{{ resolutionCountdown }}</span>
           </div>
@@ -284,7 +303,11 @@
           <div class="w-full bg-slate-100 h-1.5 rounded-full mt-1.5 overflow-hidden">
             <div 
               class="h-full rounded-full transition-all duration-500"
-              :class="ticket.isSlaResolutionBreached ? 'bg-rose-500' : (ticket.isPaused ? 'bg-amber-400' : 'bg-amber-500')"
+              :class="isResolutionBreached ? 'bg-rose-500' 
+                    : ticket.resolvedAt ? 'bg-emerald-500'
+                    : ticket.isPaused ? 'bg-amber-400' 
+                    : isNearResolutionBreach ? 'bg-orange-500'
+                    : 'bg-blue-500'"
               :style="{ width: slaProgressPercent + '%' }"
             ></div>
           </div>
@@ -293,7 +316,7 @@
         <div class="pt-2 mt-2 border-t border-slate-100 text-[11px] text-slate-500 space-y-0.5">
           <div class="font-medium text-slate-700">Waktu Berjalan: <strong class="text-slate-900 font-bold">{{ elapsedTimeFormatted }}</strong></div>
           <div class="text-slate-400 truncate">
-            Target: {{ formatClock(ticket.resolutionDeadline) }} WIB &bull; Estimasi: {{ formatClock(estimatedResolutionTime) }} WIB
+            Deadline: {{ formatClock(ticket.resolutionDeadline) }} WIB
           </div>
         </div>
       </div>
@@ -1973,7 +1996,6 @@ const hasPrincipalEscalation = computed(() => {
 
 // SLA Countdown & Timers
 const now = ref(Date.now());
-const mountedTimestamp = ref(Date.now());
 let timerInterval = null;
 
 onMounted(() => {
@@ -2003,33 +2025,79 @@ const toggleMoreActions = () => {
 };
 
 // Response SLA calculations
+const matchedSlaPolicy = computed(() => {
+  if (!ticket.value) return null;
+  const policies = ticketStore.slaPolicies || [];
+  return policies.find(p => p.tierCode === ticket.value.contractSla) || null;
+});
+
 const responseTargetText = computed(() => {
-  return '30 Menit (Gold 8x5)';
+  if (!ticket.value) return '30 Menit';
+  if (matchedSlaPolicy.value) {
+    const sev = ticket.value.severity;
+    let respH = sev === 'HIGH' ? matchedSlaPolicy.value.p1ResponseHours
+              : sev === 'LOW'  ? (matchedSlaPolicy.value.p3ResponseHours || matchedSlaPolicy.value.p4ResponseHours || 4)
+              : matchedSlaPolicy.value.p2ResponseHours;
+    const mins = Math.round(respH * 60);
+    return mins < 60 ? `${mins} Menit (${matchedSlaPolicy.value.tierName})` : `${respH} Jam (${matchedSlaPolicy.value.tierName})`;
+  }
+  if (ticket.value.responseDeadline && ticket.value.createdAt) {
+    const diffMs = new Date(ticket.value.responseDeadline).getTime() - new Date(ticket.value.createdAt).getTime();
+    const mins = Math.round(diffMs / 60000);
+    return mins < 60 ? `${mins} Menit` : `${Math.round(mins / 60)} Jam`;
+  }
+  return '30 Menit';
 });
 
 const responseDurationText = computed(() => {
-  if (!ticket.value) return '12 menit';
-  return '12 menit';
+  if (!ticket.value || !ticket.value.createdAt) return '-';
+  const endTime = ticket.value.respondedAt ? new Date(ticket.value.respondedAt).getTime() : Date.now();
+  const diffMs = endTime - new Date(ticket.value.createdAt).getTime();
+  const totalSec = Math.max(0, Math.floor(diffMs / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}j ${m}m`;
+  if (m > 0) return `${m}m ${s}d`;
+  return `${s} detik`;
 });
 
 // Resolution SLA calculations
 const resolutionTargetText = computed(() => {
-  return '8 Jam (Gold SLA)';
+  if (!ticket.value) return '8 Jam';
+  if (matchedSlaPolicy.value) {
+    const sev = ticket.value.severity;
+    let resH = sev === 'HIGH' ? matchedSlaPolicy.value.p1ResolutionHours
+             : sev === 'LOW'  ? (matchedSlaPolicy.value.p3ResolutionHours || matchedSlaPolicy.value.p4ResolutionHours || 24)
+             : matchedSlaPolicy.value.p2ResolutionHours;
+    return `${resH} Jam (${matchedSlaPolicy.value.tierName})`;
+  }
+  if (ticket.value.resolutionDeadline && ticket.value.createdAt) {
+    const diffMs = new Date(ticket.value.resolutionDeadline).getTime() - new Date(ticket.value.createdAt).getTime();
+    return `${Math.round(diffMs / 3600000)} Jam`;
+  }
+  return '8 Jam';
 });
 
 const resolutionCountdown = computed(() => {
   if (!ticket.value) return '00:00:00 HRS';
-  if (ticket.value.status === 'RESOLVED') return 'RESOLVED (STOPPED)';
-  if (ticket.value.status === 'CLOSED') return 'CLOSED (STOPPED)';
-  if (ticket.value.isPaused) return 'PAUSED (FROZEN)';
-  if (ticket.value.isSlaResolutionBreached) return 'BREACHED (00:00:00)';
+  // Timer berhenti hanya ketika RESOLVED atau CLOSED
+  if (ticket.value.resolvedAt || ticket.value.status === 'RESOLVED') return 'SELESAI (BERHENTI)';
+  if (ticket.value.status === 'CLOSED') return 'DITUTUP (BERHENTI)';
+  if (ticket.value.isPaused) return 'DIJEDA (FROZEN)';
+
+  if (!ticket.value.resolutionDeadline) return '--:--:-- HRS';
 
   const deadlineMs = new Date(ticket.value.resolutionDeadline).getTime();
-  let diffSec = Math.floor((deadlineMs - now.value) / 1000);
+  const diffSec = Math.floor((deadlineMs - now.value) / 1000);
 
   if (diffSec <= 0) {
-    const elapsedSinceMount = Math.floor((now.value - mountedTimestamp.value) / 1000);
-    diffSec = Math.max(0, 43189 - elapsedSinceMount); // ~11:59:49 HRS
+    // Sudah breach — tampilkan waktu yang telah lewat (negatif)
+    const overSec = Math.abs(diffSec);
+    const h = Math.floor(overSec / 3600);
+    const m = Math.floor((overSec % 3600) / 60);
+    const s = overSec % 60;
+    return `+${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')} (BREACH)`;
   }
 
   const h = Math.floor(diffSec / 3600);
@@ -2039,23 +2107,70 @@ const resolutionCountdown = computed(() => {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')} HRS`;
 });
 
+// Apakah Resolution SLA breached (melewati batas waktu tanpa selesai)
+const isResolutionBreached = computed(() => {
+  if (!ticket.value) return false;
+  if (ticket.value.isSlaResolutionBreached) return true;
+  if (ticket.value.resolvedAt || ticket.value.status === 'RESOLVED' || ticket.value.status === 'CLOSED') {
+    if (ticket.value.resolvedAt && ticket.value.resolutionDeadline) {
+      return new Date(ticket.value.resolvedAt).getTime() > new Date(ticket.value.resolutionDeadline).getTime();
+    }
+    return false;
+  }
+  if (ticket.value.isPaused) return false;
+  if (!ticket.value.resolutionDeadline) return false;
+  return new Date(ticket.value.resolutionDeadline).getTime() < now.value;
+});
+
+// Apakah Response SLA breached
+const isResponseBreached = computed(() => {
+  if (!ticket.value) return false;
+  if (ticket.value.isSlaResponseBreached) return true;
+  if (ticket.value.respondedAt && ticket.value.responseDeadline) {
+    return new Date(ticket.value.respondedAt).getTime() > new Date(ticket.value.responseDeadline).getTime();
+  }
+  if (!ticket.value.respondedAt && ticket.value.responseDeadline) {
+    return new Date(ticket.value.responseDeadline).getTime() < now.value;
+  }
+  return false;
+});
+
+// Apakah Resolution SLA sedang dalam status Near Breach (< 25% sisa waktu)
+const isNearResolutionBreach = computed(() => {
+  if (!ticket.value || !ticket.value.resolutionDeadline || !ticket.value.createdAt) return false;
+  if (ticket.value.resolvedAt || ticket.value.status === 'RESOLVED' || ticket.value.status === 'CLOSED' || isResolutionBreached.value) return false;
+  const totalMs = new Date(ticket.value.resolutionDeadline).getTime() - new Date(ticket.value.createdAt).getTime();
+  const remainMs = new Date(ticket.value.resolutionDeadline).getTime() - now.value;
+  if (totalMs <= 0) return false;
+  const pct = remainMs / totalMs;
+  return pct > 0 && pct < 0.25; // sisa < 25%
+});
+
 const slaProgressPercent = computed(() => {
-  return 76;
+  if (!ticket.value || !ticket.value.resolutionDeadline || !ticket.value.createdAt) return 0;
+  if (isResolutionBreached.value) return 100;
+  const totalMs = new Date(ticket.value.resolutionDeadline).getTime() - new Date(ticket.value.createdAt).getTime();
+  if (totalMs <= 0) return 100;
+  const endTime = ticket.value.resolvedAt ? new Date(ticket.value.resolvedAt).getTime() : now.value;
+  const elapsedMs = endTime - new Date(ticket.value.createdAt).getTime();
+  return Math.min(100, Math.max(0, Math.round((elapsedMs / totalMs) * 100)));
 });
 
 const elapsedTimeFormatted = computed(() => {
-  if (!ticket.value || !ticket.value.createdAt) return '6j 5m';
-  if (ticket.value.resolvedAt) {
-    const totalMs = new Date(ticket.value.resolvedAt).getTime() - new Date(ticket.value.createdAt).getTime();
-    const sec = Math.max(0, Math.floor(totalMs / 1000));
-    const h = Math.floor(sec / 3600);
-    const m = Math.floor((sec % 3600) / 60);
-    return `${h}j ${m}m`;
-  }
-  return '6j 5m';
+  if (!ticket.value || !ticket.value.createdAt) return '-';
+  const endTime = ticket.value.resolvedAt
+    ? new Date(ticket.value.resolvedAt).getTime()
+    : now.value;
+  const totalMs = Math.max(0, endTime - new Date(ticket.value.createdAt).getTime());
+  const sec = Math.floor(totalMs / 1000);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  if (h > 0) return `${h}j ${m}m`;
+  return `${m}m`;
 });
 
 const estimatedResolutionTime = computed(() => {
+  if (ticket.value?.resolutionDeadline) return ticket.value.resolutionDeadline;
   const d = new Date();
   d.setHours(22, 30, 0, 0);
   return d.toISOString();
@@ -2069,7 +2184,15 @@ const closureResolvedDateText = computed(() => {
 });
 
 const closureDurationText = computed(() => {
-  return '03:23:15';
+  if (!ticket.value || !ticket.value.createdAt) return '--:--:--';
+  const endTime = ticket.value.resolvedAt || ticket.value.closedAt || null;
+  if (!endTime) return '--:--:--';
+  const totalMs = new Date(endTime).getTime() - new Date(ticket.value.createdAt).getTime();
+  const totalSec = Math.max(0, Math.floor(totalMs / 1000));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 });
 
 // Diagnostic Timeline Steps (Point 5 Reference)

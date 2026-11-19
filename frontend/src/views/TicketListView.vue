@@ -424,23 +424,29 @@
               <!-- 7. SLA RESPONSE (Target | Aktual) -->
               <td class="py-3 px-3 whitespace-nowrap font-mono text-[11px]">
                 <div class="flex items-center space-x-1">
-                  <!-- Cross icon if breached, Checkmark if met -->
+                  <!-- Cross icon if breached, Checkmark if met, or clock if waiting -->
                   <span 
-                    v-if="ticket.isSlaResponseBreached" 
+                    v-if="isResponseBreached(ticket)" 
                     class="w-3.5 h-3.5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[9px] font-bold"
                   >
                     &times;
                   </span>
                   <span 
-                    v-else 
+                    v-else-if="ticket.respondedAt" 
                     class="w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-bold"
                   >
                     &#10003;
                   </span>
                   <span 
-                    :class="ticket.isSlaResponseBreached ? 'text-rose-600 font-semibold' : 'text-emerald-700 font-medium'"
+                    v-else 
+                    class="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-bold"
                   >
-                    {{ ticket.slaResponseText || (ticket.respondedAt ? '12m / 30m' : '15m / 30m') }}
+                    &#9203;
+                  </span>
+                  <span 
+                    :class="isResponseBreached(ticket) ? 'text-rose-600 font-semibold' : ticket.respondedAt ? 'text-emerald-700 font-medium' : 'text-blue-700 font-medium'"
+                  >
+                    {{ ticket.slaResponseText || (ticket.respondedAt ? '12m / 30m' : 'Menunggu') }}
                   </span>
                 </div>
               </td>
@@ -724,7 +730,29 @@ const isNearBreach = (ticket) => {
 };
 
 const isResolutionBreached = (ticket) => {
-  return ticket.isSlaResolutionBreached === true || ticket.status === 'NEAR_BREACH' && ticket.progressPercent === 90 && ticket.ticketNumber === 'TICK-20261003-0015';
+  if (ticket.isSlaResolutionBreached === true) return true;
+  if (['RESOLVED', 'CLOSED'].includes(ticket.status)) {
+    if (ticket.resolvedAt && ticket.resolutionDeadline) {
+      return new Date(ticket.resolvedAt).getTime() > new Date(ticket.resolutionDeadline).getTime();
+    }
+    return false;
+  }
+  if (ticket.isPaused) return false;
+  if (ticket.resolutionDeadline) {
+    return new Date(ticket.resolutionDeadline).getTime() < Date.now();
+  }
+  return false;
+};
+
+const isResponseBreached = (ticket) => {
+  if (ticket.isSlaResponseBreached === true) return true;
+  if (ticket.respondedAt && ticket.responseDeadline) {
+    return new Date(ticket.respondedAt).getTime() > new Date(ticket.responseDeadline).getTime();
+  }
+  if (!ticket.respondedAt && ticket.responseDeadline) {
+    return new Date(ticket.responseDeadline).getTime() < Date.now();
+  }
+  return false;
 };
 
 const isResolutionWarning = (ticket) => {
@@ -817,11 +845,11 @@ const filteredTickets = computed(() => {
 
     // 3. SLA Status filter
     if (filterSlaStatus.value === 'SAFE') {
-      if (isResolutionBreached(t) || isResolutionWarning(t)) return false;
+      if (isResolutionBreached(t) || isResponseBreached(t) || isResolutionWarning(t)) return false;
     } else if (filterSlaStatus.value === 'NEAR_BREACH') {
       if (!isResolutionWarning(t)) return false;
     } else if (filterSlaStatus.value === 'BREACHED') {
-      if (!isResolutionBreached(t)) return false;
+      if (!isResolutionBreached(t) && !isResponseBreached(t)) return false;
     }
 
     // 4. Search query

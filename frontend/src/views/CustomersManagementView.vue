@@ -924,15 +924,7 @@ const activeCustomer = ref(null);
 const isExporting = ref(false);
 
 const availableSlaPolicies = computed(() => {
-  if (ticketStore.slaPolicies && ticketStore.slaPolicies.length > 0) {
-    return ticketStore.slaPolicies;
-  }
-  return [
-    { id: 1, tierCode: 'PLATINUM_24X7', tierName: 'Platinum 24x7 Mission Critical', operatingHours: '24 Jam x 7 Hari (Non-Stop)', p1ResponseHours: 0.5, p1ResolutionHours: 4 },
-    { id: 2, tierCode: 'GOLD_8X5', tierName: 'Enterprise 8x5 Gold Standard', operatingHours: 'Senin - Jumat (08:00 - 17:00 WIB)', p1ResponseHours: 1, p1ResolutionHours: 8 },
-    { id: 3, tierCode: 'GOV_TIER1', tierName: 'Government 8x5 Tier-1 Dedicated', operatingHours: 'Senin - Jumat (07:30 - 16:30 WIB)', p1ResponseHours: 1, p1ResolutionHours: 12 },
-    { id: 4, tierCode: 'SILVER_8X5', tierName: 'Standard Silver Managed Care', operatingHours: 'Senin - Jumat (08:00 - 17:00 WIB)', p1ResponseHours: 2, p1ResolutionHours: 24 }
-  ];
+  return ticketStore.slaPolicies || [];
 });
 
 const defaultSlaTierCode = computed(() => {
