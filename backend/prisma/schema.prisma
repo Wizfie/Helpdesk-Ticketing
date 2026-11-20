@@ -66,6 +66,18 @@ model CustomerPic {
 }
 
 // ----------------------------------------------------
+// 2b. Master Industry Sectors for Customers
+// ----------------------------------------------------
+model IndustrySector {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("industry_sectors")
+}
+
+// ----------------------------------------------------
 // 3b. Master Principals & Technology Vendors (OEM)
 // ----------------------------------------------------
 model Principal {

@@ -87,6 +87,11 @@ export const api = {
   updateCustomerPic: (id, picId, data) => request(`/customers/${id}/pics/${picId}`, { method: 'PUT', body: JSON.stringify(data) }),
   deleteCustomerPic: (id, picId) => request(`/customers/${id}/pics/${picId}`, { method: 'DELETE' }),
 
+  // Customer Industry Sectors (Master from MySQL)
+  getIndustrySectors: () => request('/customers/sectors'),
+  createIndustrySector: (data) => request('/customers/sectors', { method: 'POST', body: JSON.stringify(data) }),
+  deleteIndustrySector: (id) => request(`/customers/sectors/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+
   // Knowledge Base
   getArticles: (params = {}) => {
     const query = new URLSearchParams(params).toString();

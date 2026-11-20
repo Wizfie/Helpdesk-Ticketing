@@ -141,6 +141,33 @@ export async function deleteSlaPolicy(req, res) {
     });
     if (!policy) return res.status(404).json({ message: 'Kebijakan SLA tidak ditemukan.' });
 
+    // Restrict Guard: Cek apakah masih ada customer yang terikat ke kebijakan SLA ini
+    const attachedCustomers = await prisma.customer.findMany({
+      where: {
+        OR: [
+          { slaTier: policy.tierName },
+          { slaTier: { contains: policy.tierName } }
+        ]
+      },
+      select: {
+        id: true,
+        name: true,
+        slaTier: true
+      }
+    });
+
+    if (attachedCustomers.length > 0) {
+      const customerNames = attachedCustomers.map(c => c.name);
+      const previewNames = customerNames.slice(0, 3).join(', ');
+      const moreCount = customerNames.length > 3 ? ` dan ${customerNames.length - 3} pelanggan lainnya` : '';
+
+      return res.status(409).json({
+        message: `Kebijakan SLA "${policy.tierName}" tidak dapat dihapus karena masih aktif digunakan oleh ${attachedCustomers.length} pelanggan (${previewNames}${moreCount}). Silakan alihkan kontrak pelanggan ke SLA lain terlebih dahulu.`,
+        customerCount: attachedCustomers.length,
+        customers: customerNames
+      });
+    }
+
     await prisma.slaPolicy.delete({ where: { id: Number(id) } });
 
     await logAuditEvent({

@@ -720,7 +720,7 @@
 
 
 
-          <!-- Right Card: Operating Window (5 cols) -->
+          <!-- Right Card: Operating Window & Assigned Customers (5 cols) -->
 
           <div class="md:col-span-5 space-y-4">
 
@@ -745,6 +745,58 @@
                 {{ selectedPolicy.operatingHours }}
 
               </div>
+
+            </div>
+
+            <!-- Assigned Customers Card -->
+
+            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-2">
+
+              <div class="flex items-center justify-between text-slate-700">
+
+                <div class="flex items-center space-x-2">
+
+                  <svg class="w-4 h-4 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+
+                  </svg>
+
+                  <span class="font-bold text-xs text-slate-800">Pelanggan Terikat</span>
+
+                </div>
+
+                <span class="text-[11px] font-bold px-2 py-0.5 rounded-full" :class="getPolicyMitra(selectedPolicy).length > 0 ? 'bg-blue-100 text-blue-800' : 'bg-slate-200 text-slate-600'">
+
+                  {{ getPolicyMitra(selectedPolicy).length }} Mitra
+
+                </span>
+
+              </div>
+
+              <div v-if="getPolicyMitra(selectedPolicy).length > 0" class="flex flex-wrap gap-1.5 pt-1">
+
+                <span 
+
+                  v-for="cName in getPolicyMitra(selectedPolicy)" 
+
+                  :key="cName" 
+
+                  class="inline-flex items-center px-2 py-1 rounded-md text-[11px] font-semibold bg-white border border-slate-200 text-slate-700 shadow-2xs"
+
+                >
+
+                  {{ cName }}
+
+                </span>
+
+              </div>
+
+              <p v-else class="text-xs text-slate-400 italic pt-1">
+
+                Belum ada mitra pelanggan yang terikat ke kebijakan SLA ini.
+
+              </p>
 
             </div>
 
@@ -888,7 +940,7 @@
 
     >
 
-      <div class="bg-white border border-slate-200 rounded-2xl max-w-5xl w-full p-6 shadow-2xl space-y-4 my-auto animate-in fade-in zoom-in-95 duration-150">
+      <div class="bg-white border border-slate-200 rounded-2xl max-w-5xl w-full p-6 shadow-2xl space-y-4 my-auto max-h-[92vh] overflow-y-auto animate-in fade-in zoom-in-95 duration-150">
 
         <!-- Header -->
 
@@ -913,23 +965,18 @@
 
         <form @submit.prevent="savePolicy" class="space-y-4 text-xs">
 
-          <!-- Horizontal 2-Column Grid -->
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <!-- Horizontal 2-Column Grid (Balanced 6-6 Split without Overlap) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
-            <!-- Kolom Kiri: Informasi Kebijakan SLA (5 cols) -->
-            <div class="lg:col-span-5 space-y-3">
+            <!-- Kolom Kiri: Informasi Kebijakan SLA (6 cols) -->
+            <div class="lg:col-span-6 space-y-4">
 
-            <div class="flex items-center space-x-2.5">
+              <div class="flex items-center space-x-2.5 border-b border-slate-100 pb-2">
+                <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">1</span>
+                <h4 class="font-bold text-slate-900 text-sm">Informasi Kebijakan SLA</h4>
+              </div>
 
-              <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">1</span>
-
-              <h4 class="font-bold text-slate-900 text-sm">Informasi Kebijakan SLA</h4>
-
-            </div>
-
-
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+              <div class="space-y-3.5">
 
               <!-- Nama Kebijakan SLA -->
               <div>
@@ -943,7 +990,7 @@
                 />
               </div>
 
-              <!-- Operating Window di samping Nama SLA -->
+              <!-- Operating Window -->
               <div>
                 <BaseSelect
                   v-model="formPolicy.operatingHours"
@@ -951,51 +998,105 @@
                   label="Operating Window"
                   required
                   placeholder="Pilih operating window..."
-                  menu-width-class="min-w-full sm:min-w-[380px] max-w-[480px]"
+                  menu-width-class="w-full"
                 />
 
-                <!-- Input custom muncul jika pilih Custom -->
-                <input
+                <!-- Form Standar Pengisian Custom Operating Window -->
+                <div
                   v-if="formPolicy.operatingHours === 'custom'"
-                  v-model="formPolicy.customOperatingHours"
-                  type="text"
-                  placeholder="Contoh: Senin - Rabu (06:00 - 14:00 WIB)"
-                  class="mt-2 w-full p-2.5 border border-blue-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs"
-                />
+                  class="mt-3 p-3.5 bg-blue-50/50 border border-blue-200 rounded-xl space-y-3 shadow-2xs"
+                >
+                  <div class="flex items-center justify-between text-xs font-bold text-blue-900 border-b border-blue-100 pb-2">
+                    <span class="flex items-center gap-1.5">
+                      <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                      </svg>
+                      Pengaturan Jadwal Kerja Baku
+                    </span>
+                    <span class="text-[10px] text-blue-700 font-mono font-semibold bg-white px-2 py-0.5 rounded-md border border-blue-200 shadow-2xs">Zona Waktu: WIB</span>
+                  </div>
+
+                  <!-- Baris 1: Rentang Hari -->
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Rentang Hari Operasional</label>
+                    <div class="grid grid-cols-2 gap-3 items-center">
+                      <div>
+                        <span class="block text-[11px] text-slate-500 mb-1">Dari Hari</span>
+                        <select
+                          v-model="customSchedule.startDay"
+                          class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                        >
+                          <option v-for="d in daysList" :key="'s-' + d" :value="d">{{ d }}</option>
+                        </select>
+                      </div>
+                      <div>
+                        <span class="block text-[11px] text-slate-500 mb-1">Sampai Hari</span>
+                        <select
+                          v-model="customSchedule.endDay"
+                          class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                        >
+                          <option v-for="d in daysList" :key="'e-' + d" :value="d">{{ d }}</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Baris 2: Rentang Jam Kerja -->
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1.5">Jam Kerja Harian</label>
+                    <div class="grid grid-cols-2 gap-3 items-center">
+                      <div>
+                        <span class="block text-[11px] text-slate-500 mb-1">Jam Mulai</span>
+                        <input
+                          v-model="customSchedule.startTime"
+                          type="time"
+                          required
+                          class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <span class="block text-[11px] text-slate-500 mb-1">Jam Selesai</span>
+                        <input
+                          v-model="customSchedule.endTime"
+                          type="time"
+                          required
+                          class="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono font-semibold text-slate-800 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Format Baku yang Dihasilkan -->
+                  <div class="pt-2 border-t border-blue-100 flex items-center justify-between text-xs">
+                    <span class="text-slate-500 font-medium">Format Tersimpan:</span>
+                    <span class="font-bold text-blue-700 font-mono text-xs bg-white px-2.5 py-1 rounded-lg border border-blue-200 shadow-2xs">
+                      {{ computedCustomOperatingHours }}
+                    </span>
+                  </div>
+                </div>
               </div>
 
-              <!-- Deskripsi lebih panjang (span 2 kolom) -->
-              <div class="col-span-1 md:col-span-2">
-
-                <label class="block font-semibold text-slate-700 mb-1">Deskripsi</label>
-
+              <!-- Deskripsi -->
+              <div>
+                <label class="block font-semibold text-slate-700 text-sm mb-1">Deskripsi</label>
                 <textarea 
-
                   v-model="formPolicy.description" 
-
                   rows="3" 
-
                   placeholder="Deskripsi cakupan layanan, komitmen tingkat layanan, dan ketentuan SLA ini..." 
-
-                  class="w-full p-2.5 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-
+                  class="w-full p-2.5 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs"
                 ></textarea>
-
               </div>
 
             </div>
 
             </div>
 
-            <!-- Kolom Kanan: Matriks Batas Waktu SLA (7 cols) -->
-            <div class="lg:col-span-7 space-y-3">
+            <!-- Kolom Kanan: Matriks Batas Waktu SLA (6 cols) -->
+            <div class="lg:col-span-6 space-y-4">
 
-              <div class="flex items-center space-x-2.5">
-
+              <div class="flex items-center space-x-2.5 border-b border-slate-100 pb-2">
                 <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">2</span>
-
                 <h4 class="font-bold text-slate-900 text-sm">Matriks Batas Waktu SLA (dalam jam)</h4>
-
               </div>
 
             <div class="border border-slate-200 rounded-xl overflow-hidden shadow-xs">
@@ -1336,49 +1437,159 @@
 
 
 
-    <!-- Confirm Delete Modal -->
+    <!-- Confirm Delete Modal (Restrict Guard) -->
 
-    <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div v-if="showDeleteConfirm" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
 
-      <div class="bg-white border border-slate-200 rounded-2xl max-w-sm w-full p-6 shadow-2xl space-y-4">
+      <div class="bg-white border border-slate-200 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
 
-        <div class="flex items-start space-x-3">
+        <!-- Case 1: SLA Sedang Digunakan oleh Customer (Penghapusan Ditolak) -->
 
-          <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
+        <div v-if="customersUsingPolicyToDelete.length > 0" class="space-y-4">
 
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="flex items-start space-x-3">
 
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+            <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
 
-            </svg>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+
+              </svg>
+
+            </div>
+
+            <div>
+
+              <h4 class="font-bold text-slate-900 text-sm">Kebijakan SLA Sedang Digunakan</h4>
+
+              <p class="text-xs text-slate-600 mt-1">
+
+                Kebijakan <strong>{{ policyToDelete?.tierName }}</strong> tidak dapat dihapus karena masih aktif digunakan oleh <strong>{{ customersUsingPolicyToDelete.length }} mitra pelanggan</strong>:
+
+              </p>
+
+            </div>
 
           </div>
 
-          <div>
 
-            <h4 class="font-bold text-slate-900 text-sm">Hapus Kebijakan SLA?</h4>
 
-            <p class="text-xs text-slate-500 mt-1">Kebijakan <strong>{{ policyToDelete?.tierName }}</strong> akan dihapus secara permanen dari database.</p>
+          <!-- List of Attached Customers -->
+
+          <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-3.5 space-y-2">
+
+            <span class="text-[11px] font-bold text-amber-900 uppercase tracking-wider block">Daftar Pelanggan Terikat:</span>
+
+            <div class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto pr-1">
+
+              <span 
+
+                v-for="c in customersUsingPolicyToDelete" 
+
+                :key="c.id"
+
+                class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold bg-white border border-amber-300 text-amber-950 shadow-2xs"
+
+              >
+
+                {{ c.name }}
+
+              </span>
+
+            </div>
+
+            <p class="text-[11px] text-amber-800 pt-1 leading-normal">
+
+              💡 <em>Sesuai aturan integritas data, silakan alihkan paket kontrak pelanggan di menu <strong>Enterprise Accounts</strong> sebelum menghapus kebijakan ini.</em>
+
+            </p>
+
+          </div>
+
+
+
+          <div v-if="deleteError" class="bg-rose-50 border border-rose-200 rounded-lg p-2.5 text-xs text-rose-700">{{ deleteError }}</div>
+
+
+
+          <div class="flex justify-end space-x-2 pt-1">
+
+            <button @click="showDeleteConfirm = false" class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition-colors shadow-xs">
+
+              Mengerti & Tutup
+
+            </button>
 
           </div>
 
         </div>
 
-        <div v-if="deleteError" class="bg-rose-50 border border-rose-200 rounded-lg p-2 text-xs text-rose-700">{{ deleteError }}</div>
 
-        <div class="flex justify-end space-x-2">
 
-          <button @click="showDeleteConfirm = false" class="px-4 py-2 border border-slate-200 rounded-lg text-xs text-slate-600">Batal</button>
+        <!-- Case 2: SLA Tidak Digunakan oleh Siapapun (Aman Dihapus) -->
 
-          <button @click="doDelete" :disabled="isDeleting" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-xs font-bold rounded-lg flex items-center space-x-2">
+        <div v-else class="space-y-4">
 
-            <span v-if="isDeleting" class="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <div class="flex items-start space-x-3">
 
-            <span>{{ isDeleting ? 'Menghapus...' : 'Ya, Hapus' }}</span>
+            <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center shrink-0">
 
-          </button>
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+
+              </svg>
+
+            </div>
+
+            <div>
+
+              <h4 class="font-bold text-slate-900 text-sm">Hapus Kebijakan SLA?</h4>
+
+              <p class="text-xs text-slate-500 mt-1">
+
+                Kebijakan <strong>{{ policyToDelete?.tierName }}</strong> akan dihapus secara permanen dari database.
+
+              </p>
+
+              <p class="text-[11px] text-emerald-600 font-semibold mt-1">
+
+                ✓ Aman: Tidak ada mitra pelanggan yang menggunakan kebijakan ini.
+
+              </p>
+
+            </div>
+
+          </div>
+
+
+
+          <div v-if="deleteError" class="bg-rose-50 border border-rose-200 rounded-lg p-2.5 text-xs text-rose-700">{{ deleteError }}</div>
+
+
+
+          <div class="flex justify-end space-x-2 pt-1">
+
+            <button @click="showDeleteConfirm = false" class="px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs text-slate-600 font-semibold transition-colors">
+
+              Batal
+
+            </button>
+
+            <button @click="doDelete" :disabled="isDeleting" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:opacity-60 text-white text-xs font-bold rounded-xl flex items-center space-x-2 transition-colors shadow-xs">
+
+              <span v-if="isDeleting" class="inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+
+              <span>{{ isDeleting ? 'Menghapus...' : 'Ya, Hapus' }}</span>
+
+            </button>
+
+          </div>
 
         </div>
+
+
 
       </div>
 
@@ -1392,7 +1603,7 @@
 
 <script setup>
 
-import { ref, computed, onMounted } from 'vue';
+import { ref, reactive, computed, onMounted } from 'vue';
 import { api } from '../services/api.js';
 import { useTicketStore } from '../stores/ticketStore.js';
 import { useAuthStore } from '../stores/authStore.js';
@@ -1456,19 +1667,28 @@ const filterStatusOptions = [
 
 const filterOperatingWindowOptions = [
   { value: '', label: 'Semua Operating Window' },
-  { value: '24 Jam x 7 Hari', label: '24 Jam x 7 Hari (Non-Stop)', subtext: 'Operasional 24 jam nonstop' },
-  { value: 'Senin - Jumat', label: 'Senin - Jumat (08:00 - 17:00 WIB)', subtext: 'Jam kerja reguler 5 hari' },
-  { value: 'Senin - Sabtu', label: 'Senin - Sabtu (07:00 - 18:00 WIB)', subtext: 'Jam operasional 6 hari' },
-  { value: 'Custom', label: 'Jadwal Khusus (Custom)', subtext: 'Jadwal yang dikonfigurasi kustom' }
+  { value: '24 Jam x 7 Hari', label: '24 Jam x 7 Hari (Non-Stop)', subtext: 'Operasional 24 jam nonstop (24/7)' },
+  { value: 'Custom', label: 'Jadwal Khusus (Custom)', subtext: 'Jadwal yang dikonfigurasi manual' }
 ];
 
 const operatingWindowOptions = [
   { value: '24 Jam x 7 Hari (Non-Stop)', label: '24 Jam x 7 Hari (Non-Stop)', subtext: 'Layanan operasional tanpa henti 24 jam x 7 hari' },
-  { value: 'Senin - Jumat (08:00 - 17:00 WIB)', label: 'Senin - Jumat (08:00 - 17:00 WIB)', subtext: 'Jam kerja standar operasional bisnis (8x5)' },
-  { value: 'Senin - Sabtu (07:00 - 18:00 WIB)', label: 'Senin - Sabtu (07:00 - 18:00 WIB)', subtext: 'Jam kerja operasional komersial (6 hari)' },
-  { value: 'Senin - Jumat (07:30 - 16:30 WIB)', label: 'Senin - Jumat (07:30 - 16:30 WIB)', subtext: 'Instansi pemerintahan / BUMN' },
-  { value: 'custom', label: 'Custom...', subtext: 'Tentukan jadwal operasional khusus sendiri' }
+  { value: 'custom', label: 'Custom (Tentukan Jadwal Baku)...', subtext: 'Tambah jadwal operasional khusus secara manual' }
 ];
+
+// Opsi Hari & Jadwal Kustom Terstandarisasi
+const daysList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+
+const customSchedule = reactive({
+  startDay: 'Senin',
+  endDay: 'Jumat',
+  startTime: '08:00',
+  endTime: '17:00'
+});
+
+const computedCustomOperatingHours = computed(() => {
+  return `${customSchedule.startDay} - ${customSchedule.endDay} (${customSchedule.startTime} - ${customSchedule.endTime} WIB)`;
+});
 
 // Pagination
 const currentPage = ref(1);
@@ -1574,56 +1794,54 @@ const getPolicyMeta = (policy) => {
 
 
 const getPolicyStatus = (policy) => {
-
+  if (!policy) return 'Active';
+  if (policy.isActive !== undefined && policy.isActive !== null) {
+    return policy.isActive ? 'Active' : 'Inactive';
+  }
   const meta = getPolicyMeta(policy);
-
   return meta.status || 'Active';
-
 };
 
-
-
 const getPolicyDescription = (policy) => {
-
-  const meta = getPolicyMeta(policy);
-
-  return meta.description || 'SLA untuk cakupan layanan operasional dan pemeliharaan sistem terpadu.';
-
+  if (!policy || !policy.notes) return '-';
+  if (typeof policy.notes === 'string' && policy.notes.trim().startsWith('{')) {
+    try {
+      const parsed = JSON.parse(policy.notes);
+      return parsed.description || '-';
+    } catch {
+      return policy.notes;
+    }
+  }
+  return policy.notes;
 };
 
 
 
 const getPolicyCreator = (policy) => {
-
   const meta = getPolicyMeta(policy);
-
-  if (!meta.createdBy || meta.createdBy === 'Ahmad Fauzi') {
-
-    return authStore.currentUser?.name || 'Rina Agustina';
-
-  }
-
-  return meta.createdBy;
-
+  return meta.createdBy || authStore.currentUser?.name || 'Ahmad Fauzi';
 };
 
 
+
+const getCustomersUsingPolicy = (policy) => {
+  if (!policy || !policy.tierName) return [];
+  const tierName = policy.tierName.trim().toUpperCase();
+  return (customers.value || []).filter(c => {
+    if (!c.slaTier) return false;
+    const cTier = c.slaTier.trim().toUpperCase();
+    return cTier === tierName || cTier.includes(tierName) || tierName.includes(cTier);
+  });
+};
 
 const getPolicyMitra = (policy) => {
-
   if (!policy) return [];
-
-  const meta = getPolicyMeta(policy);
-
-  if (meta.assignedCustomers && Array.isArray(meta.assignedCustomers)) {
-
-    return meta.assignedCustomers;
-
-  }
-
-  return [];
-
+  return getCustomersUsingPolicy(policy).map(c => c.name);
 };
+
+const customersUsingPolicyToDelete = computed(() => {
+  return getCustomersUsingPolicy(policyToDelete.value);
+});
 
 
 
@@ -1658,10 +1876,7 @@ const filteredPolicies = computed(() => {
     const q = searchQuery.value.trim().toLowerCase();
 
     const status = getPolicyStatus(p);
-
-    const meta = getPolicyMeta(p);
-
-    const desc = (meta.description || '').toLowerCase();
+    const desc = (getPolicyDescription(p) || '').toLowerCase();
 
 
 
@@ -1694,15 +1909,14 @@ const filteredPolicies = computed(() => {
     // Match Operating Window Filter
 
     if (filterOperatingWindow.value) {
-
       const w = p.operatingHours || '';
-
-      if (!w.toLowerCase().includes(filterOperatingWindow.value.toLowerCase())) {
-
+      if (filterOperatingWindow.value === '24 Jam x 7 Hari') {
+        if (!w.includes('24 Jam x 7 Hari')) return false;
+      } else if (filterOperatingWindow.value === 'Custom') {
+        if (w.includes('24 Jam x 7 Hari')) return false;
+      } else if (!w.toLowerCase().includes(filterOperatingWindow.value.toLowerCase())) {
         return false;
-
       }
-
     }
 
 
@@ -1875,6 +2089,11 @@ const openAddPolicyModal = () => {
 
   formPolicy.value = defaultForm();
 
+  customSchedule.startDay = 'Senin';
+  customSchedule.endDay = 'Jumat';
+  customSchedule.startTime = '08:00';
+  customSchedule.endTime = '17:00';
+
   showModal.value = true;
 
 };
@@ -1897,16 +2116,23 @@ const editPolicy = (policy) => {
 
   base.operatingHours = policy.operatingHours || '24 Jam x 7 Hari (Non-Stop)';
 
-  // Jika nilai tidak ada di daftar opsi baku, perlakukan sebagai custom
-  const standardOptions = [
-    '24 Jam x 7 Hari (Non-Stop)',
-    'Senin - Jumat (08:00 - 17:00 WIB)',
-    'Senin - Sabtu (07:00 - 18:00 WIB)',
-    'Senin - Jumat (07:30 - 16:30 WIB)',
-  ];
-  if (base.operatingHours && !standardOptions.includes(base.operatingHours)) {
-    base.customOperatingHours = base.operatingHours;
+  // Jika nilai bukan 24/7 (Non-Stop), perlakukan sebagai custom
+  if (base.operatingHours && base.operatingHours !== '24 Jam x 7 Hari (Non-Stop)') {
+    const raw = base.operatingHours;
+    base.customOperatingHours = raw;
     base.operatingHours = 'custom';
+    const m = raw.match(/([a-zA-Z]+)\s*-\s*([a-zA-Z]+)\s*\(([\d]{1,2}:[\d]{2})\s*-\s*([\d]{1,2}:[\d]{2})/i);
+    if (m) {
+      customSchedule.startDay = daysList.find(d => d.toLowerCase() === m[1].toLowerCase()) || 'Senin';
+      customSchedule.endDay = daysList.find(d => d.toLowerCase() === m[2].toLowerCase()) || 'Jumat';
+      customSchedule.startTime = m[3];
+      customSchedule.endTime = m[4];
+    } else {
+      customSchedule.startDay = 'Senin';
+      customSchedule.endDay = 'Jumat';
+      customSchedule.startTime = '08:00';
+      customSchedule.endTime = '17:00';
+    }
   }
 
   base.p1ResponseHours = policy.p1ResponseHours ?? 0.5;
@@ -1927,53 +2153,9 @@ const editPolicy = (policy) => {
 
 
 
-  if (policy.notes) {
-
-    try {
-
-      if (typeof policy.notes === 'string' && policy.notes.trim().startsWith('{')) {
-
-        const extra = JSON.parse(policy.notes);
-
-        base.description = extra.description || '';
-
-        base.status = extra.status || 'Active';
-
-        base.responseStartCondition = extra.responseStartCondition || 'Ticket Created';
-
-        base.resolutionEndCondition = extra.resolutionEndCondition || 'Ticket Resolved / Closed';
-
-        if (extra.pauseConditions) {
-
-          base.pauseConditions = { ...base.pauseConditions, ...extra.pauseConditions };
-
-        }
-
-        if (extra.warningThresholds) {
-
-          base.warningThresholds = { ...base.warningThresholds, ...extra.warningThresholds };
-
-        }
-
-        if (extra.escalationRules) {
-
-          base.escalationRules = { ...base.escalationRules, ...extra.escalationRules };
-
-        }
-
-      } else {
-
-        base.description = policy.notes;
-
-      }
-
-    } catch {
-
-      base.description = policy.notes;
-
-    }
-
-  }
+  const desc = getPolicyDescription(policy);
+  base.description = desc === '-' ? '' : desc;
+  base.status = getPolicyStatus(policy);
 
 
 
@@ -1993,24 +2175,6 @@ const savePolicy = async () => {
 
   try {
 
-    const existingMeta = isEditing.value ? getPolicyMeta(policies.value.find(p => p.id === formPolicy.value.id)) : {};
-
-    const notesPayload = JSON.stringify({
-
-      description: formPolicy.value.description || '',
-
-      status: 'Active',
-
-      createdBy: isEditing.value 
-
-        ? (existingMeta.createdBy && existingMeta.createdBy !== 'Ahmad Fauzi' ? existingMeta.createdBy : (authStore.currentUser?.name || 'Rina Agustina'))
-
-        : (authStore.currentUser?.name || 'Rina Agustina')
-
-    });
-
-
-
     // Auto-generate tierCode jika kosong (misal saat tambah baru)
     let finalTierCode = formPolicy.value.tierCode;
     if (!finalTierCode || !finalTierCode.trim()) {
@@ -2020,33 +2184,21 @@ const savePolicy = async () => {
     }
 
     const payload = {
-
       tierCode: finalTierCode,
-
       tierName: formPolicy.value.tierName,
-
       operatingHours: formPolicy.value.operatingHours === 'custom'
-        ? (formPolicy.value.customOperatingHours || 'Custom')
+        ? computedCustomOperatingHours.value
         : formPolicy.value.operatingHours,
-
       p1ResponseHours: Number(formPolicy.value.p1ResponseHours),
-
       p1ResolutionHours: Number(formPolicy.value.p1ResolutionHours),
-
       p2ResponseHours: Number(formPolicy.value.p2ResponseHours),
-
       p2ResolutionHours: Number(formPolicy.value.p2ResolutionHours),
-
       p3ResponseHours: Number(formPolicy.value.p3ResponseHours),
-
       p3ResolutionHours: Number(formPolicy.value.p3ResolutionHours),
-
       p4ResponseHours: Number(formPolicy.value.p4ResponseHours),
-
       p4ResolutionHours: Number(formPolicy.value.p4ResolutionHours),
-
-      notes: notesPayload
-
+      notes: formPolicy.value.description ? formPolicy.value.description.trim() : null,
+      isActive: formPolicy.value.status ? formPolicy.value.status === 'Active' : true
     };
 
 
@@ -2114,43 +2266,27 @@ const savePolicy = async () => {
 
 
 const togglePolicyStatus = async (policy) => {
-
   if (!policy) return;
 
-  const currentMeta = getPolicyMeta(policy);
-
-  const nextStatus = (currentMeta.status === 'Active') ? 'Inactive' : 'Active';
-
-  currentMeta.status = nextStatus;
-
-
+  const currentStatus = getPolicyStatus(policy);
+  const nextStatus = (currentStatus === 'Active') ? 'Inactive' : 'Active';
+  const nextIsActive = nextStatus === 'Active';
+  const desc = getPolicyDescription(policy);
 
   const payload = {
-
     tierCode: policy.tierCode,
-
     tierName: policy.tierName,
-
     operatingHours: policy.operatingHours,
-
     p1ResponseHours: policy.p1ResponseHours,
-
     p1ResolutionHours: policy.p1ResolutionHours,
-
     p2ResponseHours: policy.p2ResponseHours,
-
     p2ResolutionHours: policy.p2ResolutionHours,
-
     p3ResponseHours: policy.p3ResponseHours,
-
     p3ResolutionHours: policy.p3ResolutionHours,
-
     p4ResponseHours: policy.p4ResponseHours,
-
     p4ResolutionHours: policy.p4ResolutionHours,
-
-    notes: JSON.stringify(currentMeta)
-
+    notes: (desc && desc !== '-') ? desc : null,
+    isActive: nextIsActive
   };
 
 
@@ -2195,48 +2331,34 @@ const confirmDelete = (policy) => {
 
 
 const doDelete = async () => {
+  if (customersUsingPolicyToDelete.value.length > 0) {
+    deleteError.value = `Kebijakan SLA "${policyToDelete.value?.tierName}" masih digunakan oleh ${customersUsingPolicyToDelete.value.length} pelanggan.`;
+    return;
+  }
 
   isDeleting.value = true;
-
   deleteError.value = null;
 
   try {
-
-    try {
-
-      await api.deleteSlaPolicy(policyToDelete.value.id);
-
-    } catch {
-      // Local delete jika offline
-    }
+    await api.deleteSlaPolicy(policyToDelete.value.id);
 
     policies.value = policies.value.filter(p => p.id !== policyToDelete.value.id);
-
     ticketStore.setSlaPolicies([...policies.value]);
 
     const deletedName = policyToDelete.value?.tierName || 'Kebijakan SLA';
     showDeleteConfirm.value = false;
-
     policyToDelete.value = null;
 
     if (selectedPolicy.value && selectedPolicy.value.id === policyToDelete.value?.id) {
-
       showDetailModal.value = false;
-
     }
 
     uiStore.toastSuccess(`Kebijakan SLA "${deletedName}" berhasil dihapus.`);
-
   } catch (err) {
-
     deleteError.value = err.message || 'Gagal menghapus kebijakan SLA.';
-
   } finally {
-
     isDeleting.value = false;
-
   }
-
 };
 
 

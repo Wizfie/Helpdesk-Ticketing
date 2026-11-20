@@ -7,11 +7,19 @@ import {
   deleteCustomer,
   addCustomerPic,
   updateCustomerPic,
-  deleteCustomerPic
+  deleteCustomerPic,
+  getIndustrySectors,
+  createIndustrySector,
+  deleteIndustrySector
 } from '../controllers/customerController.js';
 import { authenticate, authorizeRoles } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
+
+// Master Industry Sectors (MUST BE BEFORE /:id)
+router.get('/sectors', authenticate, getIndustrySectors);
+router.post('/sectors', authenticate, authorizeRoles(['ADMIN']), createIndustrySector);
+router.delete('/sectors/:id', authenticate, authorizeRoles(['ADMIN']), deleteIndustrySector);
 
 router.get('/', authenticate, getCustomers);
 router.get('/:id', authenticate, getCustomerById);

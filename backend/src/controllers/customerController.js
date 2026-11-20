@@ -250,3 +250,54 @@ export async function deleteCustomerPic(req, res) {
     return res.status(500).json({ message: 'Gagal menghapus kontak PIC.', error: error.message });
   }
 }
+
+// ----------------------------------------------------
+// Master Industry Sectors
+// ----------------------------------------------------
+export async function getIndustrySectors(req, res) {
+  try {
+    const sectors = await prisma.industrySector.findMany({
+      orderBy: { name: 'asc' }
+    });
+    return res.json(sectors);
+  } catch (error) {
+    return res.status(500).json({ message: 'Gagal mengambil data sektor industri.', error: error.message });
+  }
+}
+
+export async function createIndustrySector(req, res) {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: 'Nama sektor wajib diisi.' });
+    }
+    const trimmed = name.trim();
+    const existing = await prisma.industrySector.findUnique({
+      where: { name: trimmed }
+    });
+    if (existing) {
+      return res.status(409).json({ message: `Sektor "${trimmed}" sudah terdaftar.` });
+    }
+    const created = await prisma.industrySector.create({
+      data: { name: trimmed }
+    });
+    return res.status(201).json(created);
+  } catch (error) {
+    return res.status(500).json({ message: 'Gagal menambahkan sektor industri.', error: error.message });
+  }
+}
+
+export async function deleteIndustrySector(req, res) {
+  try {
+    const { id } = req.params;
+    const isNum = !isNaN(Number(id));
+    if (isNum) {
+      await prisma.industrySector.delete({ where: { id: Number(id) } });
+    } else {
+      await prisma.industrySector.delete({ where: { name: decodeURIComponent(id) } });
+    }
+    return res.json({ message: 'Sektor industri berhasil dihapus.' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Gagal menghapus sektor industri.', error: error.message });
+  }
+}

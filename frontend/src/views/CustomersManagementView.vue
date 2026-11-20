@@ -1632,78 +1632,81 @@ const activeMenuCustomer = computed(() => {
 
 const defaultIndustries = [
   "Telekomunikasi",
-  "Otomotif",
+  "Perbankan & Finansial",
+  "Transportasi & Logistik",
   "Keuangan / Perbankan",
+  "Otomotif",
   "Energi & Utilitas",
   "Kesehatan",
   "Pemerintahan / Publik",
-  "Transportasi",
   "Farmasi",
   "Teknologi & Media",
 ];
 
-const loadIndustryList = () => {
-  if (typeof window === "undefined" || !window.localStorage)
-    return defaultIndustries;
-  try {
-    const raw = localStorage.getItem("gtt_industry_sectors");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-    }
-  } catch (e) {}
-  return defaultIndustries;
-};
-
-const industryList = ref(loadIndustryList());
+const industryList = ref([...defaultIndustries]);
 const showSectorManager = ref(false);
 const newSectorInput = ref("");
 
-const handleAddSector = () => {
+const fetchIndustrySectors = async () => {
+  try {
+    const data = await api.getIndustrySectors();
+    if (Array.isArray(data) && data.length > 0) {
+      industryList.value = data.map((item) => (typeof item === 'string' ? item : item.name));
+    }
+  } catch (err) {
+    console.warn('[CustomersManagementView] Fallback ke daftar sektor default:', err.message);
+  }
+};
+
+const handleAddSector = async () => {
   const trimmed = newSectorInput.value.trim();
   if (!trimmed) return;
-  if (
-    !industryList.value.some((i) => i.toLowerCase() === trimmed.toLowerCase())
-  ) {
-    industryList.value.push(trimmed);
-    try {
-      localStorage.setItem(
-        "gtt_industry_sectors",
-        JSON.stringify(industryList.value),
-      );
-    } catch (e) {}
+
+  if (industryList.value.some((i) => i.toLowerCase() === trimmed.toLowerCase())) {
+    uiStore.toastWarning(`Sektor "${trimmed}" sudah ada di daftar.`);
+    return;
   }
-  if (showAddCustomerModal.value) {
-    newCustomer.value.industry = trimmed;
-  } else if (showEditCustomerModal.value) {
-    editCustomerForm.value.industry = trimmed;
+
+  try {
+    const created = await api.createIndustrySector({ name: trimmed });
+    const sectorName = created?.name || trimmed;
+    industryList.value.push(sectorName);
+    industryList.value.sort();
+
+    if (showAddCustomerModal.value) {
+      newCustomer.value.industry = sectorName;
+    } else if (showEditCustomerModal.value) {
+      editCustomerForm.value.industry = sectorName;
+    }
+    newSectorInput.value = "";
+    uiStore.toastSuccess(`Sektor "${sectorName}" berhasil ditambahkan ke database.`);
+  } catch (err) {
+    uiStore.toastError(err.message || 'Gagal menambahkan sektor industri.');
   }
-  newSectorInput.value = "";
 };
 
 const handleDeleteSector = async (sector) => {
   const ok = await uiStore.confirm({
     title: "Hapus Sektor Industri?",
-    message: `Apakah Anda yakin ingin menghapus sektor "${sector}" dari daftar pilihan?`,
+    message: `Apakah Anda yakin ingin menghapus sektor "${sector}" dari database master?`,
     confirmText: "Ya, Hapus",
     type: "danger",
   });
   if (!ok) return;
 
-  industryList.value = industryList.value.filter((i) => i !== sector);
   try {
-    localStorage.setItem(
-      "gtt_industry_sectors",
-      JSON.stringify(industryList.value),
-    );
-  } catch (e) {}
-  if (newCustomer.value.industry === sector) {
-    newCustomer.value.industry = "";
+    await api.deleteIndustrySector(sector);
+    industryList.value = industryList.value.filter((i) => i !== sector);
+    if (newCustomer.value.industry === sector) {
+      newCustomer.value.industry = "";
+    }
+    if (editCustomerForm.value.industry === sector) {
+      editCustomerForm.value.industry = "";
+    }
+    uiStore.toastSuccess(`Sektor "${sector}" berhasil dihapus dari database.`);
+  } catch (err) {
+    uiStore.toastError(err.message || 'Gagal menghapus sektor industri.');
   }
-  if (editCustomerForm.value.industry === sector) {
-    editCustomerForm.value.industry = "";
-  }
-  uiStore.toastSuccess(`Sektor "${sector}" berhasil dihapus.`);
 };
 
 const availableSlaPolicies = computed(() => {
@@ -2404,8 +2407,11 @@ const handleQueryFocus = () => {
 watch(() => route.query.focus, handleQueryFocus);
 
 onMounted(async () => {
-  await ticketStore.fetchCustomers();
-  await ticketStore.fetchSlaPolicies();
+  await Promise.all([
+    ticketStore.fetchCustomers(),
+    ticketStore.fetchSlaPolicies(),
+    fetchIndustrySectors()
+  ]);
   ticketStore.checkAndSyncCustomerMaintenanceStatus();
   handleQueryFocus();
   window.addEventListener("scroll", handleWindowScroll, true);
