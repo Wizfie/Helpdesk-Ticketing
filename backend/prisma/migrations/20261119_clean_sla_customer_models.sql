@@ -37,6 +37,17 @@ WHERE `tierCode` IN ('PLATINUM_24X7', 'GOLD_8X5', 'GOV_TIER1', 'SILVER_8X5')
 -- 3. Drop obsolete quick_presets table
 DROP TABLE IF EXISTS `quick_presets`;
 
--- 4. Clean tickets table
+-- 4. Clean tickets table (remove legacy contractSla and dead isNearBreachFlag)
 ALTER TABLE `tickets` 
-  DROP COLUMN `contractSla`;
+  DROP COLUMN `contractSla`,
+  DROP COLUMN `isNearBreachFlag`;
+
+-- 5. Clean sla_policies table (remove tierCode, ensure unique tierName)
+ALTER TABLE `sla_policies`
+  DROP INDEX `sla_policies_tierCode_key`,
+  DROP COLUMN `tierCode`,
+  ADD UNIQUE KEY `sla_policies_tierName_key` (`tierName`);
+
+-- 6. Drop redundant SLA Hold tables (Reasons & Hold Logs now unified in Ticket Milestones)
+DROP TABLE IF EXISTS `sla_hold_logs`;
+DROP TABLE IF EXISTS `sla_hold_reasons`;

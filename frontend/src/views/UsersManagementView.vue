@@ -55,7 +55,7 @@
       <div
         class="px-5 py-3.5 border-b border-slate-200 flex items-center justify-between bg-slate-50"
       >
-        <span class="font-bold text-slate-800">Daftar Akun Staf PT GTT</span>
+        <span class="font-bold text-slate-800">Daftar Akun Staf</span>
         <span class="text-slate-500"
           >{{ users.length }} Pengguna Terdaftar</span
         >
@@ -69,7 +69,7 @@
             <tr>
               <th class="py-3 px-4">Pengguna</th>
               <th class="py-3 px-4">Email Perusahaan</th>
-              <th class="py-3 px-4">Peran (Role)</th>
+              <th class="py-3 px-4">Peran </th>
               <th class="py-3 px-4">No. Kontak</th>
               <th class="py-3 px-4">Status Akun</th>
               <th class="py-3 px-4 text-right">Aksi</th>
@@ -86,7 +86,7 @@
                   <div
                     class="w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center font-bold text-slate-700 text-xs"
                   >
-                    {{ user.initials }}
+                    {{ getInitials(user.name) }}
                   </div>
                   <div>
                     <div class="font-bold text-slate-900">{{ user.name }}</div>
@@ -290,18 +290,13 @@
 
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block font-semibold text-slate-700 mb-1"
-                >Peran (Role) *</label
-              >
-              <select
+              <BaseSelect
                 v-model="newUser.roleCode"
-                class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white"
-              >
-                <option value="ADMIN">
-                  ADMIN / CPIG (Admin & Helpdesk Lead)
-                </option>
-                <option value="ENGINEER">Support Engineer (Teknisi NOC)</option>
-              </select>
+                :options="roleOptions"
+                label="Peran (Role)"
+                required
+                size="sm"
+              />
             </div>
             <div>
               <label class="block font-semibold text-slate-700 mb-1"
@@ -390,18 +385,13 @@
 
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block font-semibold text-slate-700 mb-1"
-                >Peran (Role) *</label
-              >
-              <select
+              <BaseSelect
                 v-model="editUserForm.roleCode"
-                class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white"
-              >
-                <option value="ADMIN">
-                  ADMIN / CPIG (Admin & Helpdesk Lead)
-                </option>
-                <option value="ENGINEER">Support Engineer (Teknisi NOC)</option>
-              </select>
+                :options="roleOptions"
+                label="Peran (Role)"
+                required
+                size="sm"
+              />
             </div>
             <div>
               <label class="block font-semibold text-slate-700 mb-1"
@@ -417,16 +407,13 @@
           </div>
 
           <div>
-            <label class="block font-semibold text-slate-700 mb-1"
-              >Status Keaktifan Akun</label
-            >
-            <select
+            <BaseSelect
               v-model="editUserForm.isActive"
-              class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white"
-            >
-              <option :value="true">Aktif (Dapat Login & Bertugas)</option>
-              <option :value="false">Nonaktif (Akses Dicabut Sementara)</option>
-            </select>
+              :options="userStatusOptions"
+              label="Status Keaktifan Akun"
+              required
+              size="sm"
+            />
           </div>
 
           <div
@@ -587,12 +574,24 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useAuthStore } from "../stores/authStore";
 import { useTicketStore } from "../stores/ticketStore";
+import { useUiStore } from "../stores/uiStore";
 
 const authStore = useAuthStore();
 const ticketStore = useTicketStore();
+const uiStore = useUiStore();
+
+const getInitials = (name) => {
+  if (!name) return 'U';
+  const parts = name.trim().split(/\s+/);
+  return parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+};
+
+onMounted(async () => {
+  await authStore.fetchUsersFromApi();
+});
 
 const users = computed(() => authStore.users);
 
@@ -624,6 +623,17 @@ const showResetModal = ref(false);
 const resetTargetUser = ref(null);
 const resetPasswordValue = ref("GTT@2026!");
 const resetSuccessMsg = ref("");
+
+// Dropdown options
+const roleOptions = [
+  { value: 'ADMIN', label: 'Admin', subtext: 'Admin Sistem & Helpdesk', badge: 'Admin', badgeClass: 'bg-purple-50 text-purple-700 border border-purple-200' },
+  { value: 'ENGINEER', label: 'Engineer', subtext: 'Teknisi ', badge: 'Engineer', badgeClass: 'bg-blue-50 text-blue-700 border border-blue-200' }
+];
+
+const userStatusOptions = [
+  { value: true, label: 'Aktif (Dapat Login & Bertugas)', badge: 'Aktif', badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+  { value: false, label: 'Nonaktif (Akses Dicabut Sementara)', badge: 'Nonaktif', badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200' }
+];
 
 const newUser = ref({
   name: "",
@@ -673,8 +683,16 @@ const openResetModal = (user) => {
   showResetModal.value = true;
 };
 
-const submitResetPassword = () => {
+const submitResetPassword = async () => {
   if (!resetTargetUser.value) return;
+  const ok = await uiStore.confirm({
+    title: "Reset Kata Sandi Pengguna?",
+    message: `Reset kata sandi untuk staf "${resetTargetUser.value.name}" menjadi kata sandi baru?`,
+    confirmText: "Ya, Reset Sandi",
+    type: "warning",
+  });
+  if (!ok) return;
+
   const res = authStore.adminResetPassword(
     resetTargetUser.value.id,
     resetPasswordValue.value,
@@ -683,26 +701,49 @@ const submitResetPassword = () => {
   );
   if (res.success) {
     resetSuccessMsg.value = `Sandi berhasil direset ke: ${res.temporaryPassword}`;
+    uiStore.toastSuccess(`Kata sandi "${resetTargetUser.value.name}" berhasil direset.`);
   }
 };
 
-const submitAddUser = () => {
-  authStore.createUser(newUser.value, authStore.currentUser, ticketStore);
-  newUser.value = { name: "", email: "", roleCode: "ENGINEER", phone: "" };
-  showAddModal.value = false;
+const submitAddUser = async () => {
+  try {
+    const userName = newUser.value.name;
+    await authStore.createUser(newUser.value, authStore.currentUser, ticketStore);
+    newUser.value = { name: "", email: "", roleCode: "ENGINEER", phone: "" };
+    showAddModal.value = false;
+    uiStore.toastSuccess(`Pengguna "${userName}" berhasil didaftarkan!`);
+  } catch (err) {
+    uiStore.toastError("Gagal mendaftarkan pengguna: " + (err.message || "Terjadi kesalahan"));
+  }
 };
 
-const submitEditUser = () => {
-  authStore.updateUser(
-    editUserForm.value.id,
-    editUserForm.value,
-    authStore.currentUser,
-    ticketStore,
-  );
-  showEditModal.value = false;
+const submitEditUser = async () => {
+  try {
+    const userName = editUserForm.value.name;
+    await authStore.updateUser(
+      editUserForm.value.id,
+      editUserForm.value,
+      authStore.currentUser,
+      ticketStore,
+    );
+    showEditModal.value = false;
+    uiStore.toastSuccess(`Data profil "${userName}" berhasil diperbarui!`);
+  } catch (err) {
+    uiStore.toastError("Gagal memperbarui profil: " + (err.message || "Terjadi kesalahan"));
+  }
 };
 
-const toggleStatus = (user) => {
-  authStore.toggleUserStatus(user.id, authStore.currentUser, ticketStore);
+const toggleStatus = async (user) => {
+  const willBeActive = !user.isActive;
+  const ok = await uiStore.confirm({
+    title: willBeActive ? "Aktifkan Akun Pengguna?" : "Nonaktifkan Akun Pengguna?",
+    message: `Apakah Anda yakin ingin ${willBeActive ? "mengaktifkan" : "menonaktifkan"} akses staf "${user.name}"?`,
+    confirmText: willBeActive ? "Ya, Aktifkan" : "Ya, Nonaktifkan",
+    type: willBeActive ? "info" : "warning",
+  });
+  if (!ok) return;
+
+  await authStore.toggleUserStatus(user.id, authStore.currentUser, ticketStore);
+  uiStore.toastSuccess(`Status pengguna "${user.name}" berhasil diubah menjadi ${willBeActive ? "Aktif" : "Nonaktif"}.`);
 };
 </script>

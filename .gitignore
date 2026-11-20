@@ -37,8 +37,10 @@ _local_dev/
 *.7z
 *.rar
 
-# Backend Uploads (track .gitkeep only)
+# Backend & Root Uploads (track .gitkeep only)
 backend/uploads/*
 !backend/uploads/.gitkeep
+uploads/*
+!uploads/.gitkeep
 
 

@@ -253,7 +253,7 @@
             title="Buka Profil Pengguna & Kelola Sandi (Klik)"
           >
             <div class="w-8 h-8 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs tracking-wider shadow-sm shrink-0 group-hover:ring-2 group-hover:ring-blue-400 transition-all">
-              {{ authStore.currentUser?.initials || 'U' }}
+              {{ authStore.currentUserInitials || 'U' }}
             </div>
             <div class="hidden sm:block text-left">
               <p class="text-xs font-bold text-slate-800 leading-tight truncate max-w-[130px] lg:max-w-[160px] group-hover:text-blue-600 transition-colors">

@@ -49,32 +49,25 @@
             <!-- Row 1: Jenis Tiket & Customer Selector -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label class="block font-bold text-slate-700 mb-1">Jenis Tiket *</label>
-                <select 
-                  v-model="form.ticketType" 
+                <BaseSelect
+                  v-model="form.ticketType"
+                  :options="ticketTypeOptions"
+                  label="Jenis Tiket"
                   required
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 font-semibold text-slate-800 text-xs"
-                >
-                  <option value="Incident (Gangguan)">Incident (Gangguan)</option>
-                  <option value="Service Request (Permintaan)">Service Request (Permintaan)</option>
-                  <option value="Problem (Investigasi RCA)">Problem (Investigasi RCA)</option>
-                  <option value="Maintenance / Perubahan">Maintenance / Perubahan</option>
-                </select>
+                  placeholder="Pilih jenis tiket..."
+                />
               </div>
 
               <div>
-                <label class="block font-bold text-slate-700 mb-1">Customer / Perusahaan Klien *</label>
-                <select 
-                  v-model="form.customerId" 
-                  required 
+                <BaseSelect
+                  v-model="form.customerId"
+                  :options="customerOptions"
+                  label="Customer / Perusahaan Klien"
+                  required
+                  searchable
+                  placeholder="-- Pilih Entitas Customer --"
                   @change="handleCustomerChange"
-                  class="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 font-semibold text-slate-800 text-xs"
-                >
-                  <option value="" disabled>-- Pilih Entitas Customer --</option>
-                  <option v-for="c in ticketStore.customers" :key="c.id" :value="c.id">
-                    {{ c.name }} ({{ c.code }}){{ c.isActive === false ? ' [NONAKTIF]' : '' }} - {{ c.serviceContract }}
-                  </option>
-                </select>
+                />
               </div>
             </div>
 
@@ -159,26 +152,23 @@
                     </a>
                   </div>
                 </div>
-                <select 
+                <BaseSelect 
                   v-model="form.customerPicId" 
+                  :options="customerPicOptions"
+                  placeholder="-- Pilih PIC Pelapor --"
                   required
-                  class="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 text-xs"
-                >
-                  <option value="" disabled>-- Pilih PIC Pelapor --</option>
-                  <option v-for="p in availablePics" :key="p.id" :value="p.id">
-                    {{ p.name }} - {{ p.dept }} ({{ p.phone }})
-                  </option>
-                </select>
+                  :disabled="!form.customerId || customerPicOptions.length === 0"
+                />
               </div>
 
               <div>
-                <label class="block font-bold text-slate-700 mb-1">Saluran Intake (Channel) *</label>
-                <select v-model="form.channel" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs">
-                  <option value="WHATSAPP">WhatsApp Support (Chat Helpdesk)</option>
-                  <option value="EMAIL">Email Support (helpdesk@glotratech.com)</option>
-                  <option value="PHONE">Telepon / Dedicated Hotline Call</option>
-                  <option value="DIRECT">Informasi Langsung / NOC Monitoring</option>
-                </select>
+                <BaseSelect
+                  v-model="form.channel"
+                  :options="channelOptions"
+                  label="Saluran Intake (Channel)"
+                  required
+                  placeholder="Pilih saluran intake..."
+                />
               </div>
             </div>
 
@@ -215,20 +205,14 @@
                     <span>+ Kategori Baru</span>
                   </button>
                 </div>
-                <select 
+                <BaseSelect 
                   v-model="form.categoryId" 
-                  @change="onCategorySelectChange"
+                  :options="categoryOptions"
+                  placeholder="-- Pilih Kategori Masalah --"
                   required 
-                  class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 text-xs"
-                >
-                  <option value="" disabled>-- Pilih Kategori Masalah --</option>
-                  <option v-for="cat in ticketStore.categories" :key="cat.id" :value="cat.id">
-                    {{ cat.name }} ({{ cat.code }})
-                  </option>
-                  <option value="__ADD_NEW__" class="font-bold text-blue-600 bg-blue-50">
-                    + Tambah Kategori Masalah Baru...
-                  </option>
-                </select>
+                  searchable
+                  @change="onCategorySelectChange"
+                />
                 <div v-if="selectedCategoryDesc" class="text-[10px] text-slate-500 mt-1 truncate">
                   {{ selectedCategoryDesc }}
                 </div>
@@ -236,21 +220,14 @@
 
               <!-- Affected Service / System -->
               <div>
-                <label class="block font-bold text-slate-700 mb-1">Affected Service / System *</label>
-                <select 
+                <BaseSelect
                   v-model="form.affectedService" 
+                  :options="affectedServiceOptions"
+                  label="Affected Service / System"
                   required
-                  class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-blue-500 text-xs"
-                >
-                  <option value="VMware Infrastructure">VMware Infrastructure</option>
-                  <option value="Database Server (PostgreSQL / Oracle / MySQL)">Database Server</option>
-                  <option value="Network Core &amp; Switching (Cisco / Nexus)">Network Core &amp; Switching</option>
-                  <option value="Storage SAN &amp; Storage Controller">Storage SAN &amp; Controller</option>
-                  <option value="Backup &amp; Disaster Recovery (Rubrik / Veeam)">Backup &amp; Disaster Recovery</option>
-                  <option value="Web Portal &amp; Application Service">Web Portal &amp; Application</option>
-                  <option value="Operating System / Virtual Machine">OS &amp; Virtual Machine</option>
-                  <option value="Lainnya">Lainnya / General Infrastructure</option>
-                </select>
+                  searchable
+                  placeholder="Pilih affected service..."
+                />
               </div>
             </div>
 
@@ -267,20 +244,13 @@
               </div>
 
               <div>
-                <div class="flex items-center space-x-1 mb-1">
-                  <label class="font-bold text-slate-700">Dampak Gangguan (Business Impact) *</label>
-                  <span title="Dampak gangguan mempengaruhi penentuan eskalasi dan SLA" class="text-slate-400 cursor-help">ℹ</span>
-                </div>
-                <select 
-                  v-model="form.businessImpact" 
+                <BaseSelect
+                  v-model="form.businessImpact"
+                  :options="businessImpactOptions"
+                  label="Dampak Gangguan (Business Impact)"
                   required
-                  class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="Seluruh layanan tidak dapat digunakan">Seluruh layanan tidak dapat digunakan</option>
-                  <option value="Sebagian fungsionalitas utama terganggu">Sebagian fungsionalitas utama terganggu</option>
-                  <option value="Degradasi performa minor">Degradasi performa minor</option>
-                  <option value="Tidak berdampak langsung ke operasional bisnis">Tidak berdampak langsung</option>
-                </select>
+                  placeholder="Pilih dampak gangguan..."
+                />
               </div>
 
               <div>
@@ -459,17 +429,12 @@
           <div class="p-6 space-y-5 text-xs">
             <!-- Engineer Assignee Selector -->
             <div>
-              <label class="block font-bold text-slate-700 mb-1">Alokasi Penanganan Teknisi (Engineer On-Duty)</label>
-              <select v-model="form.assignedToId" class="w-full px-3 py-2.5 border border-slate-200 rounded-xl bg-white text-xs">
-                <option value="">-- Biarkan Dalam Antrean Terbuka (Triage NOC) --</option>
-                <option 
-                  v-for="eng in availableEngineers" 
-                  :key="eng.id" 
-                  :value="eng.id"
-                >
-                  {{ eng.name }} ({{ eng.roleTitle || 'Support Engineer' }}) • On-Duty
-                </option>
-              </select>
+              <BaseSelect 
+                v-model="form.assignedToId"
+                :options="engineerOptions"
+                label="Alokasi Penanganan Teknisi (Engineer On-Duty)"
+                placeholder="-- Biarkan Dalam Antrean Terbuka (Triage NOC) --"
+              />
               <p class="text-[10px] text-slate-400 mt-1">
                 Jika teknisi langsung dipilih, status tiket otomatis berubah menjadi <strong>ASSIGNED</strong>.
               </p>
@@ -525,15 +490,13 @@
               <!-- Principal Form Fields -->
               <div v-if="isPrincipalEscalation" class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-slate-100 animate-in fade-in duration-150">
                 <div>
-                  <label class="block font-bold text-slate-700 mb-1">Vendor Principal *</label>
-                  <select v-model="form.principalVendor" class="w-full px-3 py-2 border border-slate-200 rounded-lg bg-white">
-                    <option value="VMware by Broadcom Enterprise">VMware by Broadcom Enterprise</option>
-                    <option value="Cisco TAC Global">Cisco TAC Global</option>
-                    <option value="Fortinet TAC Enterprise">Fortinet TAC Enterprise</option>
-                    <option value="Mikrotik Certified Support">Mikrotik Certified Support</option>
-                    <option value="AWS Premium Enterprise Support">AWS Premium Support</option>
-                    <option value="Dell EMC Core Support">Dell EMC Core Support</option>
-                  </select>
+                  <BaseSelect 
+                    v-model="form.principalVendor" 
+                    :options="principalVendorOptions"
+                    label="Vendor Principal"
+                    required
+                    placeholder="Pilih vendor principal..."
+                  />
                 </div>
 
                 <div>
@@ -857,36 +820,31 @@
         </form>
       </div>
     </div>
-
-    <!-- Success Toast Notification -->
-    <div 
-      v-if="categorySuccessToast" 
-      class="fixed bottom-5 right-5 z-50 bg-emerald-900 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center space-x-2.5 text-xs animate-in slide-in-from-bottom-5 duration-200 border border-emerald-700"
-    >
-      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-      <span class="font-medium">{{ categorySuccessToast }}</span>
-      <button @click="categorySuccessToast = ''" class="text-emerald-300 hover:text-white ml-2">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-        </svg>
-      </button>
-    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import { useTicketStore } from '../stores/ticketStore';
+import { useUiStore } from '../stores/uiStore';
 import { api } from '../services/api';
 
 const router = useRouter();
 const authStore = useAuthStore();
 const ticketStore = useTicketStore();
+const uiStore = useUiStore();
+
+onMounted(async () => {
+  await Promise.all([
+    ticketStore.fetchCustomers(),
+    ticketStore.fetchSlaPolicies(),
+    authStore.fetchUsersFromApi()
+  ]);
+});
 
 const showAddCategoryModal = ref(false);
-const categorySuccessToast = ref('');
 const previousCategoryId = ref(1);
 const isPrincipalEscalation = ref(false);
 const uploadedFiles = ref([]);
@@ -916,12 +874,12 @@ const newCategoryForm = ref({
 
 const form = ref({
   ticketType: 'Incident (Gangguan)',
-  customerId: 1,
-  customerPicId: 101,
+  customerId: '',
+  customerPicId: '',
   channel: 'WHATSAPP',
   incidentDate: getTodayDate(),
   incidentTime: getNowTime(),
-  categoryId: 1,
+  categoryId: '',
   affectedService: 'VMware Infrastructure',
   cluster: 'PROD-CL01',
   businessImpact: 'Seluruh layanan tidak dapat digunakan',
@@ -937,6 +895,72 @@ const form = ref({
   principalSpecialist: ''
 });
 
+// Dropdown options
+const ticketTypeOptions = [
+  { value: 'Incident (Gangguan)', label: 'Incident (Gangguan)', subtext: 'Insiden pemadaman atau degradasi fungsionalitas sistem' },
+  { value: 'Service Request (Permintaan)', label: 'Service Request (Permintaan)', subtext: 'Permintaan bantuan layanan, konfigurasi, atau akses' },
+  { value: 'Problem (Investigasi RCA)', label: 'Problem (Investigasi RCA)', subtext: 'Investigasi komprehensif akar masalah berulang' },
+  { value: 'Maintenance / Perubahan', label: 'Maintenance / Perubahan', subtext: 'Jadwal pemeliharaan dan perubahan infrastruktur' }
+];
+
+const customerOptions = computed(() => {
+  return (ticketStore.customers || []).map(c => ({
+    value: c.id,
+    label: c.name,
+    subtext: c.slaTier || 'SLA Standard',
+    badge: c.isActive === false ? 'NONAKTIF' : (c.slaTier || ''),
+    badgeClass: c.isActive === false ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-blue-50 text-blue-700 border border-blue-200'
+  }));
+});
+
+const channelOptions = [
+  { value: 'WHATSAPP', label: 'WhatsApp Support', subtext: 'Chat Helpdesk via WhatsApp Business' },
+  { value: 'EMAIL', label: 'Email Support', subtext: 'helpdesk@glotratech.com' },
+  { value: 'PHONE', label: 'Telepon Hotline', subtext: 'Dedicated Hotline Call Center' },
+  { value: 'DIRECT', label: 'Informasi Langsung / NOC', subtext: 'Alert langsung dari sistem NOC Monitoring' }
+];
+
+const categoryOptions = computed(() => {
+  const list = (ticketStore.categories || []).map(cat => ({
+    value: cat.id,
+    label: `${cat.name} (${cat.code})`,
+    subtext: cat.desc || ''
+  }));
+  list.push({
+    value: '__ADD_NEW__',
+    label: '+ Tambah Kategori Masalah Baru...',
+    subtext: 'Buka form untuk membuat master kategori baru'
+  });
+  return list;
+});
+
+const affectedServiceOptions = [
+  { value: 'VMware Infrastructure', label: 'VMware Infrastructure', subtext: 'ESXi, vCenter, VM instances' },
+  { value: 'Database Server (PostgreSQL / Oracle / MySQL)', label: 'Database Server', subtext: 'PostgreSQL, Oracle, MySQL' },
+  { value: 'Network Core & Switching (Cisco / Nexus)', label: 'Network Core & Switching', subtext: 'Switch, Router, Firewall' },
+  { value: 'Storage SAN & Storage Controller', label: 'Storage SAN & Controller', subtext: 'SAN Array, LUN, Controller' },
+  { value: 'Backup & Disaster Recovery (Rubrik / Veeam)', label: 'Backup & Disaster Recovery', subtext: 'Backup jobs, Veeam, Rubrik' },
+  { value: 'Web Portal & Application Service', label: 'Web Portal & Application', subtext: 'Frontend, Web apps, Microservices' },
+  { value: 'Operating System / Virtual Machine', label: 'OS & Virtual Machine', subtext: 'Linux / Windows guest OS' },
+  { value: 'Lainnya', label: 'Lainnya / General Infrastructure', subtext: 'Infrastruktur umum lainnya' }
+];
+
+const businessImpactOptions = [
+  { value: 'Seluruh layanan tidak dapat digunakan', label: 'Seluruh layanan tidak dapat digunakan', badge: 'Critical Impact', badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200' },
+  { value: 'Sebagian fungsionalitas utama terganggu', label: 'Sebagian fungsionalitas utama terganggu', badge: 'Major Impact', badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  { value: 'Degradasi performa minor', label: 'Degradasi performa minor', badge: 'Minor', badgeClass: 'bg-blue-50 text-blue-700 border border-blue-200' },
+  { value: 'Tidak berdampak langsung ke operasional bisnis', label: 'Tidak berdampak langsung', badge: 'Low', badgeClass: 'bg-slate-100 text-slate-600' }
+];
+
+const principalVendorOptions = [
+  { value: 'VMware by Broadcom Enterprise', label: 'VMware by Broadcom Enterprise' },
+  { value: 'Cisco TAC Global', label: 'Cisco TAC Global' },
+  { value: 'Fortinet TAC Enterprise', label: 'Fortinet TAC Enterprise' },
+  { value: 'Mikrotik Certified Support', label: 'Mikrotik Certified Support' },
+  { value: 'AWS Premium Enterprise Support', label: 'AWS Premium Support' },
+  { value: 'Dell EMC Core Support', label: 'Dell EMC Core Support' }
+];
+
 const selectedCustomer = computed(() => {
   return ticketStore.customers.find(item => item.id === Number(form.value.customerId));
 });
@@ -946,7 +970,16 @@ const customerQuotaInfo = computed(() => {
 });
 
 const availablePics = computed(() => {
-  return selectedCustomer.value ? selectedCustomer.value.pics : [];
+  return selectedCustomer.value ? (selectedCustomer.value.pics || []) : [];
+});
+
+const customerPicOptions = computed(() => {
+  return (availablePics.value || []).map(p => ({
+    value: p.id,
+    label: p.name,
+    subtext: `${p.phone || '-'} • ${p.email || '-'}`,
+    badge: p.isPrimary ? 'Primary PIC' : ''
+  }));
 });
 
 const selectedPic = computed(() => {
@@ -970,6 +1003,20 @@ const selectedCategoryDesc = computed(() => {
 
 const availableEngineers = computed(() => {
   return authStore.users.filter(u => u.roleCode === 'ENGINEER');
+});
+
+const engineerOptions = computed(() => {
+  const list = [{ value: '', label: '-- Biarkan Dalam Antrean Terbuka (Triage NOC) --', subtext: 'Tiket masuk antrean umum unassigned' }];
+  (availableEngineers.value || []).forEach(eng => {
+    list.push({
+      value: eng.id,
+      label: eng.name,
+      subtext: (eng.role || eng.roleCode) === 'ADMIN' ? 'Administrator' : 'Support Engineer',
+      badge: 'On-Duty',
+      badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+    });
+  });
+  return list;
 });
 
 // Knowledge Base Recommendations based on real published runbooks
@@ -1115,10 +1162,7 @@ const handleSaveNewCategory = () => {
   previousCategoryId.value = newCat.id;
   showAddCategoryModal.value = false;
 
-  categorySuccessToast.value = `Kategori "${newCat.name}" (${newCat.code}) berhasil ditambahkan dan dipilih.`;
-  setTimeout(() => {
-    categorySuccessToast.value = '';
-  }, 4000);
+  uiStore.toastSuccess(`Kategori "${newCat.name}" (${newCat.code}) berhasil ditambahkan dan dipilih.`);
 };
 
 const handleSubmitTicket = async () => {

@@ -10,8 +10,7 @@ export async function authenticate(req, res, next) {
     const simulatedUserId = req.headers['x-simulated-user-id'];
     if (simulatedUserId) {
       user = await prisma.user.findUnique({
-        where: { id: Number(simulatedUserId) },
-        include: { role: true }
+        where: { id: Number(simulatedUserId) }
       });
       if (user) {
         req.user = user;
@@ -23,16 +22,14 @@ export async function authenticate(req, res, next) {
       const token = authHeader.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'glotra_enterprise_helpdesk_secret_key_2026');
       user = await prisma.user.findUnique({
-        where: { id: decoded.id },
-        include: { role: true }
+        where: { id: decoded.id }
       });
     }
 
     if (!user) {
       // Default fallback to first admin for seamless KP local development
       user = await prisma.user.findFirst({
-        where: { role: { code: 'ADMIN' } },
-        include: { role: true }
+        where: { role: 'ADMIN' }
       });
     }
 
@@ -49,7 +46,7 @@ export function authorizeRoles(allowedRoles = []) {
       return res.status(403).json({ message: 'Akses ditolak: Data pengguna tidak terotentikasi.' });
     }
 
-    const userRole = req.user.role.code;
+    const userRole = typeof req.user.role === 'string' ? req.user.role : req.user.role?.code;
     if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
       return res.status(403).json({ 
         message: `Akses ditolak: Peran ${userRole} tidak memiliki izin untuk tindakan ini.`,

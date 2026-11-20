@@ -12,25 +12,22 @@ export async function calculateSlaDeadlines({ customerId, severity = 'MEDIUM', c
   let policy = await prisma.slaPolicy.findFirst({
     where: {
       OR: [
-        { tierCode: slaTier },
-        { tierName: slaTier }
+        { tierName: slaTier },
+        { tierName: { contains: slaTier } }
       ]
     }
   });
 
   if (!policy) {
-    let tierCode = 'GOLD_8X5';
     const upper = slaTier.toUpperCase();
-    if (upper.includes('PLATINUM')) tierCode = 'PLATINUM_24X7';
-    else if (upper.includes('SILVER')) tierCode = 'SILVER_8X5';
-    else if (upper.includes('GOV')) tierCode = 'GOV_TIER1';
+    let keyword = 'GOLD';
+    if (upper.includes('PLATINUM')) keyword = 'PLATINUM';
+    else if (upper.includes('SILVER')) keyword = 'SILVER';
+    else if (upper.includes('GOV')) keyword = 'GOV';
 
     policy = await prisma.slaPolicy.findFirst({
       where: {
-        OR: [
-          { tierCode },
-          { tierName: { contains: tierCode.split('_')[0] } }
-        ]
+        tierName: { contains: keyword }
       }
     });
   }
@@ -62,7 +59,7 @@ export async function calculateSlaDeadlines({ customerId, severity = 'MEDIUM', c
   const resolutionDeadline = new Date(createdAt.getTime() + resHours * 3600 * 1000);
 
   return {
-    contractTier: customer?.contractTier || '8x5 GOLD ENTERPRISE',
+    contractTier: customer?.slaTier || '8x5 GOLD ENTERPRISE',
     responseDeadline,
     resolutionDeadline,
     respHours,

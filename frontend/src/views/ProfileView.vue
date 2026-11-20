@@ -43,7 +43,7 @@
       <div class="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
         <!-- Big Avatar with initials -->
         <div class="w-20 h-20 rounded-2xl bg-linear-to-tr from-blue-600 to-indigo-500 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0">
-          {{ authStore.currentUser?.initials || 'U' }}
+          {{ authStore.currentUserInitials || 'U' }}
         </div>
 
         <div class="flex-1 min-w-0">
@@ -64,7 +64,7 @@
           </div>
 
           <p class="text-xs text-slate-300 font-medium mb-3">
-            {{ authStore.currentUser?.roleTitle || 'Staf Operasional PT Glotra Technology' }}
+            {{ (authStore.currentUser?.role || authStore.currentUser?.roleCode) === 'ADMIN' ? 'Administrator Helpdesk & Operasional' : 'Support Engineer' }}
           </p>
 
           <div class="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-slate-300 font-mono">
@@ -167,17 +167,6 @@
               class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 transition-all font-mono"
             />
             <p class="text-[11px] text-slate-400 mt-1">Digunakan untuk eskalasi insiden darurat atau dispatching tiket NOC.</p>
-          </div>
-
-          <!-- Jabatan / Spesialisasi -->
-          <div>
-            <label class="block font-bold text-slate-700 mb-1.5">Jabatan / Spesialisasi Teknis</label>
-            <input 
-              v-model="profileForm.roleTitle" 
-              type="text" 
-              placeholder="Contoh: Lead SysOps & SAN Specialist"
-              class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 transition-all"
-            />
           </div>
 
           <!-- Submit Button -->
@@ -333,8 +322,7 @@ const ticketStore = useTicketStore();
 
 const profileForm = reactive({
   name: '',
-  phone: '',
-  roleTitle: ''
+  phone: ''
 });
 
 const passwordForm = reactive({
@@ -368,22 +356,21 @@ onMounted(() => {
   if (authStore.currentUser) {
     profileForm.name = authStore.currentUser.name || '';
     profileForm.phone = authStore.currentUser.phone || '';
-    profileForm.roleTitle = authStore.currentUser.roleTitle || '';
   }
 });
 
-const handleUpdateProfile = () => {
+const handleUpdateProfile = async () => {
   if (!profileForm.name.trim()) {
     setNotice('Nama lengkap tidak boleh kosong.', true);
     return;
   }
   isUpdatingProfile.value = true;
   try {
-    const res = authStore.updateProfile(authStore.currentUser.id, profileForm, ticketStore);
-    if (res.success) {
+    const res = await authStore.updateProfile(authStore.currentUser.id, profileForm, ticketStore);
+    if (res?.success !== false) {
       setNotice('Informasi profil Anda berhasil disimpan.');
     } else {
-      setNotice(res.message || 'Gagal memperbarui profil.', true);
+      setNotice(res?.message || 'Gagal memperbarui profil.', true);
     }
   } catch (e) {
     setNotice('Terjadi kesalahan sistem saat menyimpan profil.', true);

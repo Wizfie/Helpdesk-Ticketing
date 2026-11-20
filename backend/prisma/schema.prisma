@@ -8,31 +8,15 @@ datasource db {
 }
 
 // ----------------------------------------------------
-// 1. Roles & Users (Strict RBAC for Glotra Helpdesk)
+// 1. Users (Strict RBAC for Glotra Helpdesk)
 // ----------------------------------------------------
-model Role {
-  id        Int      @id @default(autoincrement())
-  code      String   @unique // 'ADMIN', 'ENGINEER'
-  name      String
-  users     User[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("roles")
-}
-
 model User {
   id              Int               @id @default(autoincrement())
-  roleId          Int
-  role            Role              @relation(fields: [roleId], references: [id])
   name            String
   email           String            @unique
+  role            String            @default("ENGINEER") // 'ADMIN', 'ENGINEER'
   password        String?           @default("$2a$10$defaultPlaceholderHash2026")
-  initials        String
   phone           String?
-  roleTitle       String?           // e.g. 'Service Delivery Lead', 'Senior Storage Engineer'
-  shift           String?           // e.g. 'Morning Tier-2 (08:00 - 17:00 WIB)'
-  supervisor      String?           // e.g. 'Denny Wicaksono'
   isActive        Boolean           @default(true)
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
@@ -50,16 +34,12 @@ model User {
 model Customer {
   id                 Int           @id @default(autoincrement())
   name               String
-  code               String        @unique // 'AHM', 'BCA', 'SLM', 'KMN'
   industry           String?
-  serviceContract    String?       @default("PKS Layanan Managed Service 24x7")
   slaTier            String?       @default("8x5 GOLD ENTERPRISE")
   address            String?       @db.Text
   maintenanceStart   String?
   maintenanceEnd     String?
   ticketQuota        String?       @default("Unlimited")
-  initialUsedTickets Int           @default(0)
-  deactivatedReason  String?
   isActive           Boolean       @default(true)
   createdAt          DateTime      @default(now())
   updatedAt          DateTime      @updatedAt
@@ -75,7 +55,6 @@ model CustomerPic {
   customerId Int
   customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
   name       String
-  dept       String?
   phone      String?
   email      String?
   createdAt  DateTime @default(now())
@@ -121,25 +100,11 @@ model Principal {
 }
 
 // ----------------------------------------------------
-// 3c. Master SLA Hold Reasons & Policies
+// 3c. Master SLA Policies
 // ----------------------------------------------------
-model SlaHoldReason {
-  id             Int      @id @default(autoincrement())
-  code           String   @unique // 'PART_INDENT', 'CUSTOMER', 'VENDOR', 'OTHER'
-  name           String
-  description    String?  @db.Text
-  requiresCaseId Boolean  @default(false)
-  isActive       Boolean  @default(true)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
-  @@map("sla_hold_reasons")
-}
-
 model SlaPolicy {
   id                   Int      @id @default(autoincrement())
-  tierCode             String   @unique // 'PLATINUM_24X7', 'GOLD_8X5', 'SILVER_8X5', 'GOV_TIER1'
-  tierName             String
+  tierName             String   @unique // 'GOLD', 'PLATINUM 24x7', 'SILVER 8x5'
   operatingHours       String   // '24 Jam x 7 Hari (Non-Stop)', 'Senin - Jumat (08:00 - 17:00 WIB)'
   p1ResponseHours      Float    // Critical Response (hours)
   p1ResolutionHours    Float    // Critical Resolution (hours)
@@ -215,7 +180,6 @@ model Ticket {
   totalPausedDurationSec   Int               @default(0)
   isSlaResponseBreached     Boolean           @default(false)
   isSlaResolutionBreached   Boolean           @default(false)
-  isNearBreachFlag          Boolean           @default(false)
 
   rootCause                String?           @db.Text
   resolutionStrategy       String?           @db.Text
@@ -225,34 +189,12 @@ model Ticket {
 
   milestones               TicketMilestone[]
   attachments              Attachment[]
-  holdLogs                 SlaHoldLog[]
 
   @@map("tickets")
 }
 
 // ----------------------------------------------------
-// 5. SLA Hold / Freeze History Log
-// ----------------------------------------------------
-model SlaHoldLog {
-  id              Int       @id @default(autoincrement())
-  ticketId        Int
-  ticket          Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  // Skenario hold sesuai MoM Glotra:
-  // 'PART_INDENT', 'PENDING_CUSTOMER', 'VENDOR_DEPENDENCY', 'OTHER'
-  reasonType      String
-  reasonDetail    String    @db.Text
-  principalCaseId String?
-  pausedAt        DateTime  @default(now())
-  resumedAt       DateTime?
-  durationSec     Int       @default(0)
-  actorName       String
-  createdAt       DateTime  @default(now())
-
-  @@map("sla_hold_logs")
-}
-
-// ----------------------------------------------------
-// 6. Troubleshooting Timeline & Attachments
+// 5. Troubleshooting Timeline & Attachments
 // ----------------------------------------------------
 model TicketMilestone {
   id           Int      @id @default(autoincrement())
@@ -294,22 +236,26 @@ model KnowledgeBase {
   id                     Int      @id @default(autoincrement())
   kbCode                 String   @unique // 'KB-1024'
   title                  String
+  caseType               String?  // 'Incident', 'Problem', 'Configuration', 'Maintenance'
   category               String
   categoryGroup          String?
+  product                String?
   technologyPrincipal    String?
   author                 String
   approver               String?
   status                 String   @default("PUBLISHED") // 'DRAFT', 'PENDING_REVIEW', 'PUBLISHED'
   ticketsReferencedCount Int      @default(0)
   sourceTicket           String?
-  symptom                String   @db.Text
-  rootCause              String   @db.Text
+  symptom                String?  @db.Text
+  rootCause              String?  @db.Text
   prerequisites          String?  @db.Text
   cliSnippet             String?  @db.Text
   verificationSteps      String?  @db.Text
   rollbackProcedure      String?  @db.Text
   recommendation         String?  @db.Text
-  pdfAttachmentUrl       String?  // Storage path to uploaded PDF runbook
+  pdfAttachmentUrl       String?  // Storage path to uploaded document/PDF runbook
+  documentName           String?  // Original uploaded file name
+  documentSize           String?  // Formatted file size (e.g., '1.2 MB')
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

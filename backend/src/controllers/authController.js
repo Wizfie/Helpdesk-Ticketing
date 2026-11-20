@@ -5,7 +5,6 @@ import jwt from 'jsonwebtoken';
 export async function getUsers(req, res) {
   try {
     const users = await prisma.user.findMany({
-      include: { role: true },
       orderBy: { id: 'asc' }
     });
     return res.json(users);
@@ -32,13 +31,11 @@ export async function login(req, res) {
 
     if (userId) {
       user = await prisma.user.findUnique({
-        where: { id: Number(userId) },
-        include: { role: true }
+        where: { id: Number(userId) }
       });
     } else if (email) {
       user = await prisma.user.findUnique({
-        where: { email },
-        include: { role: true }
+        where: { email }
       });
     }
 
@@ -47,7 +44,7 @@ export async function login(req, res) {
     }
 
     const token = jwt.sign(
-      { id: user.id, role: user.role.code, email: user.email },
+      { id: user.id, role: user.role, email: user.email },
       process.env.JWT_SECRET || 'glotra_enterprise_helpdesk_secret_key_2026',
       { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
     );
@@ -55,11 +52,11 @@ export async function login(req, res) {
     // Audit Log: Perekaman aktivitas login (Sesuai MoM Poin 13)
     await logAuditEvent({
       userName: user.name,
-      role: user.role.code,
+      role: user.role,
       action: 'LOGIN',
       entityType: 'USER',
       entityId: `USER-00${user.id}`,
-      description: `Staf ${user.name} (${user.role.name}) berhasil masuk / beralih sesi ke sistem`,
+      description: `Staf ${user.name} (${user.role}) berhasil masuk / beralih sesi ke sistem`,
       ipAddress: req.ip || '127.0.0.1'
     });
 
@@ -75,37 +72,27 @@ export async function login(req, res) {
 
 export async function createUser(req, res) {
   try {
-    const { name, email, roleCode, phone, roleTitle, shift } = req.body;
+    const { name, email, role, roleCode, phone } = req.body;
     const actor = req.user;
-
-    const role = await prisma.role.findUnique({
-      where: { code: roleCode || 'ENGINEER' }
-    });
-
-    const parts = name.trim().split(' ');
-    const initials = parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+    const targetRole = role || roleCode || 'ENGINEER';
 
     const newUser = await prisma.user.create({
       data: {
-        roleId: role.id,
         name,
         email,
-        initials,
+        role: targetRole,
         phone,
-        roleTitle: roleTitle || (roleCode === 'ADMIN' ? 'Operations Staff' : 'Support Engineer'),
-        shift: shift || 'Standard Office Hours',
         isActive: true
-      },
-      include: { role: true }
+      }
     });
 
     await logAuditEvent({
       userName: actor?.name || 'System Admin',
-      role: actor?.role?.code || 'ADMIN',
+      role: actor?.role || 'ADMIN',
       action: 'USER_CREATED',
       entityType: 'USER',
       entityId: `USER-00${newUser.id}`,
-      description: `Mendaftarkan staf baru: ${newUser.name} (Peran: ${role.name})`,
+      description: `Mendaftarkan staf baru: ${newUser.name} (Peran: ${targetRole})`,
       ipAddress: req.ip
     });
 
@@ -118,31 +105,24 @@ export async function createUser(req, res) {
 export async function updateUser(req, res) {
   try {
     const { id } = req.params;
-    const { name, email, roleCode, phone, roleTitle, shift, isActive } = req.body;
+    const { name, email, role, roleCode, phone, isActive } = req.body;
     const actor = req.user;
 
     const dataToUpdate = {};
     if (name) dataToUpdate.name = name;
     if (email) dataToUpdate.email = email;
     if (phone !== undefined) dataToUpdate.phone = phone;
-    if (roleTitle !== undefined) dataToUpdate.roleTitle = roleTitle;
-    if (shift !== undefined) dataToUpdate.shift = shift;
     if (isActive !== undefined) dataToUpdate.isActive = isActive;
-
-    if (roleCode) {
-      const role = await prisma.role.findUnique({ where: { code: roleCode } });
-      if (role) dataToUpdate.roleId = role.id;
-    }
+    if (role || roleCode) dataToUpdate.role = role || roleCode;
 
     const updatedUser = await prisma.user.update({
       where: { id: Number(id) },
-      data: dataToUpdate,
-      include: { role: true }
+      data: dataToUpdate
     });
 
     await logAuditEvent({
       userName: actor?.name || 'System Admin',
-      role: actor?.role?.code || 'ADMIN',
+      role: actor?.role || 'ADMIN',
       action: 'USER_UPDATED',
       entityType: 'USER',
       entityId: `USER-00${updatedUser.id}`,

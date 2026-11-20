@@ -1,40 +1,108 @@
 import { defineStore } from 'pinia';
 
-const STORAGE_KEY_SIDEBAR_COLLAPSED = 'gtt_ui_sidebar_collapsed';
-
 export const useUiStore = defineStore('ui', {
   state: () => ({
-    isSidebarOpen: false, // Mobile drawer state (< lg)
-    isSidebarCollapsed: typeof window !== 'undefined' && window.localStorage
-      ? localStorage.getItem(STORAGE_KEY_SIDEBAR_COLLAPSED) === 'true'
-      : false // Desktop sidebar collapsed/hidden (>= lg)
+    toasts: [],
+    dialog: {
+      isOpen: false,
+      title: '',
+      message: '',
+      type: 'info', // 'danger' | 'warning' | 'info' | 'success'
+      confirmText: 'Lanjutkan',
+      cancelText: 'Batal',
+      showCancel: false,
+      resolve: null
+    }
   }),
+
   actions: {
-    toggleMobileSidebar() {
-      this.isSidebarOpen = !this.isSidebarOpen;
-    },
-    closeMobileSidebar() {
-      this.isSidebarOpen = false;
-    },
-    openMobileSidebar() {
-      this.isSidebarOpen = true;
-    },
-    toggleSidebarCollapse() {
-      this.isSidebarCollapsed = !this.isSidebarCollapsed;
-      if (typeof window !== 'undefined' && window.localStorage) {
-        localStorage.setItem(STORAGE_KEY_SIDEBAR_COLLAPSED, String(this.isSidebarCollapsed));
+    // ------------------------------------------------------------------------
+    // 1. Toast Notification Management
+    // ------------------------------------------------------------------------
+    showToast({ message, type = 'info', duration = 4000 }) {
+      const id = Date.now() + Math.random().toString(36).substring(2, 7);
+      const toastItem = { id, message, type, duration };
+      this.toasts.push(toastItem);
+
+      if (duration > 0) {
+        setTimeout(() => {
+          this.removeToast(id);
+        }, duration);
       }
+      return id;
     },
-    toggleSidebar() {
-      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
-        this.toggleMobileSidebar();
-      } else {
-        this.toggleSidebarCollapse();
+
+    removeToast(id) {
+      this.toasts = this.toasts.filter((t) => t.id !== id);
+    },
+
+    // Shorthand helpers for direct calls
+    toastSuccess(message, duration = 4000) {
+      return this.showToast({ message, type: 'success', duration });
+    },
+
+    toastError(message, duration = 5000) {
+      return this.showToast({ message, type: 'error', duration });
+    },
+
+    toastWarning(message, duration = 4500) {
+      return this.showToast({ message, type: 'warning', duration });
+    },
+
+    toastInfo(message, duration = 4000) {
+      return this.showToast({ message, type: 'info', duration });
+    },
+
+    // ------------------------------------------------------------------------
+    // 2. Promise-Based Confirmation & Alert Dialogs
+    // ------------------------------------------------------------------------
+    confirm({
+      title = 'Konfirmasi Tindakan',
+      message = 'Apakah Anda yakin ingin melanjutkan tindakan ini?',
+      type = 'danger', // 'danger' | 'warning' | 'info'
+      confirmText = 'Lanjutkan',
+      cancelText = 'Batal'
+    }) {
+      return new Promise((resolve) => {
+        this.dialog = {
+          isOpen: true,
+          title,
+          message,
+          type,
+          confirmText,
+          cancelText,
+          showCancel: true,
+          resolve
+        };
+      });
+    },
+
+    alert({
+      title = 'Pemberitahuan',
+      message = '',
+      type = 'info', // 'info' | 'warning' | 'error' | 'success'
+      confirmText = 'Mengerti'
+    }) {
+      return new Promise((resolve) => {
+        this.dialog = {
+          isOpen: true,
+          title,
+          message,
+          type,
+          confirmText,
+          cancelText: '',
+          showCancel: false,
+          resolve
+        };
+      });
+    },
+
+    resolveDialog(result) {
+      if (this.dialog.resolve) {
+        this.dialog.resolve(result);
       }
-    },
-    closeSidebar() {
-      this.closeMobileSidebar();
+      this.dialog.isOpen = false;
+      this.dialog.resolve = null;
     }
   }
 });
-

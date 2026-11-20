@@ -27,13 +27,19 @@ const storage = multer.diskStorage({
 });
 
 // MIME Type Whitelist Validator
-const allowedMimes = (process.env.ALLOWED_MIME_TYPES || 'application/pdf,image/png,image/jpeg,image/svg+xml,text/plain').split(',');
+const allowedMimes = (
+  process.env.ALLOWED_MIME_TYPES ||
+  'application/pdf,image/png,image/jpeg,image/svg+xml,text/plain,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/octet-stream'
+).split(',');
+
+const allowedExts = ['.pdf', '.docx', '.doc', '.png', '.jpg', '.jpeg', '.svg', '.txt', '.log'];
 
 const fileFilter = (req, file, cb) => {
-  if (allowedMimes.includes(file.mimetype) || file.mimetype.startsWith('image/')) {
+  const ext = path.extname(file.originalname).toLowerCase();
+  if (allowedExts.includes(ext) || allowedMimes.includes(file.mimetype) || file.mimetype.startsWith('image/')) {
     cb(null, true);
   } else {
-    cb(new Error(`Tipe berkas ${file.mimetype} tidak diizinkan. Hanya diizinkan: PDF, Gambar, dan Log Teks.`), false);
+    cb(new Error(`Tipe berkas ${file.mimetype} tidak diizinkan. Hanya diizinkan: Dokumen (PDF, Word DOCX/DOC), Gambar, dan Log Teks.`), false);
   }
 };
 

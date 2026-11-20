@@ -46,8 +46,8 @@
       </div>
     </div>
 
-    <!-- 3 Account Portfolio KPI Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <!-- 2 Account Portfolio KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <!-- Card 1: TOTAL MITRA -->
       <div
         class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex items-center justify-between"
@@ -92,60 +92,7 @@
         </div>
       </div>
 
-      <!-- Card 2: TOTAL TIKET TAHUN INI (Progress Bar) -->
-      <div
-        class="bg-white border border-slate-200 rounded-xl p-4 shadow-xs flex items-center justify-between"
-      >
-        <div class="flex-1 pr-3">
-          <span
-            class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block"
-            >TOTAL TIKET TAHUN INI</span
-          >
-          <div class="mt-1">
-            <span class="text-2xl font-black text-slate-900 font-mono">
-              {{ ticketStore.totalQuotaStats.totalUsed.toLocaleString() }} /
-              {{ ticketStore.totalQuotaStats.totalQuota.toLocaleString() }}
-            </span>
-          </div>
-          <!-- Progress bar -->
-          <div class="mt-2 flex items-center gap-2">
-            <div class="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
-              <div
-                class="h-full bg-blue-600 rounded-full transition-all duration-500"
-                :style="{ width: `${ticketStore.totalQuotaStats.percentage}%` }"
-              ></div>
-            </div>
-            <span
-              class="text-[11px] text-slate-500 font-mono whitespace-nowrap"
-            >
-              {{
-                ticketStore.totalQuotaStats.totalQuota > 0
-                  ? `${ticketStore.totalQuotaStats.percentage}% digunakan`
-                  : "Belum ada kuota"
-              }}
-            </span>
-          </div>
-        </div>
-        <div
-          class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0"
-        >
-          <svg
-            class="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"
-            ></path>
-          </svg>
-        </div>
-      </div>
-
-      <!-- Card 3: TIKET HAMPIR HABIS -->
+      <!-- Card 2: TIKET HAMPIR HABIS -->
       <div
         class="border rounded-xl p-4 shadow-xs flex items-center justify-between transition-colors"
         :class="
@@ -214,10 +161,10 @@
           v-model="searchQuery"
           type="text"
           placeholder="Cari nama mitra atau industri..."
-          class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          class="w-full pl-9 pr-3 h-[34px] border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-blue-500 focus:outline-none"
         />
         <svg
-          class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"
+          class="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -231,35 +178,37 @@
         </svg>
       </div>
 
-      <div class="flex items-center space-x-2">
-        <select
+      <div class="flex items-center space-x-2 shrink-0">
+        <BaseSelect
           v-model="filterIndustry"
-          class="px-3 py-2 border border-slate-200 rounded-lg bg-white text-xs text-slate-700"
-        >
-          <option value="">Semua Sektor Industri</option>
-          <option v-for="sec in industryList" :key="sec" :value="sec">
-            {{ sec }}
-          </option>
-        </select>
+          :options="filterIndustryOptions"
+          size="sm"
+          searchable
+          placeholder="Semua Sektor Industri"
+          containerClass="w-48"
+          rounded="rounded-lg"
+          inputClass="h-[34px]"
+        />
 
-        <select
+        <BaseSelect
           v-model="filterStatus"
-          class="px-3 py-2 border border-slate-200 rounded-lg bg-white text-xs text-slate-700"
-        >
-          <option value="">Semua Status</option>
-          <option value="active">Active (Aktif)</option>
-          <option value="inactive">Nonaktif / Expired</option>
-          <option value="critical">Tiket Hampir Habis (≤ 10%)</option>
-        </select>
+          :options="filterStatusOptions"
+          size="sm"
+          placement="right"
+          placeholder="Semua Status"
+          containerClass="w-40"
+          rounded="rounded-lg"
+          inputClass="h-[34px]"
+        />
 
         <button
           @click="handleExportExcel"
           :disabled="isExporting"
-          class="px-3 py-2 border border-slate-200 rounded-lg bg-white text-xs font-semibold text-slate-700 hover:text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors flex items-center space-x-1.5 cursor-pointer disabled:opacity-50"
+          class="h-[34px] px-3.5 border border-slate-200 rounded-lg bg-white text-xs font-semibold text-slate-700 hover:text-emerald-700 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all inline-flex items-center justify-center gap-1.5 shrink-0 whitespace-nowrap cursor-pointer shadow-2xs disabled:opacity-50 select-none"
           title="Ekspor daftar mitra ke Microsoft Excel (.xlsx)"
         >
           <svg
-            class="w-4 h-4 text-emerald-600"
+            class="w-3.5 h-3.5 text-emerald-600 shrink-0"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -271,7 +220,7 @@
               d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             ></path>
           </svg>
-          <span>{{ isExporting ? "Mengekspor..." : "Export Excel" }}</span>
+          <span class="whitespace-nowrap">{{ isExporting ? "Mengekspor..." : "Export Excel" }}</span>
         </button>
       </div>
     </div>
@@ -373,12 +322,6 @@
                   <div class="flex items-center justify-center space-x-1.5">
                     <span class="font-mono text-xs font-black text-slate-900">
                       {{ getCustomerQuotaInfo(c).remaining }}
-                    </span>
-                    <span
-                      class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold border"
-                      :class="getRemainingBadgeClass(getCustomerQuotaInfo(c))"
-                    >
-                      {{ getCustomerQuotaInfo(c).percentage }}%
                     </span>
                   </div>
                 </template>
@@ -875,15 +818,13 @@
                     </button>
                   </div>
 
-                  <select
+                  <BaseSelect
                     v-model="newCustomer.industry"
-                    class="w-full p-2.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  >
-                    <option value="">-- Pilih Sektor --</option>
-                    <option v-for="sec in industryList" :key="sec" :value="sec">
-                      {{ sec }}
-                    </option>
-                  </select>
+                    :options="industrySelectOptions"
+                    size="sm"
+                    searchable
+                    placeholder="-- Pilih Sektor --"
+                  />
 
                   <!-- Panel Kelola Sektor -->
                   <div
@@ -1036,29 +977,12 @@
                       <span>Kelola SLA &rarr;</span>
                     </router-link>
                   </div>
-                  <select
+                  <BaseSelect
                     v-model="newCustomer.contractSla"
+                    :options="slaPolicySelectOptions"
                     required
-                    class="w-full p-2.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none font-medium"
-                  >
-                    <option
-                      v-if="availableSlaPolicies.length === 0"
-                      value=""
-                      disabled
-                    >
-                      -- Belum ada kebijakan SLA (Buat di Kelola SLA) --
-                    </option>
-                    <option v-else value="" disabled>
-                      -- Pilih Paket Kontrak SLA --
-                    </option>
-                    <option
-                      v-for="policy in availableSlaPolicies"
-                      :key="policy.tierCode || policy.id"
-                      :value="policy.tierCode"
-                    >
-                      {{ policy.tierName }}
-                    </option>
-                  </select>
+                    placeholder="-- Pilih Paket Kontrak SLA --"
+                  />
                 </div>
 
                 <!-- Periode Maintenance -->
@@ -1258,15 +1182,13 @@
                   </button>
                 </div>
 
-                <select
+                <BaseSelect
                   v-model="editCustomerForm.industry"
-                  class="w-full p-2.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option value="">-- Pilih Sektor (Opsional) --</option>
-                  <option v-for="sec in industryList" :key="sec" :value="sec">
-                    {{ sec }}
-                  </option>
-                </select>
+                  :options="industrySelectOptions"
+                  size="sm"
+                  searchable
+                  placeholder="-- Pilih Sektor (Opsional) --"
+                />
 
                 <!-- Panel Kelola Sektor (Add & Delete) -->
                 <div
@@ -1334,18 +1256,12 @@
 
               <!-- Status Operasional Mitra -->
               <div>
-                <label class="block font-semibold text-slate-700 mb-1"
-                  >Status Operasional Mitra *</label
-                >
-                <select
+                <BaseSelect
                   v-model="editCustomerForm.isActive"
-                  class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option :value="true">Active (Aktif Melayani)</option>
-                  <option :value="false">
-                    Nonaktif (Inactive / Ditangguhkan)
-                  </option>
-                </select>
+                  :options="customerStatusOptions"
+                  label="Status Operasional Mitra"
+                  required
+                />
               </div>
             </div>
 
@@ -1382,29 +1298,12 @@
                     <span>Kelola SLA &rarr;</span>
                   </router-link>
                 </div>
-                <select
+                <BaseSelect
                   v-model="editCustomerForm.contractSla"
+                  :options="slaPolicySelectOptions"
                   required
-                  class="w-full p-2.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                >
-                  <option
-                    v-if="availableSlaPolicies.length === 0"
-                    value=""
-                    disabled
-                  >
-                    -- Belum ada kebijakan SLA (Buat di Kelola SLA) --
-                  </option>
-                  <option v-else value="" disabled>
-                    -- Pilih Paket Kontrak SLA --
-                  </option>
-                  <option
-                    v-for="policy in availableSlaPolicies"
-                    :key="policy.tierCode || policy.id"
-                    :value="policy.tierCode"
-                  >
-                    {{ policy.tierName }}
-                  </option>
-                </select>
+                  placeholder="-- Pilih Paket Kontrak SLA --"
+                />
               </div>
 
               <!-- Maintenance (Mulai & Selesai) -->
@@ -1543,8 +1442,7 @@
             <div>
               <div class="font-bold text-slate-900">{{ pic.name }}</div>
               <div class="text-[11px] text-slate-500">
-                <span v-if="pic.dept">{{ pic.dept }} &bull; </span
-                >{{ pic.email }}
+                <span>{{ pic.email }}</span>
               </div>
             </div>
             <div class="flex items-center space-x-2">
@@ -1655,16 +1553,38 @@
           >
             <button
               type="button"
+              :disabled="isSubmittingPic"
               @click="showAddPicModal = false"
-              class="px-3.5 py-1.5 border border-slate-200 rounded-lg text-slate-600 cursor-pointer"
+              class="px-3.5 py-1.5 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 cursor-pointer disabled:opacity-50"
             >
               Batal
             </button>
             <button
               type="submit"
-              class="px-4 py-1.5 bg-blue-600 text-white font-bold rounded-lg shadow-sm cursor-pointer"
+              :disabled="isSubmittingPic"
+              class="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm cursor-pointer disabled:opacity-50 flex items-center space-x-1.5"
             >
-              Simpan PIC
+              <svg
+                v-if="isSubmittingPic"
+                class="w-3.5 h-3.5 animate-spin text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
+                <path
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8v8H4z"
+                ></path>
+              </svg>
+              <span>{{ isSubmittingPic ? "Menyimpan..." : "Simpan PIC" }}</span>
             </button>
           </div>
         </form>
@@ -1678,11 +1598,13 @@ import { ref, computed, onMounted, onUnmounted, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTicketStore, filterCleanSlaPolicies } from "../stores/ticketStore";
 import { useAuthStore } from "../stores/authStore";
+import { useUiStore } from "../stores/uiStore";
 
 const route = useRoute();
 const router = useRouter();
 const ticketStore = useTicketStore();
 const authStore = useAuthStore();
+const uiStore = useUiStore();
 
 const searchQuery = ref("");
 const filterIndustry = ref("");
@@ -1700,6 +1622,7 @@ const actionMenuPosition = ref({ top: 0, left: 0 });
 const focusedCustomerId = ref(null);
 const activeCustomer = ref(null);
 const isExporting = ref(false);
+const isSubmittingPic = ref(false);
 
 const activeMenuCustomer = computed(() => {
   return (
@@ -1758,22 +1681,29 @@ const handleAddSector = () => {
   newSectorInput.value = "";
 };
 
-const handleDeleteSector = (sector) => {
-  if (window.confirm(`Hapus sektor "${sector}" dari daftar pilihan?`)) {
-    industryList.value = industryList.value.filter((i) => i !== sector);
-    try {
-      localStorage.setItem(
-        "gtt_industry_sectors",
-        JSON.stringify(industryList.value),
-      );
-    } catch (e) {}
-    if (newCustomer.value.industry === sector) {
-      newCustomer.value.industry = "";
-    }
-    if (editCustomerForm.value.industry === sector) {
-      editCustomerForm.value.industry = "";
-    }
+const handleDeleteSector = async (sector) => {
+  const ok = await uiStore.confirm({
+    title: "Hapus Sektor Industri?",
+    message: `Apakah Anda yakin ingin menghapus sektor "${sector}" dari daftar pilihan?`,
+    confirmText: "Ya, Hapus",
+    type: "danger",
+  });
+  if (!ok) return;
+
+  industryList.value = industryList.value.filter((i) => i !== sector);
+  try {
+    localStorage.setItem(
+      "gtt_industry_sectors",
+      JSON.stringify(industryList.value),
+    );
+  } catch (e) {}
+  if (newCustomer.value.industry === sector) {
+    newCustomer.value.industry = "";
   }
+  if (editCustomerForm.value.industry === sector) {
+    editCustomerForm.value.industry = "";
+  }
+  uiStore.toastSuccess(`Sektor "${sector}" berhasil dihapus.`);
 };
 
 const availableSlaPolicies = computed(() => {
@@ -1789,12 +1719,43 @@ const getSlaTierName = (tierCode) => {
 };
 
 const defaultSlaTierCode = computed(() => {
-  return availableSlaPolicies.value[0]?.tierCode || "";
+  return availableSlaPolicies.value[0]?.tierName || "";
+});
+
+// Dropdown options
+const filterIndustryOptions = computed(() => [
+  { value: "", label: "Semua Sektor Industri" },
+  ...industryList.value.map(sec => ({ value: sec, label: sec }))
+]);
+
+const filterStatusOptions = [
+  { value: "", label: "Semua Status" },
+  { value: "active", label: "Active (Aktif)", badge: "Aktif", badgeClass: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
+  { value: "inactive", label: "Nonaktif / Expired", badge: "Nonaktif", badgeClass: "bg-slate-100 text-slate-500" },
+  { value: "critical", label: "Tiket Hampir Habis (≤ 10%)", badge: "Kritis", badgeClass: "bg-rose-50 text-rose-700 border border-rose-200" }
+];
+
+const industrySelectOptions = computed(() => [
+  { value: "", label: "-- Pilih Sektor Industri --" },
+  ...industryList.value.map(sec => ({ value: sec, label: sec }))
+]);
+
+const customerStatusOptions = [
+  { value: true, label: "Active (Aktif Melayani)", subtext: "Mitra berhak menerbitkan tiket layanan", badge: "Aktif", badgeClass: "bg-emerald-50 text-emerald-700 border border-emerald-200" },
+  { value: false, label: "Nonaktif (Inactive / Ditangguhkan)", subtext: "Layanan ditangguhkan sementara", badge: "Nonaktif", badgeClass: "bg-rose-50 text-rose-700 border border-rose-200" }
+];
+
+const slaPolicySelectOptions = computed(() => {
+  return availableSlaPolicies.value.map(p => ({
+    value: p.tierName || p.id,
+    label: p.tierName,
+    subtext: p.operatingHours || '24 Jam x 7 Hari (Non-Stop)',
+    badge: 'SLA'
+  }));
 });
 
 const newCustomer = ref({
   name: "",
-  code: "",
   industry: "",
   contractSla: "",
   address: "",
@@ -1825,7 +1786,6 @@ const isCustomerMaintenanceExpired = (customer) => {
 const editCustomerForm = ref({
   id: null,
   name: "",
-  code: "",
   industry: "",
   contractSla: "",
   address: "",
@@ -1910,7 +1870,6 @@ const filteredCustomers = computed(() => {
     const matchQuery =
       !q ||
       c.name.toLowerCase().includes(q) ||
-      c.code.toLowerCase().includes(q) ||
       (c.industry && c.industry.toLowerCase().includes(q));
     const matchIndustry =
       !filterIndustry.value ||
@@ -1987,7 +1946,6 @@ const handleWindowScroll = () => {
 const openAddCustomerModal = () => {
   newCustomer.value = {
     name: "",
-    code: "",
     industry: "",
     contractSla: defaultSlaTierCode.value,
     address: "",
@@ -2008,7 +1966,6 @@ const openEditCustomerModal = (customer) => {
   editCustomerForm.value = {
     id: customer.id,
     name: customer.name,
-    code: customer.code || "",
     industry: customer.industry || "",
     contractSla: customer.contractSla || defaultSlaTierCode.value,
     address: customer.address || "",
@@ -2025,7 +1982,7 @@ const openEditCustomerModal = (customer) => {
   showEditCustomerModal.value = true;
 };
 
-const handleToggleCustomerStatus = (customer) => {
+const handleToggleCustomerStatus = async (customer) => {
   const isCurrentlyActive = customer.isActive !== false;
 
   if (isCurrentlyActive) {
@@ -2034,61 +1991,87 @@ const handleToggleCustomerStatus = (customer) => {
         t.customerId === customer.id &&
         !["RESOLVED", "CLOSED"].includes(t.status),
     ).length;
-    let msg = `Nonaktifkan mitra "${customer.name}"?`;
+    let msg = `Apakah Anda yakin ingin menonaktifkan status operasional mitra "${customer.name}"?`;
     if (activeTickets > 0) {
-      msg += `\n\nPerhatian: Mitra ini masih memiliki ${activeTickets} tiket yang sedang berjalan.`;
+      msg += `\n\nPerhatian: Mitra ini masih memiliki ${activeTickets} tiket yang sedang berjalan di helpdesk.`;
     }
-    if (!window.confirm(msg)) {
-      return;
-    }
+    const ok = await uiStore.confirm({
+      title: "Nonaktifkan Kemitraan?",
+      message: msg,
+      confirmText: "Ya, Nonaktifkan",
+      type: "warning",
+    });
+    if (!ok) return;
   } else {
     if (isCustomerMaintenanceExpired(customer)) {
-      if (
-        !window.confirm(
-          `Periode maintenance mitra "${customer.name}" telah berakhir pada ${formatIndoDate(customer.maintenanceEnd)}.\n\nTetap aktifkan akun mitra ini secara manual?`,
-        )
-      ) {
-        return;
-      }
+      const ok = await uiStore.confirm({
+        title: "Masa Maintenance Selesai",
+        message: `Periode maintenance mitra "${customer.name}" telah berakhir pada ${formatIndoDate(customer.maintenanceEnd)}.\n\nTetap aktifkan akun mitra ini secara manual?`,
+        confirmText: "Tetap Aktifkan",
+        type: "warning",
+      });
+      if (!ok) return;
     }
   }
 
   ticketStore.toggleCustomerStatus(customer.id, authStore.currentUser);
-};
-
-const submitAddCustomer = () => {
-  ticketStore.addCustomer(newCustomer.value, authStore.currentUser);
-  showAddCustomerModal.value = false;
-};
-
-const submitEditCustomer = () => {
-  ticketStore.updateCustomer(
-    editCustomerForm.value.id,
-    editCustomerForm.value,
-    authStore.currentUser,
+  uiStore.toastSuccess(
+    `Status mitra "${customer.name}" berhasil ${!isCurrentlyActive ? "diaktifkan" : "dinonaktifkan"}.`,
   );
-  showEditCustomerModal.value = false;
 };
 
-const handleDeleteCustomer = (customer) => {
+const submitAddCustomer = async () => {
+  try {
+    await ticketStore.addCustomer(newCustomer.value, authStore.currentUser);
+    await ticketStore.fetchCustomers();
+    showAddCustomerModal.value = false;
+    uiStore.toastSuccess(`Berhasil mendaftarkan perusahaan mitra "${newCustomer.value.name}"!`);
+  } catch (err) {
+    console.error("Gagal mendaftarkan mitra:", err);
+    uiStore.toastError("Gagal mendaftarkan mitra: " + (err.message || "Terjadi kesalahan sistem"));
+  }
+};
+
+const submitEditCustomer = async () => {
+  try {
+    await ticketStore.updateCustomer(
+      editCustomerForm.value.id,
+      editCustomerForm.value,
+      authStore.currentUser,
+    );
+    await ticketStore.fetchCustomers();
+    showEditCustomerModal.value = false;
+    uiStore.toastSuccess(`Berhasil memperbarui data profil mitra "${editCustomerForm.value.name}"!`);
+  } catch (err) {
+    console.error("Gagal memperbarui profil mitra:", err);
+    uiStore.toastError("Gagal memperbarui profil mitra: " + (err.message || "Terjadi kesalahan sistem"));
+  }
+};
+
+const handleDeleteCustomer = async (customer) => {
   const ticketCount = ticketStore.tickets.filter(
     (t) =>
       t.customerId === customer.id &&
       !["RESOLVED", "CLOSED"].includes(t.status),
   ).length;
   if (ticketCount > 0) {
-    alert(
-      `Tidak dapat menghapus mitra "${customer.name}" karena masih memiliki ${ticketCount} tiket aktif.`,
-    );
+    await uiStore.alert({
+      title: "Tidak Dapat Menghapus Mitra",
+      message: `Tidak dapat menghapus mitra "${customer.name}" karena masih memiliki ${ticketCount} tiket aktif yang sedang ditangani.`,
+      type: "warning",
+    });
     return;
   }
-  if (
-    window.confirm(
-      `Yakin ingin menghapus mitra "${customer.name}" (${customer.code}) dari database?`,
-    )
-  ) {
-    ticketStore.deleteCustomer(customer.id, authStore.currentUser);
-  }
+  const ok = await uiStore.confirm({
+    title: "Hapus Mitra Pelanggan?",
+    message: `Apakah Anda yakin ingin menghapus mitra "${customer.name}" secara permanen dari database? Seluruh data riwayat terkait akan terhapus.`,
+    confirmText: "Ya, Hapus Mitra",
+    type: "danger",
+  });
+  if (!ok) return;
+
+  ticketStore.deleteCustomer(customer.id, authStore.currentUser);
+  uiStore.toastSuccess(`Mitra pelanggan "${customer.name}" berhasil dihapus.`);
 };
 
 const focusAndEditCustomer = (customer) => {
@@ -2124,28 +2107,84 @@ const openAddPicModal = (customer) => {
   showAddPicModal.value = true;
 };
 
-const submitAddPic = () => {
-  if (!activeCustomer.value) return;
-  ticketStore.addCustomerPic(
-    activeCustomer.value.id,
-    newPic.value,
-    authStore.currentUser,
-  );
-  showAddPicModal.value = false;
+const submitAddPic = async () => {
+  if (!activeCustomer.value || isSubmittingPic.value) return;
+  if (!newPic.value.name || !newPic.value.name.trim()) {
+    uiStore.toastWarning("Nama lengkap PIC wajib diisi.");
+    return;
+  }
+
+  isSubmittingPic.value = true;
+  try {
+    const picName = newPic.value.name.trim();
+    const customerName = activeCustomer.value.name;
+    const customerId = activeCustomer.value.id;
+
+    await ticketStore.addCustomerPic(
+      customerId,
+      newPic.value,
+      authStore.currentUser,
+    );
+
+    // Refresh data pelanggan dari MySQL backend
+    await ticketStore.fetchCustomers();
+
+    // Perbarui activeCustomer agar sinkron dengan data terbaru dari store
+    const updatedCustomer = ticketStore.customers.find((c) => c.id === customerId);
+    if (updatedCustomer) {
+      activeCustomer.value = updatedCustomer;
+    }
+
+    // Reset form dan tutup form/modal Tambah PIC serta modal daftar PIC
+    newPic.value = { name: "", phone: "", email: "" };
+    showAddPicModal.value = false;
+    showPicModal.value = false;
+
+    // Tampilkan Toast Alert Berhasil
+    uiStore.toastSuccess(`Berhasil menambahkan kontak PIC "${picName}" untuk mitra ${customerName}!`);
+  } catch (err) {
+    console.error("Gagal menambahkan PIC:", err);
+    uiStore.toastError("Gagal menambahkan PIC: " + (err.message || "Terjadi kesalahan sistem"));
+  } finally {
+    isSubmittingPic.value = false;
+  }
 };
 
-const handleDeletePic = (pic) => {
+const handleDeletePic = async (pic) => {
   if (!activeCustomer.value) return;
-  if (
-    window.confirm(
-      `Hapus kontak PIC "${pic.name}" dari ${activeCustomer.value.name}?`,
-    )
-  ) {
-    ticketStore.deleteCustomerPic(
-      activeCustomer.value.id,
+  const ok = await uiStore.confirm({
+    title: "Hapus Kontak PIC?",
+    message: `Hapus kontak PIC "${pic.name}" dari ${activeCustomer.value.name}?`,
+    confirmText: "Ya, Hapus",
+    type: "danger",
+  });
+  if (!ok) return;
+
+  const customerId = activeCustomer.value.id;
+  const customerName = activeCustomer.value.name;
+  try {
+    await ticketStore.deleteCustomerPic(
+      customerId,
       pic.id,
       authStore.currentUser,
     );
+
+    // Refresh data pelanggan dari MySQL backend
+    await ticketStore.fetchCustomers();
+
+    const updatedCustomer = ticketStore.customers.find((c) => c.id === customerId);
+    if (updatedCustomer) {
+      activeCustomer.value = updatedCustomer;
+    }
+
+    // Tutup modal form PIC setelah delete berhasil
+    showPicModal.value = false;
+    showAddPicModal.value = false;
+
+    uiStore.toastSuccess(`Kontak PIC "${pic.name}" berhasil dihapus dari ${customerName}.`);
+  } catch (err) {
+    console.error("Gagal menghapus PIC:", err);
+    uiStore.toastError("Gagal menghapus PIC: " + (err.message || "Terjadi kesalahan sistem"));
   }
 };
 
@@ -2171,18 +2210,18 @@ const handleExportExcel = async () => {
 
     const columns = [
       { header: "NO", width: 6, align: "center" },
-      { header: "KODE", width: 10, align: "center" },
+      { header: "ID MITRA", width: 12, align: "center" },
       { header: "NAMA PERUSAHAAN MITRA", width: 34, align: "left" },
       { header: "SEKTOR INDUSTRI", width: 22, align: "left" },
-      { header: "PAKET KONTRAK SLA", width: 26, align: "left" },
+      { header: "PAKET KONTRAK SLA", width: 24, align: "center" },
       { header: "PERIODE MULAI", width: 15, align: "center" },
       { header: "PERIODE SELESAI", width: 16, align: "center" },
-      { header: "KUOTA TAHUNAN", width: 18, align: "center" },
+      { header: "KUOTA TAHUNAN", width: 16, align: "center" },
       { header: "TIKET TERPAKAI", width: 15, align: "center" },
       { header: "SISA TIKET", width: 14, align: "center" },
-      { header: "SISA KUOTA (%)", width: 15, align: "center" },
+      { header: "% SISA KUOTA", width: 15, align: "center" },
       { header: "STATUS OPERASIONAL", width: 20, align: "center" },
-      { header: "KONTAK PIC TERDAFTAR", width: 38, align: "left", wrap: true },
+      { header: "KONTAK PIC TERDAFTAR", width: 42, align: "left", wrap: true },
       { header: "ALAMAT LENGKAP", width: 44, align: "left", wrap: true },
     ];
 
@@ -2202,7 +2241,7 @@ const handleExportExcel = async () => {
       month: "long",
       year: "numeric",
     });
-    subCell.value = `PT Global Transformasi Teknologi  |  Tanggal Unduh: ${todayFormatted}  |  Total Data: ${filteredCustomers.value.length} Mitra`;
+    subCell.value = `PT Global Transformasi Teknologi  |  Tanggal Unduh: ${todayFormatted}  |  Total Data: ${filteredCustomers.value.length} Mitra Korporat`;
     subCell.font = { italic: true, size: 10, color: { argb: "FF475569" } };
     subCell.alignment = { vertical: "middle", horizontal: "left" };
     ws.getRow(2).height = 18;
@@ -2238,15 +2277,22 @@ const handleExportExcel = async () => {
 
       const picsStr =
         c.pics && c.pics.length > 0
-          ? c.pics.map((p) => `${p.name} (${p.phone || p.email})`).join("; ")
+          ? c.pics
+              .map((p) => {
+                const parts = [];
+                if (p.phone) parts.push(`HP: ${p.phone}`);
+                if (p.email) parts.push(p.email);
+                return `${p.name}${parts.length ? ` (${parts.join(" • ")})` : ""}`;
+              })
+              .join("; ")
           : "-";
 
       const rowData = [
         idx + 1,
-        c.code,
+        c.id,
         c.name,
         c.industry || "-",
-        c.slaTier || c.contractSla || "-",
+        c.slaTier || "-",
         c.maintenanceStart || "-",
         c.maintenanceEnd || "-",
         c.ticketQuota || "Unlimited",
@@ -2259,7 +2305,7 @@ const handleExportExcel = async () => {
       ];
 
       const row = ws.addRow(rowData);
-      row.height = 22;
+      row.height = 24;
 
       row.eachCell({ includeEmpty: true }, (cell, ci) => {
         const colDef = columns[ci - 1] || {};
@@ -2280,8 +2326,8 @@ const handleExportExcel = async () => {
           };
         }
 
-        // Highlight status cell
-        if (ci === 13) {
+        // Highlight status cell (Column 12: STATUS OPERASIONAL)
+        if (ci === 12) {
           if (statusStr.includes("Active")) {
             cell.font = { bold: true, size: 9.5, color: { argb: "FF047857" } }; // emerald
           } else if (statusStr.includes("Expired")) {
@@ -2291,8 +2337,8 @@ const handleExportExcel = async () => {
           }
         }
 
-        // Highlight quota remaining if critical
-        if (ci === 10 && qInfo.isCritical) {
+        // Highlight quota remaining if critical (Column 10: SISA TIKET, Column 11: % SISA KUOTA)
+        if ((ci === 10 || ci === 11) && qInfo.isCritical) {
           cell.font = { bold: true, size: 9.5, color: { argb: "FFE11D48" } };
         }
       });
@@ -2318,9 +2364,10 @@ const handleExportExcel = async () => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    uiStore.toastSuccess("Direktori mitra berhasil diekspor ke Microsoft Excel.");
   } catch (err) {
     console.error("Gagal export Excel customer:", err);
-    alert("Terjadi kesalahan saat memproses ekspor Excel.");
+    uiStore.toastError("Terjadi kesalahan saat memproses ekspor Excel.");
   } finally {
     isExporting.value = false;
   }
@@ -2357,6 +2404,7 @@ const handleQueryFocus = () => {
 watch(() => route.query.focus, handleQueryFocus);
 
 onMounted(async () => {
+  await ticketStore.fetchCustomers();
   await ticketStore.fetchSlaPolicies();
   ticketStore.checkAndSyncCustomerMaintenanceStatus();
   handleQueryFocus();

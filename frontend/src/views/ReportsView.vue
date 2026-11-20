@@ -63,12 +63,15 @@
         <!-- Filter Customer Dropdown -->
         <div class="flex items-center space-x-2">
           <label class="font-semibold text-slate-600 whitespace-nowrap">Filter Mitra:</label>
-          <select v-model="selectedCustomer" class="border border-slate-200 rounded-lg px-3 py-1.5 bg-white text-xs">
-            <option value="">Semua Mitra Korporat</option>
-            <option v-for="c in ticketStore.customers" :key="c.id" :value="c.id">
-              {{ c.name }} ({{ c.code }})
-            </option>
-          </select>
+          <BaseSelect
+            v-model="selectedCustomer"
+            :options="customerReportOptions"
+            size="sm"
+            placement="right"
+            searchable
+            placeholder="Semua Mitra Korporat"
+            containerClass="w-56"
+          />
         </div>
       </div>
 
@@ -208,8 +211,8 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="acc in customerShown.rows" :key="acc.code">
-                  <td class="text-left font-bold text-blue-900">{{ acc.name }} <span class="text-slate-500 font-normal">({{ acc.code }})</span></td>
+                <tr v-for="acc in customerShown.rows" :key="acc.id">
+                  <td class="text-left font-bold text-blue-900">{{ acc.name }}</td>
                   <td class="text-[7px]">{{ acc.tier }}</td>
                   <td class="font-bold">{{ acc.handled }}</td>
                   <td class="font-bold" :class="acc.responseRate !== null && acc.responseRate < 90 ? 'text-rose-600' : 'text-emerald-600'">{{ acc.responseRate !== null ? `${acc.responseRate}%` : '-' }}</td>
@@ -318,7 +321,7 @@
 
             <div class="space-y-0.5">
               <p class="font-extrabold text-blue-950 text-[10px]">{{ authStore.currentUser.name }}</p>
-              <p class="text-[8.5px] text-slate-500 font-medium">{{ authStore.currentUser.roleTitle || 'System Administrator' }}</p>
+              <p class="text-[8.5px] text-slate-500 font-medium">{{ (authStore.currentUser?.role || authStore.currentUser?.roleCode) === 'ADMIN' ? 'System Administrator' : 'Support Engineer' }}</p>
               <p class="text-[8.5px] text-blue-700 font-medium">{{ reportPrintDate.local.split(',')[0] }}</p>
             </div>
           </div>
@@ -426,7 +429,7 @@
             <p class="text-slate-600 font-semibold">Disiapkan Oleh (Helpdesk Lead):</p>
             <div class="h-16"></div>
             <p class="font-bold text-slate-900 underline">{{ authStore.currentUser.name }}</p>
-            <p class="text-slate-500">{{ authStore.currentUser.roleTitle || 'Helpdesk Operations' }}</p>
+            <p class="text-slate-500">{{ (authStore.currentUser?.role || authStore.currentUser?.roleCode) === 'ADMIN' ? 'Helpdesk Administrator' : 'Support Engineer' }}</p>
             <p class="text-slate-500">{{ reportPrintDate.local.split(',')[0] }}</p>
           </div>
           <div class="flex flex-col items-center">
@@ -480,6 +483,15 @@ const selectedPeriod = ref('ALL_TIME');
 const selectedCustomer = ref('');
 const customStartDate = ref('');
 const customEndDate = ref('');
+
+const customerReportOptions = computed(() => [
+  { value: '', label: 'Semua Mitra Korporat' },
+  ...(ticketStore.customers || []).map(c => ({
+    value: c.id,
+    label: c.name,
+    badge: c.slaTier || ''
+  }))
+]);
 
 const reportPrintDate = formatUtcToLocal(new Date().toISOString());
 const currentMonthYear = new Date().toISOString().slice(0, 7);
@@ -573,7 +585,7 @@ const customerPerformance = computed(() =>
     const trendIcon = trend === 'EXCELLENT' ? 'trending_up' : trend === 'STABLE' ? 'trending_flat' : trend === 'NO DATA' ? 'remove' : 'trending_down';
     const trendColor = trend === 'EXCELLENT' ? 'text-emerald-600' : trend === 'STABLE' ? 'text-amber-500' : trend === 'NO DATA' ? 'text-slate-400' : 'text-rose-600';
     return {
-      name: cust.name, code: cust.code, tier: cust.contractTier || '-',
+      id: cust.id, name: cust.name, tier: cust.slaTier || cust.contractTier || '-',
       handled, responseRate, resolutionRate, mttr: calcMttr(ct), breaches, trend, trendIcon, trendColor,
       trendBadge: trend === 'EXCELLENT' ? 'bg-emerald-100 text-emerald-800' : trend === 'STABLE' ? 'bg-blue-100 text-blue-800' : trend === 'NO DATA' ? 'bg-slate-100 text-slate-500' : 'bg-rose-100 text-rose-800'
     };
@@ -587,7 +599,7 @@ const engineerRoster = computed(() => {
   reportTickets.value.filter(t => t.assignedToId).forEach(t => {
     const id = t.assignedToId;
     const u = t.assignedTo || getUserById(id);
-    if (!map[id]) map[id] = { name: u?.name || `Engineer #${id}`, role: u?.roleTitle || 'Engineer', tickets: [] };
+    if (!map[id]) map[id] = { name: u?.name || `Engineer #${id}`, role: (u?.role || u?.roleCode) === 'ADMIN' ? 'Admin' : 'Engineer', tickets: [] };
     map[id].tickets.push(t);
   });
   return Object.values(map).map(eng => {
@@ -1269,14 +1281,14 @@ const exportExcel = async () => {
 
   // ---- Sheet 3: Performa Mitra ----
   addTableSheet('Performa Mitra', 'ACCOUNT SLA PERFORMANCE (PERFORMA PER MITRA)', [
-    { header: 'Customer Entity', width: 28 }, { header: 'Kode', width: 10, align: 'center' },
-    { header: 'Contract Tier', width: 30 }, { header: 'Total Tiket', width: 12, align: 'center' },
+    { header: 'Customer Entity', width: 28 }, { header: 'ID Mitra', width: 12, align: 'center' },
+    { header: 'Paket Kontrak SLA', width: 26, align: 'left' }, { header: 'Total Tiket', width: 12, align: 'center' },
     { header: 'Response SLA %', width: 16, align: 'center', numFmt: '0.0"%"' },
     { header: 'Resolution SLA %', width: 16, align: 'center', numFmt: '0.0"%"' },
     { header: 'Avg MTTR', width: 12, align: 'center' }, { header: 'Breaches', width: 11, align: 'center' },
     { header: 'Health Trend', width: 16, align: 'center' }
   ], customerPerformance.value.slice().sort((a, b) => b.handled - a.handled).map(a => [
-    a.name, a.code, a.tier, a.handled, a.responseRate ?? '-', a.resolutionRate ?? '-', a.mttr, a.breaches, a.trend
+    a.name, a.id, a.tier, a.handled, a.responseRate ?? '-', a.resolutionRate ?? '-', a.mttr, a.breaches, a.trend
   ]));
 
   // ---- Sheet 4: Engineer ----

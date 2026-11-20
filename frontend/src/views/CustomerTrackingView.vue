@@ -274,10 +274,12 @@
 import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTicketStore } from '../stores/ticketStore';
+import { useUiStore } from '../stores/uiStore';
 import { formatUtcToLocal } from '../utils/dateFormatter';
 
 const route = useRoute();
 const ticketStore = useTicketStore();
+const uiStore = useUiStore();
 
 const ticketNumber = computed(() => route.params.ticketNumber);
 
@@ -347,14 +349,23 @@ const statusBannerClass = computed(() => {
   }
 });
 
-const confirmCustomerSatisfaction = () => {
+const confirmCustomerSatisfaction = async () => {
   if (!ticket.value) return;
+  const ok = await uiStore.confirm({
+    title: 'Konfirmasi Penyelesaian Kasus',
+    message: 'Apakah layanan telah pulih normal dan Anda mengonfirmasi penutupan tiket ini?',
+    confirmText: 'Ya, Layanan Normal & Selesai',
+    cancelText: 'Batal',
+    type: 'success'
+  });
+  if (!ok) return;
+
   ticketStore.closeTicket(
     ticket.value.id,
     { name: pic.value?.name || 'PIC Pelanggan', roleCode: 'CUSTOMER' },
     'Pelanggan telah memverifikasi layanan normal dan mengonfirmasi penyelesaian tiket.'
   );
-  alert('Terima kasih! Konfirmasi kepuasan Anda telah dicatat. Tiket resmi diarsipkan dengan status CLOSED.');
+  uiStore.toastSuccess('Terima kasih! Tiket resmi diarsipkan dengan status CLOSED.');
 };
 
 // Share Link to Customer Internal Team
@@ -364,9 +375,11 @@ const copyShareLink = async () => {
   try {
     await navigator.clipboard.writeText(window.location.href);
     copiedLink.value = true;
+    uiStore.toastSuccess('Tautan tracking tiket berhasil disalin ke clipboard!');
     setTimeout(() => { copiedLink.value = false; }, 2500);
   } catch (err) {
     console.error('Failed to copy share link:', err);
+    uiStore.toastError('Gagal menyalin tautan.');
   }
 };
 </script>

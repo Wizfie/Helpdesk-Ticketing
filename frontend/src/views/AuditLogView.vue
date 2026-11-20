@@ -61,30 +61,15 @@
       </div>
 
       <!-- Action Type Filter -->
-      <select v-model="filterAction" class="border border-slate-200 rounded-lg px-3 py-2 bg-white text-xs">
-        <option value="">Semua Jenis Aksi ({{ filteredLogs.length }})</option>
-        <optgroup label="Aktivitas Tiket & SLA">
-          <option value="TICKET_CREATED">Tiket Dibuat (TICKET_CREATED)</option>
-          <option value="ASSIGN_ENGINEER">Penugasan Teknisi (ASSIGN_ENGINEER)</option>
-          <option value="STATUS_CHANGED">Perubahan Status (STATUS_CHANGED)</option>
-          <option value="SLA_PAUSED">SLA Ditahan (SLA_PAUSED)</option>
-          <option value="SLA_RESUMED">SLA Dilanjutkan (SLA_RESUMED)</option>
-          <option value="TICKET_RESOLVED">Tiket Selesai (TICKET_RESOLVED)</option>
-          <option value="TICKET_CLOSED">Tiket Ditutup (TICKET_CLOSED)</option>
-          <option value="KB_SUBMITTED">Pengajuan KB (KB_SUBMITTED)</option>
-        </optgroup>
-        <optgroup label="Aktivitas Manajemen Pengguna">
-          <option value="USER_CREATED">Staf Didaftarkan (USER_CREATED)</option>
-          <option value="USER_UPDATED">Data Staf Diubah (USER_UPDATED)</option>
-          <option value="USER_STATUS_TOGGLED">Status Staf Diubah (USER_STATUS_TOGGLED)</option>
-        </optgroup>
-        <optgroup label="Aktivitas Mitra & PIC Customer">
-          <option value="CUSTOMER_CREATED">Mitra Didaftarkan (CUSTOMER_CREATED)</option>
-          <option value="CUSTOMER_UPDATED">Data Mitra Diubah (CUSTOMER_UPDATED)</option>
-          <option value="CUSTOMER_PIC_ADDED">PIC Ditambahkan (CUSTOMER_PIC_ADDED)</option>
-          <option value="CUSTOMER_PIC_UPDATED">PIC Diubah (CUSTOMER_PIC_UPDATED)</option>
-        </optgroup>
-      </select>
+      <BaseSelect
+        v-model="filterAction"
+        :options="actionTypeOptions"
+        size="sm"
+        placement="right"
+        searchable
+        placeholder="Semua Jenis Aksi"
+        containerClass="w-64"
+      />
     </div>
 
     <!-- Audit Logs Table -->
@@ -211,15 +196,27 @@ const ticketStore = useTicketStore();
 const searchQuery = ref('');
 const filterAction = ref('');
 
+const actionTypeOptions = [
+  { value: '', label: 'Semua Jenis Aksi' },
+  { value: 'TICKET_CREATED', label: 'Tiket Dibuat', subtext: 'TICKET_CREATED', badge: 'Tiket' },
+  { value: 'ASSIGN_ENGINEER', label: 'Penugasan Teknisi', subtext: 'ASSIGN_ENGINEER', badge: 'Teknisi' },
+  { value: 'STATUS_CHANGED', label: 'Perubahan Status', subtext: 'STATUS_CHANGED', badge: 'Status' },
+  { value: 'SLA_PAUSED', label: 'SLA Ditahan', subtext: 'SLA_PAUSED', badge: 'SLA' },
+  { value: 'SLA_RESUMED', label: 'SLA Dilanjutkan', subtext: 'SLA_RESUMED', badge: 'SLA' },
+  { value: 'TICKET_RESOLVED', label: 'Tiket Selesai', subtext: 'TICKET_RESOLVED', badge: 'Resolusi' },
+  { value: 'TICKET_CLOSED', label: 'Tiket Ditutup', subtext: 'TICKET_CLOSED', badge: 'Closed' },
+  { value: 'KB_SUBMITTED', label: 'Pengajuan KB', subtext: 'KB_SUBMITTED', badge: 'KB' },
+  { value: 'USER_CREATED', label: 'Staf Didaftarkan', subtext: 'USER_CREATED', badge: 'User' },
+  { value: 'USER_UPDATED', label: 'Data Staf Diubah', subtext: 'USER_UPDATED', badge: 'User' },
+  { value: 'USER_STATUS_TOGGLED', label: 'Status Staf Diubah', subtext: 'USER_STATUS_TOGGLED', badge: 'User' },
+  { value: 'CUSTOMER_CREATED', label: 'Mitra Didaftarkan', subtext: 'CUSTOMER_CREATED', badge: 'Mitra' },
+  { value: 'CUSTOMER_UPDATED', label: 'Data Mitra Diubah', subtext: 'CUSTOMER_UPDATED', badge: 'Mitra' },
+  { value: 'CUSTOMER_PIC_ADDED', label: 'PIC Ditambahkan', subtext: 'CUSTOMER_PIC_ADDED', badge: 'Mitra' },
+  { value: 'CUSTOMER_PIC_UPDATED', label: 'PIC Diubah', subtext: 'CUSTOMER_PIC_UPDATED', badge: 'Mitra' }
+];
+
 onMounted(async () => {
-  try {
-    const res = await api.getAuditLogs();
-    if (res && res.data && res.data.length > 0) {
-      ticketStore.auditLogs = res.data;
-    }
-  } catch (err) {
-    console.warn('[AuditLogs] Gagal memuat audit log dari API, fallback lokal:', err.message);
-  }
+  await ticketStore.fetchAuditLogs();
 });
 
 const formatTime = (utc) => formatUtcToLocal(utc);

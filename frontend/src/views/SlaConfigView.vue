@@ -164,7 +164,7 @@
 
           type="text"
 
-          placeholder="Cari nama, kode, atau deskripsi SLA..."
+          placeholder="Cari nama atau deskripsi SLA..."
 
           class="w-full pl-10 pr-4 py-2 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
 
@@ -175,53 +175,24 @@
 
 
       <!-- Filter Status -->
-
       <div class="w-full md:w-48">
-
-        <select
-
+        <BaseSelect
           v-model="filterStatus"
-
-          class="w-full py-2 px-3 border border-slate-200 rounded-xl text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-
-        >
-
-          <option value="">Semua Status</option>
-
-          <option value="Active">Active</option>
-
-          <option value="Inactive">Inactive</option>
-
-        </select>
-
+          :options="filterStatusOptions"
+          size="sm"
+          placeholder="Semua Status"
+        />
       </div>
 
-
-
       <!-- Filter Operating Window -->
-
-      <div class="w-full md:w-60">
-
-        <select
-
+      <div class="w-full md:w-64">
+        <BaseSelect
           v-model="filterOperatingWindow"
-
-          class="w-full py-2 px-3 border border-slate-200 rounded-xl text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-
-        >
-
-          <option value="">Semua Operating Window</option>
-
-          <option value="24 Jam x 7 Hari">24 Jam x 7 Hari</option>
-
-          <option value="Senin - Jumat">Senin - Jumat</option>
-
-          <option value="Senin - Sabtu">Senin - Sabtu</option>
-
-          <option value="Custom">Custom</option>
-
-        </select>
-
+          :options="filterOperatingWindowOptions"
+          size="sm"
+          placement="right"
+          placeholder="Semua Operating Window"
+        />
       </div>
 
     </div>
@@ -290,8 +261,6 @@
 
               <th class="py-3.5 px-4">Nama Kebijakan SLA</th>
 
-              <th class="py-3.5 px-4 w-36">Kode</th>
-
               <th class="py-3.5 px-4">Operating Window</th>
 
               <th class="py-3.5 px-4 w-28 text-center">Status</th>
@@ -333,20 +302,6 @@
                 <span class="font-bold text-slate-900 hover:text-blue-600 transition-colors">
 
                   {{ policy.tierName }}
-
-                </span>
-
-              </td>
-
-
-
-              <!-- Kode -->
-
-              <td class="py-3.5 px-4">
-
-                <span class="font-mono text-[11px] text-slate-600 uppercase">
-
-                  {{ policy.tierCode }}
 
                 </span>
 
@@ -813,11 +768,9 @@
 
                   <th class="py-2.5 px-4 w-44">Priority</th>
 
-                  <th class="py-2.5 px-4 w-40">Batas Response</th>
+                  <th class="py-2.5 px-4">Batas Response</th>
 
-                  <th class="py-2.5 px-4 w-40">Batas Resolusi</th>
-
-                  <th class="py-2.5 px-4">Keterangan</th>
+                  <th class="py-2.5 px-4">Batas Resolusi</th>
 
                 </tr>
 
@@ -838,8 +791,6 @@
 
                   <td class="py-3 px-4 font-mono font-bold">{{ selectedPolicy.p1ResolutionHours }} Jam</td>
 
-                  <td class="py-3 px-4 text-slate-600">{{ getPolicyMeta(selectedPolicy).p1Notes || 'Layanan kritikal produksi' }}</td>
-
                 </tr>
 
                 <tr>
@@ -854,8 +805,6 @@
                   <td class="py-3 px-4 font-mono font-bold">{{ selectedPolicy.p2ResponseHours }} Jam</td>
 
                   <td class="py-3 px-4 font-mono font-bold">{{ selectedPolicy.p2ResolutionHours }} Jam</td>
-
-                  <td class="py-3 px-4 text-slate-600">{{ getPolicyMeta(selectedPolicy).p2Notes || 'Gangguan mayor' }}</td>
 
                 </tr>
 
@@ -872,8 +821,6 @@
 
                   <td class="py-3 px-4 font-mono font-bold">{{ selectedPolicy.p3ResolutionHours }} Jam</td>
 
-                  <td class="py-3 px-4 text-slate-600">{{ getPolicyMeta(selectedPolicy).p3Notes || 'Service degradation' }}</td>
-
                 </tr>
 
                 <tr>
@@ -888,8 +835,6 @@
                   <td class="py-3 px-4 font-mono font-bold">{{ selectedPolicy.p4ResponseHours }} Jam</td>
 
                   <td class="py-3 px-4 font-mono font-bold">{{ selectedPolicy.p4ResolutionHours }} Jam</td>
-
-                  <td class="py-3 px-4 text-slate-600">{{ getPolicyMeta(selectedPolicy).p4Notes || 'Permintaan informasi / minor' }}</td>
 
                 </tr>
 
@@ -984,53 +929,30 @@
 
 
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
 
               <!-- Nama Kebijakan SLA -->
               <div>
-
-                <label class="block font-semibold text-slate-700 mb-1">Nama Kebijakan SLA *</label>
-
+                <label class="block font-semibold text-slate-700 text-sm mb-1">Nama Kebijakan SLA *</label>
                 <input 
-
                   v-model="formPolicy.tierName" 
-
                   required 
-
                   type="text" 
-
                   placeholder="Contoh: GOLD 24x7 Production Support" 
-
-                  class="w-full p-2.5 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
-
+                  class="w-full px-3 py-2.5 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-sm min-h-[42px]" 
                 />
-
               </div>
 
               <!-- Operating Window di samping Nama SLA -->
               <div>
-
-                <label class="block font-semibold text-slate-700 mb-1">Operating Window *</label>
-
-                <select 
-
-                  v-model="formPolicy.operatingHours" 
-
-                  class="w-full p-2.5 border border-slate-200 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-
-                >
-
-                  <option value="24 Jam x 7 Hari (Non-Stop)">24 Jam x 7 Hari (Non-Stop)</option>
-
-                  <option value="Senin - Jumat (08:00 - 17:00 WIB)">Senin - Jumat (08:00 - 17:00 WIB)</option>
-
-                  <option value="Senin - Sabtu (07:00 - 18:00 WIB)">Senin - Sabtu (07:00 - 18:00 WIB)</option>
-
-                  <option value="Senin - Jumat (07:30 - 16:30 WIB)">Senin - Jumat (07:30 - 16:30 WIB)</option>
-
-                  <option value="custom">Custom...</option>
-
-                </select>
+                <BaseSelect
+                  v-model="formPolicy.operatingHours"
+                  :options="operatingWindowOptions"
+                  label="Operating Window"
+                  required
+                  placeholder="Pilih operating window..."
+                  menu-width-class="min-w-full sm:min-w-[380px] max-w-[480px]"
+                />
 
                 <!-- Input custom muncul jika pilih Custom -->
                 <input
@@ -1040,7 +962,6 @@
                   placeholder="Contoh: Senin - Rabu (06:00 - 14:00 WIB)"
                   class="mt-2 w-full p-2.5 border border-blue-300 rounded-lg text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-xs"
                 />
-
               </div>
 
               <!-- Deskripsi lebih panjang (span 2 kolom) -->
@@ -1087,11 +1008,9 @@
 
                     <th class="py-2.5 px-4 w-40">Priority</th>
 
-                    <th class="py-2.5 px-4 w-36">Batas Response (jam)</th>
+                    <th class="py-2.5 px-4">Batas Response (jam)</th>
 
-                    <th class="py-2.5 px-4 w-36">Batas Resolusi (jam)</th>
-
-                    <th class="py-2.5 px-4">Keterangan (Opsional)</th>
+                    <th class="py-2.5 px-4">Batas Resolusi (jam)</th>
 
                   </tr>
 
@@ -1154,22 +1073,6 @@
                         placeholder="4" 
 
                         class="w-full p-2 border border-slate-200 rounded-lg font-mono text-center focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
-
-                      />
-
-                    </td>
-
-                    <td class="py-2.5 px-4">
-
-                      <input 
-
-                        v-model="formPolicy.p1Notes" 
-
-                        type="text" 
-
-                        placeholder="Contoh: Layanan kritikal produksi" 
-
-                        class="w-full p-2 border border-slate-200 rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
 
                       />
 
@@ -1239,22 +1142,6 @@
 
                     </td>
 
-                    <td class="py-2.5 px-4">
-
-                      <input 
-
-                        v-model="formPolicy.p2Notes" 
-
-                        type="text" 
-
-                        placeholder="Contoh: Gangguan mayor" 
-
-                        class="w-full p-2 border border-slate-200 rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
-
-                      />
-
-                    </td>
-
                   </tr>
 
 
@@ -1319,22 +1206,6 @@
 
                     </td>
 
-                    <td class="py-2.5 px-4">
-
-                      <input 
-
-                        v-model="formPolicy.p3Notes" 
-
-                        type="text" 
-
-                        placeholder="Contoh: Service degradation" 
-
-                        class="w-full p-2 border border-slate-200 rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
-
-                      />
-
-                    </td>
-
                   </tr>
 
 
@@ -1394,22 +1265,6 @@
                         placeholder="48" 
 
                         class="w-full p-2 border border-slate-200 rounded-lg font-mono text-center focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
-
-                      />
-
-                    </td>
-
-                    <td class="py-2.5 px-4">
-
-                      <input 
-
-                        v-model="formPolicy.p4Notes" 
-
-                        type="text" 
-
-                        placeholder="Contoh: Permintaan informasi / minor" 
-
-                        class="w-full p-2 border border-slate-200 rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
 
                       />
 
@@ -1538,16 +1393,14 @@
 <script setup>
 
 import { ref, computed, onMounted } from 'vue';
-
 import { api } from '../services/api.js';
-
 import { useTicketStore } from '../stores/ticketStore.js';
-
 import { useAuthStore } from '../stores/authStore.js';
+import { useUiStore } from '../stores/uiStore.js';
 
 const ticketStore = useTicketStore();
-
 const authStore = useAuthStore();
+const uiStore = useUiStore();
 
 
 
@@ -1590,35 +1443,42 @@ const customers = ref([]);
 
 
 // Filter & Search states
-
 const searchQuery = ref('');
-
 const filterStatus = ref('');
-
 const filterOperatingWindow = ref('');
 
+// Dropdown options
+const filterStatusOptions = [
+  { value: '', label: 'Semua Status' },
+  { value: 'Active', label: 'Active', badge: 'Aktif', badgeClass: 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200' },
+  { value: 'Inactive', label: 'Inactive', badge: 'Non-aktif', badgeClass: 'px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500' }
+];
 
+const filterOperatingWindowOptions = [
+  { value: '', label: 'Semua Operating Window' },
+  { value: '24 Jam x 7 Hari', label: '24 Jam x 7 Hari (Non-Stop)', subtext: 'Operasional 24 jam nonstop' },
+  { value: 'Senin - Jumat', label: 'Senin - Jumat (08:00 - 17:00 WIB)', subtext: 'Jam kerja reguler 5 hari' },
+  { value: 'Senin - Sabtu', label: 'Senin - Sabtu (07:00 - 18:00 WIB)', subtext: 'Jam operasional 6 hari' },
+  { value: 'Custom', label: 'Jadwal Khusus (Custom)', subtext: 'Jadwal yang dikonfigurasi kustom' }
+];
+
+const operatingWindowOptions = [
+  { value: '24 Jam x 7 Hari (Non-Stop)', label: '24 Jam x 7 Hari (Non-Stop)', subtext: 'Layanan operasional tanpa henti 24 jam x 7 hari' },
+  { value: 'Senin - Jumat (08:00 - 17:00 WIB)', label: 'Senin - Jumat (08:00 - 17:00 WIB)', subtext: 'Jam kerja standar operasional bisnis (8x5)' },
+  { value: 'Senin - Sabtu (07:00 - 18:00 WIB)', label: 'Senin - Sabtu (07:00 - 18:00 WIB)', subtext: 'Jam kerja operasional komersial (6 hari)' },
+  { value: 'Senin - Jumat (07:30 - 16:30 WIB)', label: 'Senin - Jumat (07:30 - 16:30 WIB)', subtext: 'Instansi pemerintahan / BUMN' },
+  { value: 'custom', label: 'Custom...', subtext: 'Tentukan jadwal operasional khusus sendiri' }
+];
 
 // Pagination
-
 const currentPage = ref(1);
-
 const itemsPerPage = 10;
 
-
-
 const defaultForm = () => ({
-
   id: null,
-
-  tierCode: '',
-
   tierName: '',
-
   description: '',
-
   status: 'Active',
-
   operatingHours: '24 Jam x 7 Hari (Non-Stop)',
 
   customOperatingHours: '',
@@ -1627,25 +1487,17 @@ const defaultForm = () => ({
 
   p1ResolutionHours: 4,
 
-  p1Notes: '',
-
   p2ResponseHours: 1,
 
   p2ResolutionHours: 8,
-
-  p2Notes: '',
 
   p3ResponseHours: 2,
 
   p3ResolutionHours: 24,
 
-  p3Notes: '',
-
   p4ResponseHours: 4,
 
   p4ResolutionHours: 48,
-
-  p4Notes: '',
 
   responseStartCondition: 'Ticket Created',
 
@@ -1963,12 +1815,15 @@ async function loadData() {
 
   } catch (err) {
 
-    // Jika backend belum aktif atau error, gunakan store lokal (bersihkan dari mock)
-    policies.value = filterClean(ticketStore.slaPolicies);
+    console.warn('[SlaConfigView] Gagal mengambil data live dari backend:', err.message);
 
-    customers.value = ticketStore.customers || [];
+    loadError.value = err.message || 'Gagal memuat data dari database.';
 
-    ticketStore.setSlaPolicies(policies.value);
+    policies.value = [];
+
+    customers.value = [];
+
+    ticketStore.setSlaPolicies([]);
 
   } finally {
 
@@ -2084,14 +1939,6 @@ const editPolicy = (policy) => {
 
         base.status = extra.status || 'Active';
 
-        base.p1Notes = extra.p1Notes || '';
-
-        base.p2Notes = extra.p2Notes || '';
-
-        base.p3Notes = extra.p3Notes || '';
-
-        base.p4Notes = extra.p4Notes || '';
-
         base.responseStartCondition = extra.responseStartCondition || 'Ticket Created';
 
         base.resolutionEndCondition = extra.resolutionEndCondition || 'Ticket Resolved / Closed';
@@ -2153,14 +2000,6 @@ const savePolicy = async () => {
       description: formPolicy.value.description || '',
 
       status: 'Active',
-
-      p1Notes: formPolicy.value.p1Notes || '',
-
-      p2Notes: formPolicy.value.p2Notes || '',
-
-      p3Notes: formPolicy.value.p3Notes || '',
-
-      p4Notes: formPolicy.value.p4Notes || '',
 
       createdBy: isEditing.value 
 
@@ -2258,6 +2097,7 @@ const savePolicy = async () => {
     }
 
     showModal.value = false;
+    uiStore.toastSuccess(`Kebijakan SLA "${formPolicy.value.tierName}" berhasil disimpan!`);
 
   } catch (err) {
 
@@ -2330,6 +2170,7 @@ const togglePolicyStatus = async (policy) => {
     }
 
     ticketStore.setSlaPolicies([...policies.value]);
+    uiStore.toastSuccess(`Status kebijakan SLA "${policy.tierName}" berhasil diubah menjadi ${nextStatus}.`);
 
   } catch (err) {
 
@@ -2373,6 +2214,7 @@ const doDelete = async () => {
 
     ticketStore.setSlaPolicies([...policies.value]);
 
+    const deletedName = policyToDelete.value?.tierName || 'Kebijakan SLA';
     showDeleteConfirm.value = false;
 
     policyToDelete.value = null;
@@ -2382,6 +2224,8 @@ const doDelete = async () => {
       showDetailModal.value = false;
 
     }
+
+    uiStore.toastSuccess(`Kebijakan SLA "${deletedName}" berhasil dihapus.`);
 
   } catch (err) {
 

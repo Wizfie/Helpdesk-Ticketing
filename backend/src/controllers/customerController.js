@@ -44,32 +44,15 @@ export async function getCustomerById(req, res) {
 
 export async function createCustomer(req, res) {
   try {
-    const { name, code, industry, serviceContract, slaTier, contractTier, contractSla, address, picName, picPhone, picEmail, picDept, ticketQuota, maintenanceStart, maintenanceEnd } = req.body;
+    const { name, industry, slaTier, address, picName, picPhone, picEmail, ticketQuota, maintenanceStart, maintenanceEnd } = req.body;
     const actor = req.user;
 
-    let customerCode = code;
-    if (!customerCode || !customerCode.trim()) {
-      const cleanName = (name || 'CUST').replace(/^(PT|CV|UD|PD|TBK)\s+/i, '').trim();
-      const words = cleanName.split(/\s+/).filter(Boolean);
-      customerCode = words.length >= 2
-        ? words.slice(0, 4).map(w => w[0]).join('').toUpperCase()
-        : (words[0] ? words[0].slice(0, 4).toUpperCase() : 'CUST' + Date.now().toString().slice(-4));
-    }
-    const existingCode = await prisma.customer.findUnique({ where: { code: customerCode.toUpperCase() } });
-    if (existingCode) {
-      customerCode = `${customerCode.toUpperCase()}-${Math.floor(10 + Math.random() * 90)}`;
-    } else {
-      customerCode = customerCode.toUpperCase();
-    }
-
-    const assignedSlaTier = slaTier || contractTier || contractSla || '8x5 GOLD ENTERPRISE';
+    const assignedSlaTier = slaTier || 'GOLD';
 
     const newCustomer = await prisma.customer.create({
       data: {
         name,
-        code: customerCode,
         industry: industry || null,
-        serviceContract: serviceContract || 'PKS Layanan Managed Service 24x7',
         slaTier: assignedSlaTier,
         address: address || '',
         maintenanceStart: maintenanceStart || null,
@@ -81,8 +64,7 @@ export async function createCustomer(req, res) {
             {
               name: picName,
               phone: picPhone,
-              email: picEmail,
-              dept: picDept || 'IT Operations'
+              email: picEmail
             }
           ]
         }
@@ -92,11 +74,11 @@ export async function createCustomer(req, res) {
 
     await logAuditEvent({
       userName: actor?.name || 'System Admin',
-      role: actor?.role?.code || 'ADMIN',
+      role: actor?.role || 'ADMIN',
       action: 'CUSTOMER_CREATED',
       entityType: 'CUSTOMER',
-      entityId: newCustomer.code,
-      description: `Mendaftarkan klien mitra baru: ${newCustomer.name} (${newCustomer.code})`,
+      entityId: String(newCustomer.id),
+      description: `Mendaftarkan klien mitra baru: ${newCustomer.name}`,
       ipAddress: req.ip
     });
 
@@ -109,19 +91,15 @@ export async function createCustomer(req, res) {
 export async function updateCustomer(req, res) {
   try {
     const { id } = req.params;
-    const { name, code, industry, serviceContract, slaTier, contractTier, contractSla, address, isActive, maintenanceStart, maintenanceEnd, ticketQuota } = req.body;
+    const { name, industry, slaTier, address, isActive, maintenanceStart, maintenanceEnd, ticketQuota } = req.body;
     const actor = req.user;
-
-    const assignedSlaTier = slaTier !== undefined ? slaTier : (contractTier !== undefined ? contractTier : contractSla);
 
     const updated = await prisma.customer.update({
       where: { id: Number(id) },
       data: {
         name,
-        code: code ? code.toUpperCase() : undefined,
         industry: industry !== undefined ? industry : undefined,
-        serviceContract: serviceContract !== undefined ? serviceContract : undefined,
-        slaTier: assignedSlaTier !== undefined ? assignedSlaTier : undefined,
+        slaTier: slaTier !== undefined ? slaTier : undefined,
         address,
         maintenanceStart: maintenanceStart !== undefined ? maintenanceStart : undefined,
         maintenanceEnd: maintenanceEnd !== undefined ? maintenanceEnd : undefined,
@@ -133,10 +111,10 @@ export async function updateCustomer(req, res) {
 
     await logAuditEvent({
       userName: actor?.name || 'System Admin',
-      role: actor?.role?.code || 'ADMIN',
+      role: actor?.role || 'ADMIN',
       action: 'CUSTOMER_UPDATED',
       entityType: 'CUSTOMER',
-      entityId: updated.code,
+      entityId: String(updated.id),
       description: `Memperbarui profil mitra korporat: ${updated.name}`,
       ipAddress: req.ip
     });
@@ -150,7 +128,7 @@ export async function updateCustomer(req, res) {
 export async function addCustomerPic(req, res) {
   try {
     const { id } = req.params;
-    const { name, phone, email, dept } = req.body;
+    const { name, phone, email } = req.body;
     const actor = req.user;
 
     const customer = await prisma.customer.findUnique({ where: { id: Number(id) } });
@@ -161,17 +139,16 @@ export async function addCustomerPic(req, res) {
         customerId: customer.id,
         name,
         phone,
-        email,
-        dept
+        email
       }
     });
 
     await logAuditEvent({
       userName: actor?.name || 'System Admin',
-      role: actor?.role?.code || 'ADMIN',
+      role: actor?.role || 'ADMIN',
       action: 'CUSTOMER_PIC_ADDED',
       entityType: 'CUSTOMER',
-      entityId: customer.code,
+      entityId: String(customer.id),
       description: `Menambahkan kontak PIC baru ${pic.name} untuk mitra ${customer.name}`,
       ipAddress: req.ip
     });
@@ -207,11 +184,11 @@ export async function deleteCustomer(req, res) {
 
     await logAuditEvent({
       userName: actor?.name || 'System Admin',
-      role: actor?.role?.code || 'ADMIN',
+      role: actor?.role || 'ADMIN',
       action: 'CUSTOMER_DELETED',
       entityType: 'CUSTOMER',
-      entityId: customer.code,
-      description: `Menghapus data klien mitra: ${customer.name} (${customer.code})`,
+      entityId: String(customer.id),
+      description: `Menghapus data klien mitra: ${customer.name}`,
       ipAddress: req.ip
     });
 
@@ -224,21 +201,21 @@ export async function deleteCustomer(req, res) {
 export async function updateCustomerPic(req, res) {
   try {
     const { id, picId } = req.params;
-    const { name, phone, email, dept } = req.body;
+    const { name, phone, email } = req.body;
     const actor = req.user;
 
     const updatedPic = await prisma.customerPic.update({
       where: { id: Number(picId) },
-      data: { name, phone, email, dept }
+      data: { name, phone, email }
     });
 
     await logAuditEvent({
       userName: actor?.name || 'System Admin',
-      role: actor?.role?.code || 'ADMIN',
+      role: actor?.role || 'ADMIN',
       action: 'CUSTOMER_PIC_UPDATED',
       entityType: 'CUSTOMER',
       entityId: String(id),
-      description: `Memperbarui kontak PIC: ${updatedPic.name} (${updatedPic.dept})`,
+      description: `Memperbarui kontak PIC: ${updatedPic.name}`,
       ipAddress: req.ip
     });
 

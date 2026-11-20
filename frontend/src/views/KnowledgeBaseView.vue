@@ -229,36 +229,36 @@
             <span class="font-bold text-slate-400 text-[10px] uppercase tracking-wider font-mono">FILTER RUNBOOKS</span>
             
             <!-- Filter by Principal (Dinamis) -->
-            <select
+            <BaseSelect
               v-model="selectedPrincipal"
-              class="border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
-            >
-              <option value="">Semua Principal (All)</option>
-              <option v-for="p in availablePrincipals" :key="p" :value="p">{{ p }}</option>
-            </select>
+              :options="principalOptions"
+              size="sm"
+              searchable
+              placeholder="Semua Principal"
+              containerClass="w-48"
+            />
 
             <!-- Filter by Status -->
-            <select
+            <BaseSelect
               v-model="selectedStatus"
-              class="border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-medium"
-            >
-              <option value="ALL">Semua Status (All)</option>
-              <option value="PUBLISHED">Status: Published / Approved</option>
-              <option value="PENDING_APPROVAL">Status: Menunggu Review</option>
-              <option value="DRAFT">Status: Draft</option>
-            </select>
+              :options="statusFilterOptions"
+              size="sm"
+              placeholder="Semua Status"
+              containerClass="w-48"
+            />
           </div>
 
           <!-- Sort Dropdown -->
           <div class="flex items-center space-x-2">
             <span class="text-slate-400 text-[11px]">Sort:</span>
-            <select
+            <BaseSelect
               v-model="sortBy"
-              class="border border-slate-200 rounded-lg px-2.5 py-1 text-slate-700 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 font-semibold"
-            >
-              <option value="mostReferenced">Most Referenced</option>
-              <option value="latest">Recently Updated</option>
-            </select>
+              :options="sortOptions"
+              size="sm"
+              placement="right"
+              placeholder="Sort"
+              containerClass="w-40"
+            />
           </div>
         </div>
 
@@ -272,15 +272,21 @@
           >
             <!-- Card Header: Badges & Ticket Reference Counter -->
             <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center space-x-2">
+              <div class="flex items-center space-x-2 flex-wrap gap-y-1">
                 <span class="font-mono font-bold text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded border border-blue-200/70">
                   {{ item.kbCode || `KB-${item.id}` }}
                 </span>
                 <span class="text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded">
                   {{ item.category || item.categoryGroup }}
                 </span>
-                <span class="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
-                  {{ item.technologyPrincipal }}
+                <span v-if="item.caseType" class="text-[10px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded uppercase">
+                  {{ item.caseType }}
+                </span>
+                <span v-if="item.product || item.technologyPrincipal" class="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100">
+                  {{ item.product || item.technologyPrincipal }}
+                </span>
+                <span v-if="item.sourceTicket" class="text-[10px] font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                  Ref: {{ item.sourceTicket }}
                 </span>
               </div>
 
@@ -298,20 +304,46 @@
               {{ item.title }}
             </h3>
 
-            <!-- Summary / Symptom -->
-            <p class="text-xs text-slate-600 leading-relaxed line-clamp-2">
-              {{ item.symptom }}
-            </p>
+            <!-- Attached File Box with Download Button -->
+            <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3 text-xs">
+              <div class="flex items-center space-x-2.5 min-w-0">
+                <div
+                  class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[10px] shrink-0 border"
+                  :class="isDocx(item) ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-rose-50 text-rose-700 border-rose-200'"
+                >
+                  {{ isDocx(item) ? 'DOCX' : 'PDF' }}
+                </div>
+                <div class="min-w-0">
+                  <span class="font-semibold text-slate-800 truncate block text-xs" :title="item.documentName || item.uploadedDocName">
+                    {{ item.documentName || item.uploadedDocName || 'Dokumen Runbook Resmi' }}
+                  </span>
+                  <span class="text-[11px] text-slate-400">
+                    {{ item.documentSize || item.uploadedDocSize || 'Format Dokumen Terlampir' }}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                @click.stop="downloadRunbookFile(item)"
+                class="px-3 py-1.5 bg-white hover:bg-blue-50 text-blue-700 border border-slate-200 hover:border-blue-300 font-bold rounded-lg text-xs flex items-center space-x-1.5 shrink-0 transition-all shadow-2xs cursor-pointer"
+                title="Unduh Berkas Dokumen"
+              >
+                <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Unduh Dokumen</span>
+              </button>
+            </div>
 
             <!-- Card Footer: Author & Timestamp & State -->
             <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
               <div class="flex items-center space-x-2">
                 <span class="w-2 h-2 rounded-full bg-blue-500"></span>
                 <span>
-                  {{ item.approver ? `${item.approver}` : `Author: ${item.author || item.engineerName}` }}
+                  {{ item.approver ? `${item.approver}` : `Author: ${item.author || item.engineerName || 'Support Engineer'}` }}
                 </span>
                 <span>•</span>
-                <span class="text-slate-400">Updated {{ item.updatedAt || 'Recently' }}</span>
+                <span class="text-slate-400">Updated {{ item.updatedAt ? new Date(item.updatedAt).toLocaleDateString('id-ID') : 'Recently' }}</span>
               </div>
 
               <div class="flex items-center space-x-2">
@@ -319,11 +351,11 @@
                   class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider"
                   :class="{
                     'bg-emerald-50 text-emerald-700 border border-emerald-200': item.status === 'PUBLISHED',
-                    'bg-amber-50 text-amber-700 border border-amber-200': item.status === 'PENDING_APPROVAL',
+                    'bg-amber-50 text-amber-700 border border-amber-200': item.status === 'PENDING_APPROVAL' || item.status === 'PENDING_REVIEW',
                     'bg-slate-100 text-slate-600 border border-slate-200': item.status === 'DRAFT'
                   }"
                 >
-                  {{ item.status === 'PUBLISHED' ? 'VERIFIED PLAYBOOK' : (item.status === 'PENDING_APPROVAL' ? 'PENDING REVIEW' : 'DRAFT') }}
+                  {{ item.status === 'PUBLISHED' ? 'TERVERIFIKASI' : (item.status === 'DRAFT' ? 'DRAFT' : 'MENUNGGU REVIEW') }}
                 </span>
                 <span class="text-blue-600 group-hover:translate-x-0.5 transition-transform font-bold text-xs">&rarr;</span>
               </div>
@@ -549,9 +581,9 @@
       </div>
     </div>
 
-    <!-- Modal 1: Runbook Detail Drawer / Modal (Conforms to Official 12-Section Template) -->
+    <!-- Modal 1: Runbook Detail Modal (Document Viewer & Downloader) -->
     <div v-if="selectedRunbook" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4">
-      <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
+      <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden animate-in fade-in duration-150">
         <!-- Modal Header -->
         <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-start justify-between gap-3">
           <div class="space-y-1">
@@ -562,37 +594,23 @@
               <span class="text-xs font-semibold text-slate-700 bg-white border border-slate-200 px-2.5 py-0.5 rounded">
                 {{ selectedRunbook.category || selectedRunbook.categoryGroup }}
               </span>
-              <span class="text-xs font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-0.5 rounded">
-                {{ selectedRunbook.technologyPrincipal }}
-              </span>
-              <span class="text-[10px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded uppercase">
-                {{ selectedRunbook.caseType || 'Incident' }}
+              <span v-if="selectedRunbook.caseType" class="text-[10px] font-mono font-bold bg-amber-50 text-amber-800 border border-amber-200 px-2 py-0.5 rounded uppercase">
+                {{ selectedRunbook.caseType }}
               </span>
               <span 
                 class="text-[10px] font-mono font-bold px-2 py-0.5 rounded border uppercase"
                 :class="{
                   'bg-emerald-100 text-emerald-800 border-emerald-200': selectedRunbook.status === 'PUBLISHED',
-                  'bg-amber-100 text-amber-800 border-amber-200': selectedRunbook.status === 'PENDING_APPROVAL',
+                  'bg-amber-100 text-amber-800 border-amber-200': selectedRunbook.status === 'PENDING_APPROVAL' || selectedRunbook.status === 'PENDING_REVIEW',
                   'bg-slate-100 text-slate-700 border-slate-200': selectedRunbook.status === 'DRAFT'
                 }"
               >
-                {{ selectedRunbook.status === 'PUBLISHED' ? 'VERIFIED SOP' : (selectedRunbook.status === 'PENDING_APPROVAL' ? 'PENDING APPROVAL' : 'DRAFT') }}
+                {{ selectedRunbook.status === 'PUBLISHED' ? 'TERVERIFIKASI' : (selectedRunbook.status === 'DRAFT' ? 'DRAFT' : 'MENUNGGU REVIEW') }}
               </span>
             </div>
-            <h2 class="text-base sm:text-xl font-black text-slate-900 leading-snug">
+            <h2 class="text-base sm:text-lg font-black text-slate-900 leading-snug">
               {{ selectedRunbook.title }}
             </h2>
-            <div class="text-[11px] text-slate-500 flex items-center space-x-2 flex-wrap">
-              <span>Prepared By: <strong>{{ selectedRunbook.author || selectedRunbook.engineerName || 'Engineer GTT' }}</strong></span>
-              <span>•</span>
-              <span>Approver: <strong>{{ selectedRunbook.approver || 'Denny Wicaksono' }}</strong></span>
-              <span>•</span>
-              <span>Version: <strong>{{ selectedRunbook.version || '1.0' }}</strong></span>
-              <span>•</span>
-              <span>Updated {{ selectedRunbook.updatedAt || 'Recently' }}</span>
-              <span>•</span>
-              <span class="font-mono text-blue-700">{{ selectedRunbook.ticketsReferencedCount || 0 }} tickets referenced</span>
-            </div>
           </div>
 
           <button
@@ -603,280 +621,134 @@
           </button>
         </div>
 
-        <!-- Modal Body (12 Structured Sections from Official Template) -->
-        <div class="p-6 overflow-y-auto space-y-6 text-xs text-slate-700 font-sans">
-          <!-- 1. DOCUMENT INFORMATION -->
-          <div class="p-4 bg-slate-50/70 border border-slate-200 rounded-xl space-y-2">
-            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-blue-700">
-              <span class="w-5 h-5 rounded bg-blue-100 text-blue-700 flex items-center justify-center text-[10px]">1</span>
-              <span>Document Information</span>
-            </h4>
-            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
-              <div>
-                <span class="text-slate-400 text-[10px] block">Product / Platform</span>
-                <strong class="text-slate-800">{{ selectedRunbook.productPlatform || selectedRunbook.technologyPrincipal || 'HPE 3PAR / Primera' }}</strong>
-              </div>
-              <div>
-                <span class="text-slate-400 text-[10px] block">Version / Firmware / OS</span>
-                <strong class="text-slate-800 font-mono">{{ selectedRunbook.firmwareVersion || 'v3.3.1 MU5 / ESXi 8.0' }}</strong>
-              </div>
-              <div>
-                <span class="text-slate-400 text-[10px] block">Case Type</span>
-                <strong class="text-blue-700 uppercase">{{ selectedRunbook.caseType || 'Incident' }}</strong>
-              </div>
-              <div>
-                <span class="text-slate-400 text-[10px] block">Source Reference</span>
-                <strong class="text-slate-800 truncate block">{{ selectedRunbook.source || 'Standard Engineering SOP' }}</strong>
-              </div>
-            </div>
-          </div>
-
-          <!-- 2. PROBLEM DESCRIPTION -->
-          <div class="space-y-3">
-            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
-              <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">2</span>
-              <span>Problem Description</span>
-            </h4>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="bg-amber-50/40 border border-amber-200 rounded-xl p-4 space-y-1.5">
-                <span class="text-[10px] font-bold text-amber-800 uppercase block">Symptom / Gejala</span>
-                <p class="text-slate-700 leading-relaxed">{{ selectedRunbook.symptom }}</p>
-              </div>
-              <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-2">
-                <div>
-                  <span class="text-[10px] font-bold text-slate-500 uppercase block">Error Code / Alert</span>
-                  <span class="font-mono text-rose-700 font-bold">{{ selectedRunbook.errorCode || 'ALERT-PCIE-BUS-STALL' }}</span>
-                </div>
-                <div class="flex justify-between pt-1 border-t border-slate-100">
-                  <div>
-                    <span class="text-[10px] text-slate-400 block">Environment</span>
-                    <strong class="text-slate-800">{{ selectedRunbook.environment || 'Production DC Cluster' }}</strong>
-                  </div>
-                  <div>
-                    <span class="text-[10px] text-slate-400 block">Impact / Scope</span>
-                    <strong class="text-rose-700">{{ selectedRunbook.impactScope || 'Standard Operational / Latency' }}</strong>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 3. PRE-CHECK / PREREQUISITE -->
-          <div class="border border-slate-200 rounded-xl p-4 space-y-1.5 bg-slate-50/50">
-            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
-              <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">3</span>
-              <span>Pre-Check / Prerequisite</span>
-            </h4>
-            <p class="text-slate-700 leading-relaxed bg-white p-3 rounded-lg border border-slate-200 font-mono text-[11px]">
-              {{ selectedRunbook.prerequisites || 'Akses SSH CLI dengan privilege level 3 / admin, verifikasi backup datastore sebelum maintenance.' }}
-            </p>
-          </div>
-
-          <!-- 4. TROUBLESHOOTING / DIAGNOSTIC & 5. ROOT CAUSE ANALYSIS -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="border border-slate-200 rounded-xl p-4 space-y-2 bg-slate-50">
-              <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
-                <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">4</span>
-                <span>Troubleshooting / Diagnostic Steps</span>
-              </h4>
-              <p class="text-slate-700 leading-relaxed font-sans whitespace-pre-line">
-                {{ selectedRunbook.diagnosticSteps || '1. Periksa status port dan cluster hardware node.\n2. Cek alur link optical power dan error frame counter.\n3. Analisis core dump file exception kernel.' }}
-              </p>
-            </div>
-
-            <div class="border border-rose-200 rounded-xl p-4 space-y-2 bg-rose-50/40">
-              <h4 class="font-bold text-rose-900 text-xs uppercase tracking-wider flex items-center space-x-2">
-                <span class="w-5 h-5 rounded bg-rose-200 text-rose-800 flex items-center justify-center text-[10px]">5</span>
-                <span>Root Cause Analysis (RCA)</span>
-              </h4>
-              <p class="text-slate-700 leading-relaxed font-sans">
-                {{ selectedRunbook.rootCause }}
-              </p>
-            </div>
-          </div>
-
-          <!-- 6. RESOLUTION PROCEDURE & CLI COMMANDS -->
-          <div class="space-y-3">
-            <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
-              <span class="w-5 h-5 rounded bg-blue-600 text-white flex items-center justify-center text-[10px]">6</span>
-              <span>Resolution Procedure &amp; CLI Commands</span>
-            </h4>
-            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
-              <span class="text-[11px] font-bold text-slate-700 block">Resolution Steps:</span>
-              <p class="text-slate-700 leading-relaxed font-sans whitespace-pre-line">
-                {{ selectedRunbook.resolutionSteps || 'Terapkan rebalance FC host path, bersihkan command unmap yang tersendat, dan jalankan targeted rescan pada adapter storage ESXi.' }}
-              </p>
-            </div>
-
-            <!-- Terminal CLI Snippet -->
-            <div v-if="selectedRunbook.cliSnippet" class="space-y-1.5">
-              <div class="flex items-center justify-between text-[11px]">
-                <span class="font-mono text-slate-500 font-semibold">CLI Configuration Snippet:</span>
-                <button
-                  @click="copySnippet(selectedRunbook.cliSnippet)"
-                  class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors flex items-center space-x-1 cursor-pointer"
-                >
-                  <span>{{ copiedCode ? '✓ Copied' : '📋 Copy Snippet' }}</span>
-                </button>
-              </div>
-              <div class="bg-slate-950 text-slate-100 p-4 rounded-xl font-mono text-xs overflow-x-auto border border-slate-800 shadow-inner">
-                <pre class="whitespace-pre leading-relaxed">{{ selectedRunbook.cliSnippet }}</pre>
-              </div>
-            </div>
-          </div>
-
-          <!-- 7. VERIFICATION & 8. ROLLBACK PROCEDURE -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-200 space-y-2">
-              <h4 class="font-bold text-emerald-900 text-xs uppercase tracking-wider flex items-center space-x-2">
-                <span class="w-5 h-5 rounded bg-emerald-200 text-emerald-800 flex items-center justify-center text-[10px]">7</span>
-                <span>Verification Procedure &amp; Expected Result</span>
-              </h4>
-              <p class="text-emerald-900 text-[11px] leading-relaxed">
-                <strong>Verifikasi:</strong> {{ selectedRunbook.verificationSteps || 'Uji fungsionalitas volume dan pastikan status IO running normal.' }}
-              </p>
-              <p class="text-emerald-800 text-[11px] leading-relaxed border-t border-emerald-200/60 pt-2">
-                <strong>Expected Result:</strong> {{ selectedRunbook.expectedResult || 'Semua antarmuka storage melaporkan Active/Optimized, zero latency timeout.' }}
-              </p>
-            </div>
-
-            <div class="p-4 rounded-xl bg-rose-50/60 border border-rose-200 space-y-2">
-              <h4 class="font-bold text-rose-900 text-xs uppercase tracking-wider flex items-center space-x-2">
-                <span class="w-5 h-5 rounded bg-rose-200 text-rose-800 flex items-center justify-center text-[10px]">8</span>
-                <span>Rollback Procedure (Safety Protocol)</span>
-              </h4>
-              <p class="text-rose-900 text-[11px] leading-relaxed">
-                {{ selectedRunbook.rollbackProcedure || 'Jika proses gagal dalam 10 menit, eksekusi command halt pada node dan eskalasikan ke support principal.' }}
-              </p>
-            </div>
-          </div>
-
-          <!-- 9. RISK & 10. RELATED TICKET -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="border border-slate-200 rounded-xl p-4 space-y-1.5 bg-slate-50">
-              <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
-                <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">9</span>
-                <span>Risk / Potential Impact</span>
-              </h4>
-              <p class="text-slate-600 text-[11px] leading-relaxed">
-                {{ selectedRunbook.riskPotentialImpact || 'Potensi transient failover selama proses eksekusi perbaikan path SAN switch.' }}
-              </p>
-            </div>
-
-            <div class="border border-slate-200 rounded-xl p-4 space-y-1.5 bg-slate-50">
-              <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800">
-                <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">10</span>
-                <span>Related Case / Ticket</span>
-              </h4>
-              <div class="text-[11px] space-y-1">
-                <div>Ticket Ref: <strong class="text-blue-700 font-mono">{{ selectedRunbook.relatedTicketId || selectedRunbook.ticketNumber || 'TICK-20261004-0005' }}</strong></div>
-                <div>Case Date: <span class="text-slate-700 font-medium">{{ selectedRunbook.caseDate || '04 Okt 2026' }}</span> &bull; Engineer: <strong class="text-slate-800">{{ selectedRunbook.engineerName || selectedRunbook.author }}</strong></div>
-              </div>
-            </div>
-          </div>
-
-          <!-- 11. SUPPORTING DOCUMENT & 12. REVIEW & APPROVAL -->
+        <!-- Modal Body: Supporting Information & Document Card -->
+        <div class="p-6 overflow-y-auto space-y-5 text-xs text-slate-700 font-sans">
+          <!-- 1. Supporting Information Grid -->
           <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+            <h4 class="font-bold text-slate-800 text-xs uppercase tracking-wider flex items-center space-x-2">
+              <span class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[10px] font-bold">i</span>
+              <span>Informasi Pendukung</span>
+            </h4>
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs pt-1 border-t border-slate-200/80">
               <div>
-                <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800 mb-1.5">
-                  <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">11</span>
-                  <span>Supporting Document &amp; Evidence</span>
-                </h4>
-                <div v-if="selectedRunbook.uploadedDocName || selectedRunbook.pdfAttachmentUrl" class="p-2.5 bg-white border border-slate-200 rounded-lg flex items-center justify-between">
-                  <div class="flex items-center space-x-2 min-w-0">
-                    <span class="text-base">📄</span>
-                    <span class="font-mono text-slate-800 text-[11px] truncate font-medium">{{ selectedRunbook.uploadedDocName || 'lampiran_telemetry.pdf' }}</span>
-                  </div>
-                  <button 
-                    @click="downloadSupportingDoc(selectedRunbook)"
-                    class="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold rounded text-[10px] border border-blue-200 flex items-center space-x-1 shrink-0 cursor-pointer"
-                  >
-                    <span>Unduh Berkas</span>
-                    <span>&darr;</span>
-                  </button>
+                <span class="text-slate-400 text-[10px] block font-medium">Tipe Case</span>
+                <strong class="text-blue-700 uppercase font-mono">{{ selectedRunbook.caseType || 'Incident' }}</strong>
+              </div>
+              <div>
+                <span class="text-slate-400 text-[10px] block font-medium">Kategori</span>
+                <strong class="text-slate-800 block truncate">{{ selectedRunbook.category || selectedRunbook.categoryGroup || 'General' }}</strong>
+              </div>
+              <div>
+                <span class="text-slate-400 text-[10px] block font-medium">Produk / Platform</span>
+                <strong class="text-slate-800 block truncate">{{ selectedRunbook.product || selectedRunbook.technologyPrincipal || '-' }}</strong>
+              </div>
+              <div>
+                <span class="text-slate-400 text-[10px] block font-medium">Tiket Kasus</span>
+                <strong v-if="selectedRunbook.sourceTicket" class="text-blue-700 font-mono block truncate">
+                  {{ selectedRunbook.sourceTicket }}
+                </strong>
+                <span v-else class="text-slate-400 block">-</span>
+              </div>
+              <div>
+                <span class="text-slate-400 text-[10px] block font-medium">Dibuat Oleh</span>
+                <strong class="text-slate-800 block truncate">{{ selectedRunbook.author || selectedRunbook.engineerName || 'Support Engineer' }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Attached Document Hero Box -->
+          <div class="p-5 border-2 border-slate-200 rounded-2xl bg-white space-y-4">
+            <div class="flex items-center justify-between">
+              <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2">
+                <span class="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">&#10003;</span>
+                <span>Berkas Dokumen Runbook</span>
+              </h4>
+              <span class="text-[11px] text-slate-400 font-mono">
+                Diperbarui {{ selectedRunbook.updatedAt ? new Date(selectedRunbook.updatedAt).toLocaleDateString('id-ID') : 'Recently' }}
+              </span>
+            </div>
+
+            <!-- File Item -->
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3">
+              <div class="flex items-center space-x-3.5 min-w-0">
+                <div
+                  class="w-12 h-12 rounded-xl flex items-center justify-center font-black text-xs shrink-0 border"
+                  :class="isDocx(selectedRunbook) ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-rose-50 text-rose-700 border-rose-200'"
+                >
+                  {{ isDocx(selectedRunbook) ? 'DOCX' : 'PDF' }}
                 </div>
-                <div v-else class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-400 text-[11px] italic">
-                  Tidak ada dokumen lampiran tambahan.
+                <div class="min-w-0">
+                  <p class="font-bold text-xs sm:text-sm text-slate-900 truncate" :title="selectedRunbook.documentName || selectedRunbook.uploadedDocName">
+                    {{ selectedRunbook.documentName || selectedRunbook.uploadedDocName || 'GTT_Engineering_Runbook.docx' }}
+                  </p>
+                  <p class="text-[11px] text-slate-400 mt-0.5">
+                    {{ selectedRunbook.documentSize || selectedRunbook.uploadedDocSize || 'Format Dokumen Terlampir' }}
+                  </p>
                 </div>
               </div>
 
-              <div>
-                <h4 class="font-bold text-slate-900 text-xs uppercase tracking-wider flex items-center space-x-2 text-slate-800 mb-1.5">
-                  <span class="w-5 h-5 rounded bg-slate-200 text-slate-700 flex items-center justify-center text-[10px]">12</span>
-                  <span>Review &amp; Approval</span>
-                </h4>
-                <div class="p-2.5 bg-white border border-slate-200 rounded-lg space-y-1.5 text-[11px]">
-                  <div class="flex justify-between">
-                    <span class="text-slate-400">Prepared By:</span>
-                    <strong class="text-slate-800">{{ selectedRunbook.author || selectedRunbook.engineerName || 'Engineer GTT' }}</strong>
-                  </div>
-                  <div class="flex justify-between">
-                    <span class="text-slate-400">Reviewed By:</span>
-                    <strong class="text-slate-800">{{ selectedRunbook.approver || 'Denny Wicaksono (Supervisor)' }}</strong>
-                  </div>
-                  <div class="flex justify-between items-center">
-                    <span class="text-slate-400">Status Governance:</span>
-                    <span 
-                      class="font-bold px-2 py-0.5 rounded border text-[10px] font-mono uppercase"
-                      :class="{
-                        'bg-emerald-50 text-emerald-700 border-emerald-200': selectedRunbook.status === 'PUBLISHED',
-                        'bg-amber-50 text-amber-700 border-amber-200': selectedRunbook.status === 'PENDING_APPROVAL',
-                        'bg-slate-100 text-slate-700 border-slate-200': selectedRunbook.status === 'DRAFT'
-                      }"
-                    >
-                      {{ selectedRunbook.status || 'PUBLISHED' }}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <!-- Download Button -->
+              <button
+                @click="downloadRunbookFile(selectedRunbook)"
+                class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs flex items-center space-x-1.5 shrink-0 shadow-xs transition-all cursor-pointer"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span>Unduh Dokumen</span>
+              </button>
+            </div>
+
+            <!-- Optional Preview Button if PDF -->
+            <div class="flex items-center justify-between pt-1 text-[11px]">
+              <button
+                v-if="!isDocx(selectedRunbook) && selectedRunbook.pdfAttachmentUrl"
+                @click="previewRunbookDoc(selectedRunbook)"
+                class="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center space-x-1 cursor-pointer"
+              >
+                <span>Buka Preview PDF di Tab Baru</span>
+                <span>&rarr;</span>
+              </button>
+              <div v-else></div>
+
+              <a
+                href="/templates/GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
+                download="GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
+                class="text-slate-500 hover:text-blue-700 font-medium inline-flex items-center space-x-1 cursor-pointer"
+              >
+                <span>Unduh Template Resmi (.docx)</span>
+                <span>&darr;</span>
+              </a>
             </div>
           </div>
         </div>
 
         <!-- Modal Footer -->
-        <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex items-center space-x-2">
-            <!-- Cetak SOP Button -->
+        <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
+          <!-- Left: Admin Delete Button -->
+          <div>
             <button
-              @click="printRunbook"
-              class="px-3.5 py-2 border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-semibold rounded-lg text-xs transition-colors flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+              v-if="authStore.isAdmin"
+              @click="handleDeleteRunbook(selectedRunbook)"
+              class="px-3 py-1.5 text-rose-600 hover:bg-rose-50 border border-rose-200 hover:border-rose-300 font-semibold rounded-lg text-xs transition-colors cursor-pointer"
             >
-              <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
-              </svg>
-              <span>Cetak SOP</span>
+              Hapus Dokumen
             </button>
-
-            <!-- Unduh Template Dokumen DOCX -->
-            <a
-              href="/templates/GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
-              download="GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
-              class="px-3.5 py-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 font-semibold rounded-lg text-xs transition-colors flex items-center space-x-1.5 shadow-2xs cursor-pointer"
-            >
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-              </svg>
-              <span>Unduh Template (.docx)</span>
-            </a>
           </div>
 
+          <!-- Right: Publish & Close Buttons -->
           <div class="flex items-center space-x-2">
-            <!-- Approve button if Admin and runbook is PENDING_APPROVAL -->
             <button
-              v-if="authStore.isAdmin && selectedRunbook.status === 'PENDING_APPROVAL'"
+              v-if="authStore.isAdmin && (selectedRunbook.status === 'PENDING_APPROVAL' || selectedRunbook.status === 'PENDING_REVIEW')"
               @click="publishSelectedRunbook"
               class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-xs flex items-center space-x-1.5 cursor-pointer"
             >
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-              </svg>
-              <span>Setujui &amp; Publikasikan SOP</span>
+              <span>Setujui &amp; Terbitkan</span>
             </button>
 
             <button
               @click="selectedRunbook = null"
-              class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs shadow-xs cursor-pointer"
+              class="px-4 py-2 border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 font-semibold rounded-xl text-xs transition-colors cursor-pointer shadow-2xs"
             >
               Tutup
             </button>
@@ -961,11 +833,14 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import { useTicketStore } from '../stores/ticketStore';
+import { useUiStore } from '../stores/uiStore';
+import { api } from '../services/api';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const ticketStore = useTicketStore();
+const uiStore = useUiStore();
 
 const searchQuery = ref('');
 const selectedCategoryTab = ref('all');
@@ -981,7 +856,8 @@ const showPendingModal = ref(false);
 const copiedCode = ref(false);
 const createdAlertMessage = ref('');
 
-onMounted(() => {
+onMounted(async () => {
+  await ticketStore.fetchKnowledgeBase();
   if (route.query.created) {
     const createdId = Number(route.query.created);
     const found = ticketStore.knowledgeBase.find(k => k.id === createdId);
@@ -1003,6 +879,24 @@ const frequentTags = [
 const availablePrincipals = computed(() => {
   return ticketStore.allPrincipals;
 });
+
+// Dropdown options
+const principalOptions = computed(() => [
+  { value: '', label: 'Semua Principal (All)' },
+  ...availablePrincipals.value.map(p => ({ value: p, label: p }))
+]);
+
+const statusFilterOptions = [
+  { value: 'ALL', label: 'Semua Status (All)' },
+  { value: 'PUBLISHED', label: 'Published / Approved', badge: 'Published', badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+  { value: 'PENDING_APPROVAL', label: 'Menunggu Review', badge: 'Review', badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  { value: 'DRAFT', label: 'Draft', badge: 'Draft', badgeClass: 'bg-slate-100 text-slate-500' }
+];
+
+const sortOptions = [
+  { value: 'mostReferenced', label: 'Most Referenced' },
+  { value: 'latest', label: 'Recently Updated' }
+];
 
 const storagePlaybooksCount = computed(() => {
   return ticketStore.knowledgeBase.filter(k => 
@@ -1225,6 +1119,60 @@ const publishSelectedRunbook = () => {
   if (!selectedRunbook.value) return;
   ticketStore.publishKbArticle(selectedRunbook.value.id, authStore.currentUser);
   selectedRunbook.value.status = 'PUBLISHED';
+};
+
+const isDocx = (item) => {
+  const name = item?.documentName || item?.uploadedDocName || item?.pdfAttachmentUrl || '';
+  return /\.(docx|doc)$/i.test(name);
+};
+
+const downloadRunbookFile = (item) => {
+  if (!item) return;
+  if (item.id && (item.pdfAttachmentUrl || item.documentName)) {
+    const url = api.getDownloadDocUrl(item.id);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = item.documentName || `${item.kbCode || 'KB'}_Runbook`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    uiStore.toastSuccess(`Mengunduh berkas ${item.documentName || item.title}...`);
+  } else {
+    downloadSupportingDoc(item);
+  }
+};
+
+const previewRunbookDoc = (item) => {
+  if (!item) return;
+  if (item.id && item.pdfAttachmentUrl) {
+    const url = api.getDownloadDocUrl(item.id);
+    window.open(url, '_blank');
+  } else {
+    downloadRunbookFile(item);
+  }
+};
+
+const handleDeleteRunbook = async (item) => {
+  if (!item) return;
+  const confirmed = await uiStore.confirm(
+    `Apakah Anda yakin ingin menghapus dokumen Knowledge Base "${item.title}" (${item.kbCode || 'KB'})?`,
+    {
+      title: 'Hapus Dokumen Knowledge Base',
+      confirmText: 'Ya, Hapus Dokumen',
+      cancelText: 'Batal',
+      type: 'danger'
+    }
+  );
+  if (!confirmed) return;
+
+  try {
+    await ticketStore.deleteKnowledgeBase(item.id);
+    uiStore.toastSuccess(`Dokumen ${item.kbCode || 'KB'} berhasil dihapus.`);
+    selectedRunbook.value = null;
+  } catch (err) {
+    console.error('Gagal hapus KB:', err);
+    uiStore.toastError('Gagal menghapus dokumen Knowledge Base.');
+  }
 };
 
 const downloadSupportingDoc = (item) => {

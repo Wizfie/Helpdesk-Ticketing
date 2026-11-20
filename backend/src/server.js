@@ -4,8 +4,16 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 
-// Load environment variables
-dotenv.config();
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables reliably from backend/.env or root .env
+dotenv.config({ path: path.resolve(__dirname, '../.env') });
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: path.resolve(__dirname, '../../.env') });
+}
 
 // Import Routes
 import authRoutes from './routes/authRoutes.js';

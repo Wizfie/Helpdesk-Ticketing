@@ -1,25 +1,39 @@
 import { defineStore } from 'pinia';
-import { MOCK_USERS, ROLES } from '../data/mockData';
+import { api } from '../services/api';
+
+export const ROLES = ['ADMIN', 'ENGINEER'];
+
+export const DEFAULT_USERS = [
+  {
+    id: 1,
+    role: 'ADMIN',
+    roleCode: 'ADMIN',
+    name: 'Ahmad Fauzi',
+    email: 'admin@glotratech.com',
+    phone: '0812-9876-5432',
+    isActive: true
+  }
+];
 
 const STORAGE_KEY_USER_ID = 'gtt_current_user_id';
 const STORAGE_KEY_ROLE = 'gtt_current_role';
-const STORAGE_KEY_USERS = 'gtt_mock_users';
+const STORAGE_KEY_USERS = 'gtt_users_data';
 
 const USER_DATA_VERSION_KEY = 'gtt_user_data_version';
-const CURRENT_USER_DATA_VERSION = 'v6.0-single-admin';
+const CURRENT_USER_DATA_VERSION = 'v9.0-no-roles-table';
 
 function getStoredUsers() {
   if (typeof window === 'undefined' || !window.localStorage) {
-    return MOCK_USERS;
+    return DEFAULT_USERS;
   }
   try {
     const ver = localStorage.getItem(USER_DATA_VERSION_KEY);
     if (ver !== CURRENT_USER_DATA_VERSION) {
       localStorage.setItem(USER_DATA_VERSION_KEY, CURRENT_USER_DATA_VERSION);
-      localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(MOCK_USERS));
+      localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(DEFAULT_USERS));
       localStorage.setItem(STORAGE_KEY_USER_ID, '1');
       localStorage.setItem(STORAGE_KEY_ROLE, 'ADMIN');
-      return MOCK_USERS;
+      return DEFAULT_USERS;
     }
     const raw = localStorage.getItem(STORAGE_KEY_USERS);
     if (raw) {
@@ -31,7 +45,7 @@ function getStoredUsers() {
   } catch (e) {
     console.error('Failed to load users from localStorage:', e);
   }
-  return MOCK_USERS;
+  return DEFAULT_USERS;
 }
 
 function getStoredCurrentUser(users) {
@@ -86,10 +100,42 @@ export const useAuthStore = defineStore('auth', {
   },
   getters: {
     isAuthenticated: (state) => !!state.currentUser,
-    isEngineer: (state) => state.currentUser?.roleCode === 'ENGINEER',
-    isAdmin: (state) => state.currentUser?.roleCode === 'ADMIN'
+    isEngineer: (state) => (state.currentUser?.role || state.currentUser?.roleCode) === 'ENGINEER',
+    isAdmin: (state) => (state.currentUser?.role || state.currentUser?.roleCode) === 'ADMIN',
+    currentUserInitials: (state) => {
+      const name = state.currentUser?.name;
+      if (!name) return 'U';
+      const parts = name.trim().split(/\s+/);
+      return parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+    }
   },
   actions: {
+    async fetchUsersFromApi() {
+      try {
+        const res = await api.getUsers();
+        const list = Array.isArray(res) ? res : (res?.data || null);
+        if (list && list.length > 0) {
+          this.users = list.map(u => {
+            const roleVal = typeof u.role === 'string' ? u.role : (u.role?.code || u.roleCode || 'ENGINEER');
+            return {
+              ...u,
+              role: roleVal,
+              roleCode: roleVal
+            };
+          });
+          saveUsersState(this.users);
+          if (this.currentUser) {
+            const fresh = this.users.find(u => u.id === this.currentUser.id);
+            if (fresh) {
+              this.currentUser = fresh;
+              saveCurrentAuthState(fresh);
+            }
+          }
+        }
+      } catch (e) {
+        // Backend offline, keep local state
+      }
+    },
     login(email, password) {
       const trimmedEmail = (email || '').trim().toLowerCase();
       const user = this.users.find(u => u.email.toLowerCase() === trimmedEmail);
@@ -131,83 +177,106 @@ export const useAuthStore = defineStore('auth', {
         saveCurrentAuthState(user);
       }
     },
-    createUser(userData, actorUser, ticketStore) {
-      const parts = userData.name.trim().split(' ');
-      const initials = parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+    async createUser(userData, actorUser, ticketStore) {
+      try {
+        const roleVal = userData.role || userData.roleCode || 'ENGINEER';
+        const payload = {
+          name: userData.name,
+          email: userData.email,
+          role: roleVal,
+          roleCode: roleVal,
+          phone: userData.phone
+        };
+        const created = await api.createUser(payload);
+        await this.fetchUsersFromApi();
 
-      const newUser = {
-        id: this.users.length + 1,
-        roleId: userData.roleCode === 'ADMIN' ? 1 : 2,
-        roleCode: userData.roleCode,
-        name: userData.name,
-        email: userData.email,
-        initials,
-        phone: userData.phone,
-        isActive: true
-      };
-
-      this.users.push(newUser);
-      saveUsersState(this.users);
-
-      // Audit log if ticketStore is provided
-      if (ticketStore && typeof ticketStore.addAuditLog === 'function') {
-        ticketStore.addAuditLog({
-          action: 'USER_CREATED',
-          details: `Staf baru ${newUser.name} (${newUser.roleCode}) berhasil ditambahkan ke sistem`,
-          user: actorUser ? actorUser.name : 'System Admin',
-          role: actorUser ? actorUser.roleCode : 'ADMIN',
-          ipAddress: '127.0.0.1 (Local)'
-        });
+        if (ticketStore && typeof ticketStore.addAuditLog === 'function') {
+          ticketStore.addAuditLog({
+            action: 'USER_CREATED',
+            details: `Staf baru ${payload.name} (${roleVal}) berhasil didaftarkan ke sistem`,
+            user: actorUser ? actorUser.name : 'System Admin',
+            role: actorUser ? (actorUser.role || actorUser.roleCode) : 'ADMIN',
+            ipAddress: '127.0.0.1 (Local)'
+          });
+        }
+        return created;
+      } catch (err) {
+        console.error('API createUser failed, fallback local:', err);
+        const roleVal = userData.role || userData.roleCode || 'ENGINEER';
+        const newUser = {
+          id: this.users.length + 1,
+          role: roleVal,
+          roleCode: roleVal,
+          name: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          isActive: true
+        };
+        this.users.push(newUser);
+        saveUsersState(this.users);
+        return newUser;
       }
-
-      return newUser;
     },
-    updateUser(userId, updatedData, actorUser, ticketStore) {
-      const user = this.users.find(u => u.id === Number(userId));
-      if (!user) return null;
+    async updateUser(userId, updatedData, actorUser, ticketStore) {
+      try {
+        const roleVal = updatedData.role || updatedData.roleCode;
+        const payload = {
+          name: updatedData.name,
+          email: updatedData.email,
+          role: roleVal,
+          roleCode: roleVal,
+          phone: updatedData.phone,
+          isActive: updatedData.isActive
+        };
+        const updated = await api.updateUser(userId, payload);
+        await this.fetchUsersFromApi();
 
-      const oldRole = user.roleCode;
-      const oldName = user.name;
+        if (ticketStore && ticketStore.addAuditLog) {
+          ticketStore.addAuditLog({
+            userName: actorUser?.name || 'System Admin',
+            role: actorUser ? (actorUser.role || actorUser.roleCode) : 'ADMIN',
+            action: 'USER_UPDATED',
+            entityType: 'USER',
+            entityId: `USER-00${userId}`,
+            description: `Memperbarui profil staf: ${payload.name} (Peran: ${roleVal || 'Staf'}, Status: ${payload.isActive ? 'Aktif' : 'Nonaktif'})`
+          });
+        }
+        return updated;
+      } catch (err) {
+        console.error('API updateUser failed, fallback local:', err);
+        const user = this.users.find(u => u.id === Number(userId));
+        if (!user) return null;
 
-      user.name = updatedData.name;
-      user.email = updatedData.email;
-      user.roleCode = updatedData.roleCode;
-      user.roleId = updatedData.roleCode === 'ADMIN' ? 1 : 2;
-      user.phone = updatedData.phone;
-      if (typeof updatedData.isActive === 'boolean') {
-        user.isActive = updatedData.isActive;
+        const roleVal = updatedData.role || updatedData.roleCode || user.role || 'ENGINEER';
+        user.name = updatedData.name;
+        user.email = updatedData.email;
+        user.role = roleVal;
+        user.roleCode = roleVal;
+        user.phone = updatedData.phone;
+        if (typeof updatedData.isActive === 'boolean') {
+          user.isActive = updatedData.isActive;
+        }
+
+        if (this.currentUser?.id === user.id) {
+          this.currentUser = { ...user };
+          saveCurrentAuthState(this.currentUser);
+        }
+        saveUsersState(this.users);
+        return user;
       }
-
-      const parts = user.name.trim().split(' ');
-      user.initials = parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
-
-      // If updating current logged in user, update currentUser state too
-      if (this.currentUser.id === user.id) {
-        this.currentUser = { ...user };
-        saveCurrentAuthState(this.currentUser);
-      }
-
-      saveUsersState(this.users);
-
-      if (ticketStore && ticketStore.addAuditLog) {
-        ticketStore.addAuditLog({
-          userName: actorUser.name,
-          role: actorUser.roleCode,
-          action: 'USER_UPDATED',
-          entityType: 'USER',
-          entityId: `USER-00${user.id}`,
-          description: `Memperbarui profil staf: ${user.name} (Peran: ${user.roleCode}${oldRole !== user.roleCode ? ` dari ${oldRole}` : ''}, Status: ${user.isActive ? 'Aktif' : 'Nonaktif'})`
-        });
-      }
-
-      return user;
     },
-    toggleUserStatus(userId, actorUser, ticketStore) {
+    async toggleUserStatus(userId, actorUser, ticketStore) {
       const user = this.users.find(u => u.id === Number(userId));
       if (!user) return;
 
-      user.isActive = !user.isActive;
-      saveUsersState(this.users);
+      const newStatus = !user.isActive;
+      try {
+        await api.updateUser(userId, { isActive: newStatus });
+        await this.fetchUsersFromApi();
+      } catch (err) {
+        user.isActive = newStatus;
+        saveUsersState(this.users);
+      }
 
       if (ticketStore && ticketStore.addAuditLog) {
         ticketStore.addAuditLog({
@@ -216,7 +285,7 @@ export const useAuthStore = defineStore('auth', {
           action: 'USER_STATUS_TOGGLED',
           entityType: 'USER',
           entityId: `USER-00${user.id}`,
-          description: `Mengubah status keaktifan staf ${user.name} menjadi ${user.isActive ? 'Aktif' : 'Nonaktif'}`
+          description: `Mengubah status keaktifan staf ${user.name} menjadi ${newStatus ? 'Aktif' : 'Nonaktif'}`
         });
       }
     },
@@ -264,24 +333,28 @@ export const useAuthStore = defineStore('auth', {
       return { success: true, message: 'Kata sandi akun Anda berhasil diperbarui.' };
     },
 
-    updateProfile(userId, profileData, ticketStore) {
+    async updateProfile(userId, profileData, ticketStore) {
       const user = this.users.find(u => u.id === Number(userId));
       if (!user) {
         return { success: false, message: 'Pengguna tidak ditemukan.' };
       }
 
+      const payload = {};
       if (profileData.name) {
         user.name = profileData.name.trim();
-        const parts = user.name.split(' ');
-        user.initials = parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : parts[0].slice(0, 2).toUpperCase();
+        payload.name = user.name;
       }
 
-      if (profileData.phone) {
-        user.phone = profileData.phone.trim();
+      if (profileData.phone !== undefined) {
+        user.phone = (profileData.phone || '').trim();
+        payload.phone = user.phone;
       }
 
-      if (profileData.roleTitle) {
-        user.roleTitle = profileData.roleTitle.trim();
+      try {
+        await api.updateUser(userId, payload);
+        await this.fetchUsersFromApi();
+      } catch (err) {
+        console.error('API updateProfile failed, fallback local:', err);
       }
 
       if (this.currentUser && this.currentUser.id === user.id) {
@@ -332,10 +405,10 @@ export const useAuthStore = defineStore('auth', {
         });
       }
 
-      return { 
-        success: true, 
+      return {
+        success: true,
         message: `Kata sandi untuk ${user.name} berhasil direset menjadi: ${passToSet}`,
-        temporaryPassword: passToSet 
+        temporaryPassword: passToSet
       };
     }
   }

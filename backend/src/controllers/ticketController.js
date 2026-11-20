@@ -42,10 +42,10 @@ export async function getTickets(req, res) {
         customerPic: true,
         category: true,
         assignedTo: {
-          select: { id: true, name: true, initials: true, email: true, roleTitle: true }
+          select: { id: true, name: true, email: true, phone: true, role: true }
         },
         createdBy: {
-          select: { id: true, name: true, roleTitle: true }
+          select: { id: true, name: true, email: true, role: true }
         }
       },
       orderBy: { id: 'desc' }
@@ -85,9 +85,6 @@ export async function getTicketById(req, res) {
         },
         attachments: {
           orderBy: { id: 'desc' }
-        },
-        holdLogs: {
-          orderBy: { id: 'desc' }
         }
       }
     });
@@ -119,14 +116,10 @@ export async function getPublicTicketByToken(req, res) {
         customerPic: true,
         category: true,
         assignedTo: {
-          select: { name: true, roleTitle: true }
+          select: { id: true, name: true, email: true, phone: true, role: true }
         },
         milestones: {
           orderBy: { timestampUtc: 'asc' }
-        },
-        holdLogs: {
-          orderBy: { id: 'desc' },
-          take: 1
         }
       }
     });
@@ -231,7 +224,7 @@ export async function createTicket(req, res) {
               status: 'OPEN',
               actorId: actor.id,
               actorName: actor.name,
-              actorRole: actor.role.code,
+              actorRole: actor.role,
               notes: `Tiket diterbitkan oleh ${actor.name}. Target respon SLA: ${respHours * 60} menit.`,
               timestampUtc: now
             }
@@ -250,7 +243,7 @@ export async function createTicket(req, res) {
     // Audit Log
     await logAuditEvent({
       userName: actor.name,
-      role: actor.role.code,
+      role: actor.role,
       action: 'TICKET_CREATED',
       entityType: 'TICKET',
       entityId: ticketNumber,
@@ -300,8 +293,8 @@ export async function assignEngineer(req, res) {
         status: updated.status,
         actorId: actor.id,
         actorName: actor.name,
-        actorRole: actor.role.code,
-        notes: `Tiket dialokasikan kepada ${engineer.name} (${engineer.roleTitle || 'Support Engineer'}). Response SLA terpenuhi.`,
+        actorRole: actor.role,
+        notes: `Tiket dialokasikan kepada ${engineer.name} (${engineer.role || 'Support Engineer'}). Response SLA terpenuhi.`,
         timestampUtc: now
       }
     });
@@ -309,7 +302,7 @@ export async function assignEngineer(req, res) {
     // Audit Log
     await logAuditEvent({
       userName: actor.name,
-      role: actor.role.code,
+      role: actor.role,
       action: 'ASSIGN_ENGINEER',
       entityType: 'TICKET',
       entityId: ticket.ticketNumber,
@@ -353,7 +346,7 @@ export async function escalateTicket(req, res) {
         status: ticket.status,
         actorId: actor.id,
         actorName: actor.name,
-        actorRole: actor.role.code,
+        actorRole: actor.role,
         notes: notes || `Eskalasi diaktifkan ke tier ${escalationTier}. Kasus terkait: ${principalCaseId || partnerName || 'Koordinasi PM'}.`,
         timestampUtc: now
       }
@@ -361,7 +354,7 @@ export async function escalateTicket(req, res) {
 
     await logAuditEvent({
       userName: actor.name,
-      role: actor.role.code,
+      role: actor.role,
       action: 'TICKET_ESCALATED',
       entityType: 'TICKET',
       entityId: ticket.ticketNumber,
@@ -398,18 +391,6 @@ export async function pauseSla(req, res) {
       }
     });
 
-    // Create Hold Log
-    await prisma.slaHoldLog.create({
-      data: {
-        ticketId: ticket.id,
-        reasonType,
-        reasonDetail: reasonDetail || 'Penahanan waktu SLA sesuai kondisi operasional.',
-        principalCaseId: principalCaseId || null,
-        pausedAt: now,
-        actorName: actor.name
-      }
-    });
-
     // Milestone
     await prisma.ticketMilestone.create({
       data: {
@@ -418,7 +399,7 @@ export async function pauseSla(req, res) {
         status: nextStatus,
         actorId: actor.id,
         actorName: actor.name,
-        actorRole: actor.role.code,
+        actorRole: actor.role,
         notes: `SLA dibekukan sementara. Kategori: ${reasonType}. Keterangan: ${reasonDetail || '-'}.`,
         timestampUtc: now
       }
@@ -427,7 +408,7 @@ export async function pauseSla(req, res) {
     // Audit Log
     await logAuditEvent({
       userName: actor.name,
-      role: actor.role.code,
+      role: actor.role,
       action: 'SLA_PAUSED',
       entityType: 'TICKET',
       entityId: ticket.ticketNumber,
@@ -471,22 +452,6 @@ export async function resumeSla(req, res) {
       }
     });
 
-    // Update active Hold Log
-    const activeHoldLog = await prisma.slaHoldLog.findFirst({
-      where: { ticketId: ticket.id, resumedAt: null },
-      orderBy: { id: 'desc' }
-    });
-
-    if (activeHoldLog) {
-      await prisma.slaHoldLog.update({
-        where: { id: activeHoldLog.id },
-        data: {
-          resumedAt: now,
-          durationSec: pausedSeconds
-        }
-      });
-    }
-
     // Milestone
     await prisma.ticketMilestone.create({
       data: {
@@ -495,7 +460,7 @@ export async function resumeSla(req, res) {
         status: 'IN_PROGRESS',
         actorId: actor.id,
         actorName: actor.name,
-        actorRole: actor.role.code,
+        actorRole: actor.role,
         notes: `Timer SLA aktif kembali setelah tertahan ${Math.round(pausedSeconds / 60)} menit. Batas waktu resolusi otomatis diperpanjang.`,
         timestampUtc: now
       }
@@ -504,7 +469,7 @@ export async function resumeSla(req, res) {
     // Audit Log
     await logAuditEvent({
       userName: actor.name,
-      role: actor.role.code,
+      role: actor.role,
       action: 'SLA_RESUMED',
       entityType: 'TICKET',
       entityId: ticket.ticketNumber,
@@ -545,7 +510,7 @@ export async function addMilestone(req, res) {
         status: statusToSet,
         actorId: actor.id,
         actorName: actor.name,
-        actorRole: actor.role.code,
+        actorRole: actor.role,
         notes,
         proofFile: proofFile || null,
         timestampUtc: now
@@ -554,7 +519,7 @@ export async function addMilestone(req, res) {
 
     await logAuditEvent({
       userName: actor.name,
-      role: actor.role.code,
+      role: actor.role,
       action: 'PROGRESS_UPDATE',
       entityType: 'TICKET',
       entityId: ticket.ticketNumber,
@@ -599,7 +564,7 @@ export async function resolveTicket(req, res) {
         status: 'RESOLVED',
         actorId: actor.id,
         actorName: actor.name,
-        actorRole: actor.role.code,
+        actorRole: actor.role,
         notes: `Pekerjaan teknis tuntas diselesaikan oleh ${actor.name}. Resolution SLA berhenti. Masa validasi 72 jam berjalan.`,
         timestampUtc: now
       }
@@ -607,7 +572,7 @@ export async function resolveTicket(req, res) {
 
     await logAuditEvent({
       userName: actor.name,
-      role: actor.role.code,
+      role: actor.role,
       action: 'TICKET_RESOLVED',
       entityType: 'TICKET',
       entityId: ticket.ticketNumber,
@@ -647,7 +612,7 @@ export async function closeTicket(req, res) {
         status: 'CLOSED',
         actorId: actor.id,
         actorName: actor.name,
-        actorRole: actor.role.code,
+        actorRole: actor.role,
         notes: `Tiket resmi diarsipkan: ${confirmationNotes || 'Verifikasi pelanggan tuntas.'}.`,
         timestampUtc: now
       }
@@ -655,7 +620,7 @@ export async function closeTicket(req, res) {
 
     await logAuditEvent({
       userName: actor.name,
-      role: actor.role.code,
+      role: actor.role,
       action: 'TICKET_CLOSED',
       entityType: 'TICKET',
       entityId: ticket.ticketNumber,

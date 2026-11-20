@@ -97,13 +97,11 @@ export async function getQuickPresets(req, res) {
 }
 
 export async function getHoldReasons(req, res) {
-  try {
-    const reasons = await prisma.slaHoldReason.findMany({
-      where: { isActive: true },
-      orderBy: { id: 'asc' }
-    });
-    res.json({ success: true, data: reasons });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
+  // Static SLA pause reasons: PART_INDENT, VENDOR, CUSTOMER
+  const defaultReasons = [
+    { code: 'PART_INDENT', name: 'Menunggu Pengadaan / Pengiriman Sparepart (Indent)' },
+    { code: 'VENDOR', name: 'Eskalasi ke Principal / Vendor Pihak Ketiga' },
+    { code: 'CUSTOMER', name: 'Menunggu Konfirmasi / Akses dari Customer' }
+  ];
+  return res.json({ success: true, data: defaultReasons });
 }

@@ -212,49 +212,56 @@
 
         <!-- 2. Mitra Klien (lg:col-span-2) -->
         <div class="lg:col-span-2">
-          <select v-model="filterCustomer" class="w-full p-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700">
-            <option value="ALL">Semua Mitra Klien</option>
-            <option v-for="c in ticketStore.customers" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
+          <BaseSelect
+            v-model="filterCustomer"
+            :options="filterCustomerOptions"
+            size="sm"
+            searchable
+            placeholder="Semua Mitra Klien"
+          />
         </div>
 
         <!-- 3. Severity (lg:col-span-2) -->
         <div class="lg:col-span-2">
-          <select v-model="filterSeverity" class="w-full p-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700">
-            <option value="ALL">Semua Severity</option>
-            <option value="HIGH">HIGH</option>
-            <option value="MEDIUM">MEDIUM</option>
-            <option value="LOW">LOW</option>
-          </select>
+          <BaseSelect
+            v-model="filterSeverity"
+            :options="filterSeverityOptions"
+            size="sm"
+            placeholder="Semua Severity"
+          />
         </div>
 
         <!-- 4. Kategori (lg:col-span-2) -->
         <div class="lg:col-span-2">
-          <select v-model="filterCategory" class="w-full p-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700">
-            <option value="ALL">Semua Kategori</option>
-            <option v-for="cat in availableCategories" :key="cat" :value="cat">{{ cat }}</option>
-          </select>
+          <BaseSelect
+            v-model="filterCategory"
+            :options="filterCategoryOptions"
+            size="sm"
+            searchable
+            placeholder="Semua Kategori"
+          />
         </div>
 
         <!-- 5. Saluran (lg:col-span-1) -->
         <div class="lg:col-span-1">
-          <select v-model="filterChannel" class="w-full p-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700">
-            <option value="ALL">Semua Saluran</option>
-            <option value="WHATSAPP">WhatsApp</option>
-            <option value="EMAIL">Email</option>
-            <option value="PHONE">Telepon</option>
-            <option value="PORTAL">Portal</option>
-          </select>
+          <BaseSelect
+            v-model="filterChannel"
+            :options="filterChannelOptions"
+            size="sm"
+            placement="right"
+            placeholder="Semua Saluran"
+          />
         </div>
 
         <!-- 6. SLA Status (lg:col-span-1) -->
         <div class="lg:col-span-1">
-          <select v-model="filterSlaStatus" class="w-full p-1.5 border border-slate-200 rounded-lg text-xs bg-white text-slate-700">
-            <option value="ALL">Semua SLA Status</option>
-            <option value="SAFE">SLA Aman</option>
-            <option value="NEAR_BREACH">Near Breach (&lt;2h)</option>
-            <option value="BREACHED">SLA Terlewat</option>
-          </select>
+          <BaseSelect
+            v-model="filterSlaStatus"
+            :options="filterSlaStatusOptions"
+            size="sm"
+            placement="right"
+            placeholder="SLA Status"
+          />
         </div>
       </div>
 
@@ -644,7 +651,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useTicketStore } from '../stores/ticketStore';
 import { useAuthStore } from '../stores/authStore';
@@ -653,6 +660,11 @@ const route = useRoute();
 const router = useRouter();
 const ticketStore = useTicketStore();
 const authStore = useAuthStore();
+
+onMounted(async () => {
+  await ticketStore.fetchTickets();
+  await ticketStore.fetchCustomers();
+});
 
 // Selected tickets for bulk actions
 const selectedTicketIds = ref([]);
@@ -679,6 +691,46 @@ const filterCategory = ref('ALL');
 const filterChannel = ref('ALL');
 const filterSlaStatus = ref('ALL');
 const isAutoRefresh = ref(true);
+
+// Filter Dropdown Options
+const filterCustomerOptions = computed(() => [
+  { value: 'ALL', label: 'Semua Mitra Klien' },
+  ...(ticketStore.customers || []).map(c => ({
+    value: c.id,
+    label: c.name,
+    badge: c.slaTier || ''
+  }))
+]);
+
+const filterSeverityOptions = [
+  { value: 'ALL', label: 'Semua Severity' },
+  { value: 'HIGH', label: 'HIGH', badge: 'Critical', badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200' },
+  { value: 'MEDIUM', label: 'MEDIUM', badge: 'Major', badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  { value: 'LOW', label: 'LOW', badge: 'Minor', badgeClass: 'bg-sky-50 text-sky-700 border border-sky-200' }
+];
+
+const filterCategoryOptions = computed(() => [
+  { value: 'ALL', label: 'Semua Kategori' },
+  ...availableCategories.value.map(cat => ({
+    value: cat,
+    label: cat
+  }))
+]);
+
+const filterChannelOptions = [
+  { value: 'ALL', label: 'Semua Saluran' },
+  { value: 'WHATSAPP', label: 'WhatsApp', subtext: 'WA Business' },
+  { value: 'EMAIL', label: 'Email', subtext: 'Email Support' },
+  { value: 'PHONE', label: 'Telepon', subtext: 'Hotline NOC' },
+  { value: 'PORTAL', label: 'Portal', subtext: 'Customer Portal' }
+];
+
+const filterSlaStatusOptions = [
+  { value: 'ALL', label: 'Semua SLA Status' },
+  { value: 'SAFE', label: 'SLA Aman', badge: 'Normal', badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
+  { value: 'NEAR_BREACH', label: 'Near Breach (<2h)', badge: 'Warning', badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  { value: 'BREACHED', label: 'SLA Terlewat', badge: 'Breached', badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200' }
+];
 
 // Pagination
 const currentPage = ref(1);

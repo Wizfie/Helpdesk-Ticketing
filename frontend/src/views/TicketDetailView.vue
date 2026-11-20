@@ -326,10 +326,7 @@
         <div>
           <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">CUSTOMER &amp; KONTRAK</span>
           <div class="font-black text-slate-900 text-sm truncate">
-            {{ customerInfo.name }} <span v-if="customerInfo.code">({{ customerInfo.code }})</span>
-          </div>
-          <div v-if="customerInfo.contractName" class="text-[11px] text-slate-500 truncate mt-0.5">
-            {{ customerInfo.contractName }}
+            {{ customerInfo.name }}
           </div>
           <div v-if="customerInfo.slaTier" class="mt-2">
             <span class="inline-block bg-blue-100 text-blue-700 font-bold text-[10px] px-2 py-0.5 rounded shadow-2xs">
@@ -752,7 +749,7 @@
           </div>
 
           <p v-if="relatedKbArticles.length > 0" class="text-[11px] text-slate-400 -mt-1">
-            Case yang mirip berdasarkan judul, kategori, dan deskripsi.
+            Referensi artikel atau berkas runbook penyelesaian masalah yang relevan.
           </p>
 
           <div v-if="relatedKbArticles.length === 0" class="p-5 text-center text-xs text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
@@ -764,18 +761,63 @@
             <div 
               v-for="kb in relatedKbArticles" 
               :key="kb.id"
-              class="p-3.5 bg-slate-50/70 border border-slate-200/80 rounded-xl space-y-2 hover:border-slate-300 transition-all shadow-2xs"
+              class="p-3.5 border rounded-xl space-y-2.5 transition-all shadow-2xs"
+              :class="kb.isDirectLinked ? 'bg-blue-50/40 border-blue-200 ring-1 ring-blue-500/10' : 'bg-slate-50/70 border-slate-200/80 hover:border-slate-300'"
             >
-              <div class="flex items-start justify-between gap-1">
-                <div class="font-bold text-slate-900 text-xs font-mono">
+              <div class="flex items-start justify-between gap-1.5">
+                <div class="font-bold text-slate-900 text-xs font-mono min-w-0">
                   <span class="text-blue-700">{{ kb.kbCode }}</span>: {{ kb.title }}
                 </div>
-                <span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0 border border-emerald-200/60 font-mono">
-                  Similarity: {{ kb.similarity }}%
+                <span 
+                  v-if="kb.isDirectLinked"
+                  class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-600 text-white shrink-0 font-mono tracking-wide shadow-2xs"
+                >
+                  TERKAIT LANGSUNG
+                </span>
+                <span 
+                  v-else
+                  class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0 border border-emerald-200/60 font-mono"
+                >
+                  Match: {{ kb.similarity }}%
                 </span>
               </div>
 
-              <p class="text-[11px] text-slate-600 leading-relaxed font-sans line-clamp-2">
+              <!-- Attached Document Bar (if runbook document is attached) -->
+              <div 
+                v-if="kb.documentName || kb.pdfAttachmentUrl" 
+                class="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between gap-2 text-xs"
+              >
+                <div class="flex items-center space-x-2 min-w-0">
+                  <span 
+                    class="px-1.5 py-0.5 rounded text-[9px] font-black shrink-0 border"
+                    :class="isDocx(kb) ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-rose-50 text-rose-700 border-rose-200'"
+                  >
+                    {{ isDocx(kb) ? 'DOCX' : 'PDF' }}
+                  </span>
+                  <div class="min-w-0">
+                    <span class="font-semibold text-slate-800 text-[11px] truncate block" :title="kb.documentName">
+                      {{ kb.documentName || 'Dokumen Runbook Resmi' }}
+                    </span>
+                    <span v-if="kb.documentSize" class="text-[10px] text-slate-400 block">
+                      {{ kb.documentSize }}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  @click.stop="downloadKbDoc(kb)"
+                  class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] rounded transition-colors inline-flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs"
+                  title="Unduh Berkas Dokumen"
+                >
+                  <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                  </svg>
+                  <span>Unduh</span>
+                </button>
+              </div>
+
+              <p v-else-if="kb.symptom || kb.description" class="text-[11px] text-slate-600 leading-relaxed font-sans line-clamp-2">
                 {{ kb.symptom || kb.description }}
               </p>
 
@@ -799,6 +841,19 @@
                 </button>
               </div>
             </div>
+          </div>
+
+          <!-- Action Button: Propose KB Runbook from this completed ticket -->
+          <div v-if="ticket && (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED')" class="pt-2 border-t border-slate-100">
+            <router-link 
+              :to="`/knowledge-base/propose?ticketNumber=${ticket.ticketNumber}`"
+              class="w-full py-2.5 px-3 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer text-center"
+            >
+              <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+              </svg>
+              <span>+ Unggah Dokumen KB dari Kasus Tiket Ini</span>
+            </router-link>
           </div>
 
           <!-- Bottom KB Directory Link -->
@@ -883,22 +938,12 @@
             </div>
             <div class="min-w-0 flex-1">
               <div class="font-black text-slate-900 text-sm truncate">{{ assignedEngineerName }}</div>
-              <div class="text-[11px] text-slate-500 truncate">Senior Storage &amp; Infrastructure Engineer</div>
+              <div class="text-[11px] text-slate-500 truncate">{{ assignedEngineerRoleName }}</div>
             </div>
           </div>
 
           <!-- Detailed Key-Values -->
           <div class="pt-2 border-t border-slate-100 space-y-1.5 text-xs">
-            <div class="flex items-start">
-              <span class="text-slate-400 w-24 shrink-0">Supervisor</span>
-              <span class="text-slate-400 mx-1">:</span>
-              <span class="font-medium text-slate-800">Denny Wicaksono</span>
-            </div>
-            <div class="flex items-start">
-              <span class="text-slate-400 w-24 shrink-0">Shift</span>
-              <span class="text-slate-400 mx-1">:</span>
-              <span class="font-mono text-slate-700 text-[11px]">Morning Tier-2 (08:00 - 17:00 WIB)</span>
-            </div>
             <div class="flex items-start">
               <span class="text-slate-400 w-24 shrink-0">Email</span>
               <span class="text-slate-400 mx-1">:</span>
@@ -1102,25 +1147,13 @@
 
             <!-- Right: Status Penanganan * -->
             <div>
-              <label class="block font-bold text-slate-800 text-xs mb-1">
-                Status Penanganan <span class="text-rose-500">*</span>
-              </label>
-              <div class="relative">
-                <select 
-                  v-model="newMilestone.status" 
-                  class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-white text-slate-800 font-semibold focus:ring-2 focus:ring-blue-500 appearance-none"
-                >
-                  <option value="IN_PROGRESS">&#9679; In Progress</option>
-                  <option value="PENDING">&#9679; Pending (Part / Vendor / Client)</option>
-                  <option value="ESCALATED">&#9679; Escalated (Principal TAC)</option>
-                  <option value="RESOLVED">&#9679; Resolved (Terselesaikan)</option>
-                </select>
-                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
-                </div>
-              </div>
+              <BaseSelect
+                v-model="newMilestone.status"
+                :options="milestoneStatusOptions"
+                label="Status Penanganan"
+                required
+                size="sm"
+              />
             </div>
           </div>
 
@@ -1229,19 +1262,12 @@
 
             <!-- Mode 2: Pilih Berkas Existing dari Tiket -->
             <div v-else class="space-y-1.5">
-              <select
+              <BaseSelect
                 v-model="newMilestone.proofFile"
-                class="w-full p-2.5 border border-slate-200 rounded-xl text-xs bg-white font-mono"
-              >
-                <option value="">-- Tanpa Lampiran --</option>
-                <option
-                  v-for="att in allAttachments"
-                  :key="att.id || att.name"
-                  :value="att.name"
-                >
-                  📄 {{ att.name }} ({{ att.size || 'Berkas' }}) - {{ att.source || 'Tiket' }}
-                </option>
-              </select>
+                :options="proofFileOptions"
+                size="sm"
+                placeholder="-- Tanpa Lampiran --"
+              />
             </div>
           </div>
 
@@ -1381,19 +1407,12 @@
               <label class="block font-semibold text-slate-700">Tautkan ke Tahapan Step Tiket (Opsional)</label>
               <span class="text-[10px] text-blue-600 font-semibold">Tautan Dua Arah</span>
             </div>
-            <select
+            <BaseSelect
               v-model="newAttachmentForm.targetStepName"
-              class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white"
-            >
-              <option value="">-- Umum (Tidak Terikat Step Tertentu) --</option>
-              <option
-                v-for="(st, idx) in timelineSteps"
-                :key="st.id || idx"
-                :value="st.stepName"
-              >
-                Step {{ idx + 1 }}: {{ st.stepName }} ({{ st.status }})
-              </option>
-            </select>
+              :options="stepOptionsWithGeneral"
+              size="sm"
+              placeholder="-- Umum (Tidak Terikat Step Tertentu) --"
+            />
             <p class="text-[10px] text-slate-400 mt-1">
               Jika dipilih, berkas ini akan langsung tampil sebagai berkas bukti pada tahapan step yang dipilih di timeline.
             </p>
@@ -1421,17 +1440,14 @@
           </div>
 
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Pilih Tahapan / Step Target *</label>
-            <select v-model="selectedTargetStepName" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white">
-              <option value="" disabled>-- Pilih Step --</option>
-              <option
-                v-for="(st, idx) in timelineSteps"
-                :key="st.id || idx"
-                :value="st.stepName"
-              >
-                Step {{ idx + 1 }}: {{ st.stepName }}
-              </option>
-            </select>
+            <BaseSelect 
+              v-model="selectedTargetStepName"
+              :options="stepOptions"
+              label="Pilih Tahapan / Step Target"
+              required
+              size="sm"
+              placeholder="-- Pilih Step --"
+            />
           </div>
 
           <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
@@ -1470,20 +1486,22 @@
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block font-semibold text-slate-700 mb-1">Tingkat Severity *</label>
-              <select v-model="editData.severity" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white">
-                <option value="HIGH">HIGH (Kritis)</option>
-                <option value="MEDIUM">MEDIUM (Sedang)</option>
-                <option value="LOW">LOW (Rendah)</option>
-              </select>
+              <BaseSelect
+                v-model="editData.severity"
+                :options="severityOptions"
+                label="Tingkat Severity"
+                required
+                size="sm"
+              />
             </div>
             <div>
-              <label class="block font-semibold text-slate-700 mb-1">Kategori Sistem *</label>
-              <select v-model="editData.categoryId" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white">
-                <option v-for="cat in ticketStore.categories" :key="cat.id" :value="cat.id">
-                  {{ cat.name }}
-                </option>
-              </select>
+              <BaseSelect
+                v-model="editData.categoryId"
+                :options="categorySelectOptions"
+                label="Kategori Sistem"
+                required
+                size="sm"
+              />
             </div>
           </div>
 
@@ -1585,19 +1603,13 @@
 
         <form @submit.prevent="submitPauseSla" class="space-y-3">
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Preset Alasan Penahanan (MoM) *</label>
-            <select v-model="pauseData.pendingType" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white">
-              <template v-if="ticketStore.holdReasons && ticketStore.holdReasons.length > 0">
-                <option v-for="hr in ticketStore.holdReasons" :key="hr.code" :value="hr.code">
-                  {{ hr.name }}
-                </option>
-              </template>
-              <template v-else>
-                <option value="PART_INDENT">1. Part Indent (Menunggu pengiriman suku cadang/hardware)</option>
-                <option value="CUSTOMER">2. Menunggu Customer (Konfirmasi user/akses remote/maintenance window)</option>
-                <option value="VENDOR">3. Dependensi Vendor / Partner / PM (Koordinasi pihak ketiga/lead)</option>
-              </template>
-            </select>
+            <BaseSelect
+              v-model="pauseData.pendingType"
+              :options="holdReasonOptions"
+              label="Preset Alasan Penahanan (MoM)"
+              required
+              size="sm"
+            />
           </div>
 
           <div>
@@ -1631,13 +1643,13 @@
 
         <form @submit.prevent="submitEscalate" class="space-y-3">
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Tujuan Eskalasi *</label>
-            <select v-model="escalateData.target" class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white">
-              <option value="VENDOR">Vendor / Principal TAC (L3 OEM Specialist)</option>
-              <option value="PM">Project Manager (PM) - Koordinasi Scope &amp; Timeline</option>
-              <option value="PARTNER">Mitra / Partner Implementasi</option>
-              <option value="INTERNAL_L2">Internal Lead / Tier 2 Specialist</option>
-            </select>
+            <BaseSelect
+              v-model="escalateData.target"
+              :options="escalationTargetOptions"
+              label="Tujuan Eskalasi"
+              required
+              size="sm"
+            />
           </div>
 
           <div v-if="escalateData.target === 'VENDOR'" class="space-y-2.5 p-3 bg-slate-50 rounded-xl border border-slate-200">
@@ -1723,12 +1735,14 @@
 
         <form @submit.prevent="submitAssign" class="space-y-3">
           <div>
-            <label class="block font-semibold text-slate-700 mb-1">Pilih Teknisi Penanggung Jawab *</label>
-            <select v-model="selectedEngineerId" required class="w-full p-2 border border-slate-200 rounded-lg text-xs bg-white">
-              <option v-for="u in engineers" :key="u.id" :value="u.id">
-                {{ u.name }} ({{ u.roleTitle || 'Support Engineer' }})
-              </option>
-            </select>
+            <BaseSelect
+              v-model="selectedEngineerId"
+              :options="engineerSelectOptions"
+              label="Pilih Teknisi Penanggung Jawab"
+              required
+              size="sm"
+              placeholder="-- Pilih Teknisi --"
+            />
           </div>
 
           <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
@@ -1775,6 +1789,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import { useTicketStore } from '../stores/ticketStore';
+import { useUiStore } from '../stores/uiStore';
 import { api } from '../services/api';
 import { formatUtcToLocal } from '../utils/dateFormatter';
 import AttachmentPreviewModal from '../components/AttachmentPreviewModal.vue';
@@ -1783,6 +1798,7 @@ import EmailPreviewModal from '../components/EmailPreviewModal.vue';
 const route = useRoute();
 const authStore = useAuthStore();
 const ticketStore = useTicketStore();
+const uiStore = useUiStore();
 
 const ticketId = computed(() => Number(route.params.id));
 const ticket = computed(() => ticketStore.tickets.find(t => t.id === ticketId.value));
@@ -1930,8 +1946,6 @@ const customerInfo = computed(() => {
   const c = getCustomer(ticket.value.customerId);
   return {
     name: c.name || ticket.value.customerName || 'Mitra Korporat',
-    code: c.code || ticket.value.customerCode || '',
-    contractName: c.contractName || c.serviceContract || '',
     slaTier: c.slaTier || c.contractTier || ticket.value.contractTier || ticket.value.contractSla || ''
   };
 });
@@ -1971,6 +1985,12 @@ const assignedEngineerName = computed(() => {
 const assignedEngineerInitials = computed(() => {
   const name = assignedEngineerName.value;
   return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+});
+
+const assignedEngineerRoleName = computed(() => {
+  if (!ticket.value?.assignedToId) return 'Support Engineer';
+  const u = authStore.users.find(item => item.id === ticket.value.assignedToId);
+  return (u?.role || u?.roleCode) === 'ADMIN' ? 'Administrator' : 'Support Engineer';
 });
 
 const assignedEngineerEmail = computed(() => {
@@ -2304,6 +2324,81 @@ const allAttachments = computed(() => {
   return merged;
 });
 
+// Dropdown options
+const milestoneStatusOptions = [
+  { value: 'IN_PROGRESS', label: 'In Progress', subtext: 'Investigasi & penanganan sedang berlangsung', badge: 'Active' },
+  { value: 'PENDING', label: 'Pending (Part / Vendor / Client)', subtext: 'Menunggu respon eksternal atau suku cadang', badge: 'Paused' },
+  { value: 'ESCALATED', label: 'Escalated (Principal TAC)', subtext: 'Diteruskan ke level prinsipal / L3', badge: 'L3 TAC' },
+  { value: 'RESOLVED', label: 'Resolved (Terselesaikan)', subtext: 'Solusi telah diimplementasikan', badge: 'Resolved' }
+];
+
+const proofFileOptions = computed(() => [
+  { value: '', label: '-- Tanpa Lampiran --' },
+  ...(allAttachments.value || []).map(att => ({
+    value: att.name,
+    label: att.name,
+    subtext: att.stepName ? `Terikat ke: ${att.stepName}` : 'Lampiran berkas'
+  }))
+]);
+
+const stepOptions = computed(() => 
+  (timelineSteps.value || []).map((st, idx) => ({
+    value: st.stepName,
+    label: `Step ${idx + 1}: ${st.stepName}`,
+    subtext: st.desc || ''
+  }))
+);
+
+const stepOptionsWithGeneral = computed(() => [
+  { value: '', label: '-- Umum (Tidak Terikat Step Tertentu) --' },
+  ...stepOptions.value
+]);
+
+const severityOptions = [
+  { value: 'HIGH', label: 'HIGH (Kritis)', badge: 'Critical', badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200' },
+  { value: 'MEDIUM', label: 'MEDIUM (Sedang)', badge: 'Major', badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200' },
+  { value: 'LOW', label: 'LOW (Rendah)', badge: 'Minor', badgeClass: 'bg-sky-50 text-sky-700 border border-sky-200' }
+];
+
+const categorySelectOptions = computed(() => 
+  (ticketStore.categories || []).map(cat => ({
+    value: cat.id,
+    label: cat.name,
+    subtext: cat.code || ''
+  }))
+);
+
+const holdReasonOptions = computed(() => {
+  if (ticketStore.holdReasons && ticketStore.holdReasons.length > 0) {
+    return ticketStore.holdReasons.map(hr => ({
+      value: hr.code,
+      label: hr.name,
+      subtext: hr.description || ''
+    }));
+  }
+  return [
+    { value: 'PART_INDENT', label: '1. Part Indent (Menunggu suku cadang/hardware)', subtext: 'Perangkat pengganti dalam pengiriman' },
+    { value: 'CUSTOMER', label: '2. Menunggu Customer (Konfirmasi user/maintenance)', subtext: 'Menunggu konfirmasi atau jadwal maintenance' },
+    { value: 'VENDOR', label: '3. Dependensi Vendor / Partner / PM', subtext: 'Koordinasi pihak ketiga / lead' }
+  ];
+});
+
+const escalationTargetOptions = [
+  { value: 'VENDOR', label: 'Vendor / Principal TAC (L3 OEM Specialist)', subtext: 'Eskalasi ke principal OEM seperti Cisco, VMware, Fortinet' },
+  { value: 'PM', label: 'Project Manager (PM)', subtext: 'Koordinasi scope & timeline proyek' },
+  { value: 'PARTNER', label: 'Mitra / Partner Implementasi', subtext: 'Pihak ketiga penyedia layanan' },
+  { value: 'INTERNAL_L2', label: 'Internal Lead / Tier 2 Specialist', subtext: 'Eskalasi internal tier 2' }
+];
+
+const engineerSelectOptions = computed(() => 
+  (engineers.value || []).map(u => ({
+    value: u.id,
+    label: u.name,
+    subtext: (u.role || u.roleCode) === 'ADMIN' ? 'Administrator' : 'Support Engineer',
+    badge: 'Engineer'
+  }))
+);
+
 // Related Knowledge Base articles (dynamically matched from published runbooks)
 const relatedKbArticles = computed(() => {
   if (!ticketStore.knowledgeBase || ticketStore.knowledgeBase.length === 0 || !ticket.value) {
@@ -2314,25 +2409,63 @@ const relatedKbArticles = computed(() => {
   return ticketStore.knowledgeBase
     .filter(k => k.status === 'PUBLISHED')
     .map(k => {
+      // Direct ticket linkage check
+      const isDirectLinked = Boolean(
+        k.sourceTicket && (
+          k.sourceTicket === t.ticketNumber ||
+          String(k.sourceTicket) === String(t.id) ||
+          k.sourceTicket.toLowerCase() === (t.ticketNumber || '').toLowerCase()
+        )
+      );
+
       const matchTitle = query && (k.title || '').toLowerCase().includes(t.title?.toLowerCase() || '') ? 25 : 0;
       const matchCat = query && (k.category || '').toLowerCase().includes(t.category?.toLowerCase() || '') ? 20 : 0;
       const matchPrinc = query && (k.technologyPrincipal || '').toLowerCase().includes(t.principalVendor?.toLowerCase() || '') ? 25 : 0;
-      const score = Math.min(95, 50 + matchTitle + matchCat + matchPrinc);
+      const score = isDirectLinked ? 100 : Math.min(95, 50 + matchTitle + matchCat + matchPrinc);
+
       return {
         id: k.id,
         kbCode: k.kbCode || `KB-${k.id}`,
         title: k.title,
         similarity: score,
+        isDirectLinked,
+        sourceTicket: k.sourceTicket,
+        caseType: k.caseType,
+        product: k.product || k.technologyPrincipal,
+        documentName: k.documentName,
+        documentSize: k.documentSize,
+        pdfAttachmentUrl: k.pdfAttachmentUrl,
         symptom: k.symptom || k.title,
         rootCause: k.rootCause || '',
         cliSnippet: k.cliSnippet || '',
         verificationSteps: k.verificationSteps || '',
-        tags: [k.category, k.technologyPrincipal].filter(Boolean)
+        tags: [k.category, k.technologyPrincipal, k.caseType, k.product].filter(Boolean)
       };
     })
     .sort((a, b) => b.similarity - a.similarity)
-    .slice(0, 3);
+    .slice(0, 4);
 });
+
+const isDocx = (item) => {
+  const name = item?.documentName || item?.pdfAttachmentUrl || '';
+  return name.toLowerCase().endsWith('.docx') || name.toLowerCase().endsWith('.doc');
+};
+
+const downloadKbDoc = (item) => {
+  if (!item) return;
+  if (item.id && item.pdfAttachmentUrl) {
+    const url = api.getDownloadDocUrl(item.id);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = item.documentName || item.title || 'Dokumen_Runbook';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    uiStore.toastSuccess(`Mengunduh dokumen "${item.documentName || item.title}"...`);
+  } else {
+    uiStore.toastInfo('Berkas dokumen resmi belum diunggah untuk runbook ini.');
+  }
+};
 
 // Badges Styling helpers
 const getSeverityBadgeClass = (s) => {

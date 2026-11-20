@@ -53,11 +53,7 @@ async function resetForDemo() {
   const princCount = await prisma.principal.deleteMany({});
   console.log(`✅ Principal     : ${princCount.count} baris dihapus`);
 
-  // 12. SLA Hold Reasons
-  const holdReasonCount = await prisma.slaHoldReason.deleteMany({});
-  console.log(`✅ SlaHoldReason : ${holdReasonCount.count} baris dihapus`);
-
-  // 13. SLA Policies
+  // 12. SLA Policies
   const slaCount = await prisma.slaPolicy.deleteMany({});
   console.log(`✅ SlaPolicy     : ${slaCount.count} baris dihapus`);
 

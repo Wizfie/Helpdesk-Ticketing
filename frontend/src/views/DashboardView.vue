@@ -6,36 +6,25 @@
         <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
           Selamat Bertugas, {{ authStore.currentUser?.name || 'Ahmad Fauzi' }}
         </h1>
-        <p class="text-xs text-slate-500 mt-1">
-          Ringkasan pemantauan operasional tiket insiden dan kepatuhan SLA 24×7.
-        </p>
       </div>
 
       <div class="flex flex-wrap items-center gap-2.5">
         <!-- Date Range Filter -->
-        <div class="relative">
-          <select
+        <div class="w-44">
+          <BaseSelect
             v-model="selectedPeriod"
-            class="appearance-none bg-slate-50 border border-slate-200 hover:border-slate-300 text-slate-700 text-xs font-semibold rounded-xl pl-8 pr-8 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer shadow-2xs transition-all"
+            :options="periodOptions"
+            size="sm"
+            placement="right"
           >
-            <option value="30d">Last 30 Days</option>
-            <option value="14d">Last 14 Days</option>
-            <option value="7d">Last 7 Days</option>
-            <option value="today">Hari Ini</option>
-          </select>
-          <svg class="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-          </svg>
-          <svg class="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-2.5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          </svg>
+            <template #leading>
+              <svg class="w-3.5 h-3.5 text-slate-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+              </svg>
+            </template>
+          </BaseSelect>
         </div>
 
-        <!-- Telemetry Badge -->
-        <span class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-semibold shadow-2xs">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          Sistem Operasional Aktif
-        </span>
       </div>
     </div>
 
@@ -475,16 +464,13 @@
               <h2 class="font-bold text-sm text-slate-900">Ticket Aktif per Engineer</h2>
               <span class="text-slate-400 hover:text-slate-600 cursor-pointer text-xs" title="Distribusi penugasan tiket aktif per teknisi">ⓘ</span>
             </div>
-            <div class="relative">
-              <select
-                class="appearance-none bg-slate-50 border border-slate-200 text-slate-600 text-[11px] font-medium rounded-lg pl-2.5 pr-6 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
-              >
-                <option>Aktif</option>
-                <option>Semua</option>
-              </select>
-              <svg class="w-3 h-3 text-slate-400 absolute right-1.5 top-2 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-              </svg>
+            <div class="w-28">
+              <BaseSelect
+                v-model="activeEngineerFilter"
+                :options="engineerFilterOptions"
+                size="sm"
+                placement="right"
+              />
             </div>
           </div>
 
@@ -640,6 +626,19 @@ const ticketStore = useTicketStore();
 
 const selectedPeriod = ref('30d');
 const trendFilter = ref('30d');
+const activeEngineerFilter = ref('Aktif');
+
+const periodOptions = [
+  { value: '30d', label: 'Last 30 Days' },
+  { value: '14d', label: 'Last 14 Days' },
+  { value: '7d', label: 'Last 7 Days' },
+  { value: 'today', label: 'Hari Ini' }
+];
+
+const engineerFilterOptions = [
+  { value: 'Aktif', label: 'Aktif' },
+  { value: 'Semua', label: 'Semua' }
+];
 
 // Label helper for period
 const periodLabel = computed(() => {
@@ -655,7 +654,9 @@ const periodLabel = computed(() => {
 const nowTimestamp = ref(Date.now());
 let timerInterval = null;
 
-onMounted(() => {
+onMounted(async () => {
+  ticketStore.fetchTickets();
+  ticketStore.fetchCustomers();
   timerInterval = setInterval(() => {
     nowTimestamp.value = Date.now();
   }, 1000);
@@ -1055,10 +1056,13 @@ const engineerRoster = computed(() => {
       return diffSec > 0 && diffSec < 3600;
     }).length;
 
+    const parts = (user.name || '').trim().split(/\s+/);
+    const initials = parts.length > 1 ? (parts[0][0] + parts[1][0]).toUpperCase() : (parts[0] ? parts[0].slice(0, 2).toUpperCase() : 'U');
+
     return {
       id: user.id,
       name: user.name,
-      initials: user.initials || user.name.slice(0, 2).toUpperCase(),
+      initials,
       avatarBg: bgPalette[idx % bgPalette.length],
       assigned,
       inProgress,

@@ -1,663 +1,555 @@
 <template>
-  <div class="space-y-5 pb-10 animate-in fade-in duration-200">
-    <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
-      <div class="flex items-start space-x-3">
+  <div class="space-y-6 pb-12 animate-in fade-in duration-200">
+    <!-- Page Header & Navigation -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
+      <div class="flex items-center space-x-3">
         <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0112.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
           </svg>
         </div>
         <div>
-          <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Propose New Knowledge Base</h1>
-          <p class="text-xs text-slate-500 mt-0.5">Buat artikel knowledge base dari pengalaman penanganan insiden, solusi teknis, atau best practice.</p>
+          <h1 class="text-lg sm:text-xl font-black text-slate-900 tracking-tight">Upload Dokumen Knowledge Base</h1>
+          <p class="text-xs text-slate-500 mt-0.5">Unggah berkas runbook / SOP teknis pendukung operasional helpdesk multi-vendor.</p>
         </div>
       </div>
+
       <router-link
         to="/knowledge-base"
-        class="px-3.5 py-2 border border-blue-200 bg-white hover:bg-blue-50 text-blue-700 font-semibold rounded-xl text-xs transition-colors inline-flex items-center space-x-1.5 self-start"
+        class="px-3.5 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-xs transition-colors inline-flex items-center space-x-1.5 self-start cursor-pointer shadow-2xs"
       >
         <span>&larr; Kembali ke Knowledge Base</span>
       </router-link>
     </div>
 
-    <form @submit.prevent="handleSubmit(false)" class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-      <!-- ============ LEFT COLUMN ============ -->
-      <div class="xl:col-span-8 space-y-4">
-        <!-- 1. Metode -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
-          <h2 class="flex items-center space-x-2 font-bold text-slate-900 text-sm">
-            <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">1</span>
-            <span>Pilih Metode Pembuatan Knowledge Base</span>
-          </h2>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <!-- PDF -->
-            <label
-              class="cursor-pointer rounded-xl border-2 p-4 space-y-2 transition-all"
-              :class="method === 'pdf' ? 'border-blue-500 bg-blue-50/50' : 'border-slate-200 hover:border-slate-300 bg-white'"
-            >
-              <div class="flex items-start justify-between">
-                <div class="flex items-start space-x-2.5">
-                  <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                  </div>
-                  <div>
-                    <p class="font-bold text-xs text-slate-900">Upload Existing Knowledge Base (PDF)</p>
-                    <p class="text-[11px] text-slate-500 leading-snug">Saya sudah memiliki dokumen knowledge base (dari template atau hasil dokumentasi).</p>
-                  </div>
-                </div>
-                <input type="radio" value="pdf" v-model="method" class="mt-1 text-blue-600 focus:ring-blue-500" />
-              </div>
-              <ul class="text-[11px] text-slate-600 space-y-1 pl-1">
-                <li v-for="t in pdfBenefits" :key="t" class="flex items-start space-x-1.5"><span class="text-emerald-600 font-bold">&#10003;</span><span>{{ t }}</span></li>
-              </ul>
-            </label>
-
-            <!-- Manual -->
-            <label
-              class="cursor-pointer rounded-xl border-2 p-4 space-y-2 transition-all"
-              :class="method === 'manual' ? 'border-blue-500 bg-blue-50/50' : 'border-slate-200 hover:border-slate-300 bg-white'"
-            >
-              <div class="flex items-start justify-between">
-                <div class="flex items-start space-x-2.5">
-                  <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center shrink-0">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                  </div>
-                  <div>
-                    <p class="font-bold text-xs text-slate-900">Create Knowledge Base Manually</p>
-                    <p class="text-[11px] text-slate-500 leading-snug">Saya ingin mengisi Knowledge Base melalui form secara langsung.</p>
-                  </div>
-                </div>
-                <input type="radio" value="manual" v-model="method" class="mt-1 text-blue-600 focus:ring-blue-500" />
-              </div>
-              <ul class="text-[11px] text-slate-600 space-y-1 pl-1">
-                <li v-for="t in manualBenefits" :key="t" class="flex items-start space-x-1.5"><span class="text-emerald-600 font-bold">&#10003;</span><span>{{ t }}</span></li>
-              </ul>
-            </label>
-          </div>
-        </section>
-
-        <!-- 2. Upload PDF (hanya metode PDF) -->
-        <section v-if="method === 'pdf'" class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
-          <h2 class="flex items-center space-x-2 font-bold text-slate-900 text-sm">
-            <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">2</span>
-            <span>Upload Dokumen PDF Knowledge Base</span>
-          </h2>
-
-          <div class="flex flex-col sm:flex-row gap-3">
-            <div
-              @click="pdfInputRef?.click()"
-              @dragover.prevent="pdfDragging = true"
-              @dragleave.prevent="pdfDragging = false"
-              @drop.prevent="onPdfDrop"
-              class="flex-1 flex items-center space-x-3 p-4 border-2 border-dashed rounded-xl cursor-pointer transition-all"
-              :class="pdfDragging ? 'border-blue-500 bg-blue-50/60' : 'border-slate-300 hover:border-blue-400 bg-slate-50/50'"
-            >
-              <div class="w-10 h-10 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-black text-[10px] border border-rose-100">PDF</div>
-              <div>
-                <p class="font-bold text-xs text-slate-800">Klik atau drag file PDF ke sini untuk upload</p>
-                <p class="text-[10px] text-slate-400">Format: PDF (Maksimal 25MB)</p>
-              </div>
-              <input ref="pdfInputRef" type="file" accept="application/pdf,.pdf" class="hidden" @change="onPdfPick" />
-            </div>
-
-            <a
-              href="/templates/GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
-              download="GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
-              class="px-4 py-3 border border-blue-200 bg-white hover:bg-blue-50 text-blue-700 font-semibold rounded-xl text-xs transition-colors inline-flex items-center justify-center space-x-1.5 sm:self-center shrink-0"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-              <span>Download Template KB</span>
-            </a>
-          </div>
-
-          <p v-if="pdfError" class="text-[11px] text-rose-600 font-medium">{{ pdfError }}</p>
-
-          <div v-if="pdfFile" class="flex items-center justify-between p-2.5 bg-white border border-slate-200 rounded-xl">
-            <div class="flex items-center space-x-2.5 min-w-0">
-              <div class="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center font-black text-[9px] border border-rose-100 shrink-0">PDF</div>
-              <div class="min-w-0">
-                <p class="font-mono font-bold text-xs text-slate-900 truncate">{{ pdfFile.name }}</p>
-                <p class="font-mono text-[10px] text-slate-400">{{ formatSize(pdfFile.size) }}</p>
-              </div>
-            </div>
-            <div class="flex items-center space-x-2">
-              <span v-if="extracting" class="text-[11px] text-blue-600 font-semibold animate-pulse">Mengekstrak...</span>
-              <span v-else class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs font-bold">&#10003;</span>
-              <button type="button" @click="removePdf" class="text-slate-400 hover:text-rose-600 text-base leading-none px-1" title="Hapus PDF">&times;</button>
-            </div>
-          </div>
-        </section>
-
-        <!-- 3. Hasil ekstraksi / Informasi dokumen -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
-          <div class="flex items-center justify-between gap-2">
-            <h2 class="flex items-center space-x-2 font-bold text-slate-900 text-sm">
-              <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">{{ method === 'pdf' ? 3 : 2 }}</span>
-              <span>{{ method === 'pdf' ? 'Hasil Ekstraksi & Preview Data' : 'Informasi Dokumen' }}</span>
-            </h2>
-            <button
-              v-if="method === 'pdf' && pdfFile"
-              type="button"
-              @click="previewPdf"
-              class="px-3 py-1.5 border border-blue-200 text-blue-700 hover:bg-blue-50 rounded-lg text-[11px] font-semibold"
-            >
-              Lihat PDF
-            </button>
-          </div>
-
-          <div v-if="method === 'pdf' && !pdfFile" class="p-3 bg-slate-50 border border-dashed border-slate-300 rounded-xl text-[11px] text-slate-500">
-            Upload dokumen PDF terlebih dahulu. Metadata dokumen akan terisi otomatis dan dapat Anda koreksi.
-          </div>
-          <div v-else-if="method === 'pdf' && extractedOnce" class="p-3 bg-blue-50/70 border border-blue-100 rounded-xl text-[11px] text-blue-800 flex items-start space-x-2">
-            <span class="font-bold">&#9432;</span>
-            <span>Metadata dasar diekstrak dari nama dokumen. Isi detail (Problem, Root Cause, Resolution, dll.) belum dibaca otomatis &mdash; lengkapi atau verifikasi pada bagian Detail Konten.</span>
-          </div>
-
-          <div class="grid grid-cols-1 gap-3 text-xs">
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Judul Runbook &amp; Prosedur <span class="text-rose-500">*</span></label>
-              <input v-model="form.title" required type="text" placeholder="Contoh: HPE 3PAR FC Datastore Recovery via CLI" class="w-full p-2.5 border border-slate-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label class="block font-semibold text-slate-700 mb-1">Kategori Infrastruktur <span class="text-rose-500">*</span></label>
-                <select v-model="form.categoryGroup" required class="w-full p-2.5 border border-slate-200 rounded-lg bg-white">
-                  <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
-                </select>
-              </div>
-              <div>
-                <label class="block font-semibold text-slate-700 mb-1">Principal / Platform Vendor <span class="text-rose-500">*</span></label>
-                <input v-model="form.technologyPrincipal" list="kb-principals" required type="text" placeholder="HPE, Cisco, VMware..." class="w-full p-2.5 border border-slate-200 rounded-lg bg-white" />
-                <datalist id="kb-principals"><option v-for="p in ticketStore.allPrincipals" :key="p" :value="p"></option></datalist>
-              </div>
-              <div>
-                <label class="block font-semibold text-slate-700 mb-1">Produk / Platform <span class="text-rose-500">*</span></label>
-                <input v-model="form.productPlatform" required type="text" placeholder="HPE 3PAR" class="w-full p-2.5 border border-slate-200 rounded-lg bg-white" />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div>
-                <label class="block font-semibold text-slate-700 mb-1">Versi / Firmware / OS</label>
-                <input v-model="form.firmwareVersion" type="text" placeholder="3.3.1" class="w-full p-2.5 border border-slate-200 rounded-lg bg-white font-mono" />
-              </div>
-              <div>
-                <label class="block font-semibold text-slate-700 mb-1">Tipe Case <span class="text-rose-500">*</span></label>
-                <select v-model="form.caseType" required class="w-full p-2.5 border border-slate-200 rounded-lg bg-white">
-                  <option>Incident</option><option>Problem</option><option>Configuration</option><option>Maintenance</option>
-                </select>
-              </div>
-              <div>
-                <label class="block font-semibold text-slate-700 mb-1">Tag / Keywords</label>
-                <input v-model="form.tagsText" type="text" placeholder="3PAR, FC, Datastore, Recovery" class="w-full p-2.5 border border-slate-200 rounded-lg bg-white" />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 4. Detail Konten -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
-          <h2 class="flex items-center space-x-2 font-bold text-slate-900 text-sm">
-            <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">{{ method === 'pdf' ? 4 : 3 }}</span>
-            <span>Detail Konten Knowledge Base</span>
-          </h2>
-
-          <div class="flex flex-wrap gap-1.5 bg-slate-50 p-1 rounded-xl border border-slate-200">
-            <button
-              v-for="tab in contentTabs"
-              :key="tab.id"
-              type="button"
-              @click="activeTab = tab.id"
-              class="flex-1 min-w-[96px] px-3 py-1.5 rounded-lg text-[11px] font-semibold transition-colors"
-              :class="activeTab === tab.id ? 'bg-blue-600 text-white shadow-2xs' : 'text-slate-600 hover:bg-white'"
-            >
-              {{ tab.label }}
-            </button>
-          </div>
-
-          <!-- Problem & Symptom -->
-          <div v-show="activeTab === 'problem'" class="space-y-3 text-xs">
-            <div>
-              <div class="flex justify-between mb-1">
-                <label class="font-semibold text-slate-700">Gejala Kerusakan / Symptom Description <span class="text-rose-500">*</span></label>
-                <span class="font-mono text-[11px] text-slate-400">{{ form.symptom.length }}/2000</span>
-              </div>
-              <textarea v-model="form.symptom" maxlength="2000" rows="4" placeholder="Datastore unreachable, high I/O latency, multipath error pada host ESXi." class="w-full p-3 border border-slate-200 rounded-lg bg-white"></textarea>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div><label class="block font-semibold text-slate-700 mb-1">Error Code / Alert</label><input v-model="form.errorCode" type="text" class="w-full p-2.5 border border-slate-200 rounded-lg font-mono" /></div>
-              <div><label class="block font-semibold text-slate-700 mb-1">Environment</label><input v-model="form.environment" type="text" class="w-full p-2.5 border border-slate-200 rounded-lg" /></div>
-              <div><label class="block font-semibold text-slate-700 mb-1">Impact / Scope</label><input v-model="form.impactScope" type="text" class="w-full p-2.5 border border-slate-200 rounded-lg" /></div>
-            </div>
-          </div>
-
-          <!-- Root Cause -->
-          <div v-show="activeTab === 'root'" class="space-y-3 text-xs">
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Pre-Check / Prerequisite</label>
-              <textarea v-model="form.prerequisites" rows="2" placeholder="Akses, backup, atau pemeriksaan sebelum troubleshooting." class="w-full p-3 border border-slate-200 rounded-lg"></textarea>
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Troubleshooting / Diagnostic Steps</label>
-              <textarea v-model="form.diagnosticSteps" rows="3" class="w-full p-3 border border-slate-200 rounded-lg"></textarea>
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Root Cause Analysis</label>
-              <textarea v-model="form.rootCause" rows="3" class="w-full p-3 border border-slate-200 rounded-lg"></textarea>
-            </div>
-          </div>
-
-          <!-- Resolution -->
-          <div v-show="activeTab === 'resolution'" class="space-y-3 text-xs">
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Resolution Steps</label>
-              <textarea v-model="form.resolutionSteps" rows="4" class="w-full p-3 border border-slate-200 rounded-lg"></textarea>
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">CLI / Command Snippet</label>
-              <textarea v-model="form.cliSnippet" rows="4" class="w-full p-3 border border-slate-800 bg-slate-950 text-slate-100 rounded-lg font-mono text-[11px]"></textarea>
-            </div>
-          </div>
-
-          <!-- Verification -->
-          <div v-show="activeTab === 'verification'" class="space-y-3 text-xs">
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Verification Procedure</label>
-              <textarea v-model="form.verificationSteps" rows="3" class="w-full p-3 border border-slate-200 rounded-lg"></textarea>
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Expected Result</label>
-              <textarea v-model="form.expectedResult" rows="2" class="w-full p-3 border border-slate-200 rounded-lg"></textarea>
-            </div>
-          </div>
-
-          <!-- Rollback -->
-          <div v-show="activeTab === 'rollback'" class="text-xs">
-            <label class="block font-semibold text-slate-700 mb-1">Rollback Procedure</label>
-            <textarea v-model="form.rollbackProcedure" rows="5" class="w-full p-3 border border-slate-200 rounded-lg"></textarea>
-          </div>
-
-          <!-- Risk -->
-          <div v-show="activeTab === 'risk'" class="text-xs">
-            <label class="block font-semibold text-slate-700 mb-1">Risk / Potential Impact</label>
-            <textarea v-model="form.riskPotentialImpact" rows="5" class="w-full p-3 border border-slate-200 rounded-lg"></textarea>
-          </div>
-        </section>
-      </div>
-
-      <!-- ============ RIGHT COLUMN ============ -->
-      <div class="xl:col-span-4 space-y-4">
-        <!-- Preview -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
-          <h2 class="font-bold text-slate-900 text-sm">Preview Konten yang Diekstrak</h2>
-          <dl class="border border-slate-200 rounded-xl divide-y divide-slate-100 text-[11px]">
-            <div v-for="row in previewRows" :key="row.label" class="grid grid-cols-[84px_1fr] gap-2 px-3 py-1.5">
-              <dt class="font-semibold text-slate-500">{{ row.label }}</dt>
-              <dd class="text-slate-800" :class="previewExpanded ? 'whitespace-pre-line' : 'truncate'">{{ row.value || '—' }}</dd>
-            </div>
-          </dl>
-          <button type="button" @click="previewExpanded = !previewExpanded" class="text-[11px] font-semibold text-blue-600 hover:underline">
-            {{ previewExpanded ? 'Ringkas tampilan' : 'Lihat semua hasil ekstraksi' }} &rarr;
-          </button>
-        </section>
-
-        <!-- 5. Related ticket -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3 text-xs">
-          <h2 class="flex items-center space-x-2 font-bold text-slate-900 text-sm">
-            <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">5</span>
-            <span>Related Ticket / Case</span>
-          </h2>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Related Ticket / Case ID</label>
-              <select v-model="related.ticketId" @change="onTicketChange" class="w-full p-2.5 border border-slate-200 rounded-lg bg-white font-mono text-[11px]">
-                <option value="">— Tanpa tiket —</option>
-                <option v-for="t in selectableTickets" :key="t.id" :value="t.ticketNumber">{{ t.ticketNumber }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Tanggal Case</label>
-              <input v-model="related.caseDate" type="date" class="w-full p-2.5 border border-slate-200 rounded-lg bg-white" />
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Engineer</label>
-              <select v-model="related.engineerName" class="w-full p-2.5 border border-slate-200 rounded-lg bg-white">
-                <option v-for="e in engineers" :key="e.id" :value="e.name">{{ e.name }}</option>
-              </select>
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-700 mb-1">Customer / Mitra (Opsional)</label>
-              <input v-model="related.customerName" type="text" placeholder="PT ABC / Internal" class="w-full p-2.5 border border-slate-200 rounded-lg bg-white" />
-            </div>
-          </div>
-
+    <!-- Main Upload & Form Container -->
+    <form @submit.prevent="handleSubmit(false)" class="max-w-4xl mx-auto space-y-6">
+      <!-- Section 1: Upload File Dokumen Runbook -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <div class="flex justify-between mb-1">
-              <label class="font-semibold text-slate-700">Deskripsi Singkat Case</label>
-              <span class="font-mono text-[11px] text-slate-400">{{ related.description.length }}/500</span>
-            </div>
-            <textarea v-model="related.description" maxlength="500" rows="3" class="w-full p-2.5 border border-slate-200 rounded-lg"></textarea>
+            <h2 class="font-bold text-slate-900 text-sm flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">1</span>
+              <span>Upload Berkas Dokumen Runbook</span>
+              <span class="text-rose-500 font-bold">*</span>
+            </h2>
+            <p class="text-[11px] text-slate-500 mt-0.5 pl-8">
+              Pilih dokumen runbook (.docx, .doc, atau .pdf) sesuai dengan standar template resmi.
+            </p>
           </div>
-        </section>
 
-        <!-- 6. Supporting docs -->
-        <section class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3 text-xs">
-          <h2 class="flex items-center space-x-2 font-bold text-slate-900 text-sm">
-            <span class="w-5 h-5 rounded-full bg-blue-600 text-white text-[10px] flex items-center justify-center">6</span>
-            <span>Supporting Document &amp; Evidence (Opsional)</span>
-          </h2>
-
-          <div
-            @click="docInputRef?.click()"
-            @dragover.prevent="docDragging = true"
-            @dragleave.prevent="docDragging = false"
-            @drop.prevent="onDocDrop"
-            class="p-4 border-2 border-dashed rounded-xl text-center cursor-pointer transition-all"
-            :class="docDragging ? 'border-blue-500 bg-blue-50/60' : 'border-slate-300 hover:border-blue-400 bg-slate-50/50'"
+          <!-- Official Template Download Button -->
+          <a
+            href="/templates/GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
+            download="GTT_Knowledge_Base_Engineering_Runbook_Template.docx"
+            class="px-3.5 py-2 bg-slate-50 hover:bg-slate-100 text-blue-700 font-semibold rounded-xl text-xs border border-blue-200 shadow-2xs transition-all flex items-center justify-center space-x-1.5 self-start shrink-0 cursor-pointer"
+            title="Unduh file dokumen template resmi (.docx)"
           >
-            <div class="w-9 h-9 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-1.5">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-            </div>
-            <p class="font-bold text-slate-800">Klik atau drag file ke sini untuk upload</p>
-            <p class="text-[10px] text-slate-400">Format: PDF, DOC/DOCX, TXT, LOG, PNG, JPG. Maksimal 25MB per file (maksimal {{ MAX_DOCS }} file)</p>
-            <input ref="docInputRef" type="file" multiple accept=".pdf,.doc,.docx,.txt,.log,.png,.jpg,.jpeg" class="hidden" @change="onDocPick" />
-          </div>
-          <p v-if="docError" class="text-[11px] text-rose-600 font-medium">{{ docError }}</p>
-
-          <div v-if="docs.length" class="border border-slate-200 rounded-xl overflow-hidden">
-            <table class="w-full text-[11px]">
-              <thead class="bg-slate-50 text-slate-500">
-                <tr>
-                  <th class="text-left font-semibold px-2.5 py-1.5">Nama File</th>
-                  <th class="text-left font-semibold px-2 py-1.5">Tipe</th>
-                  <th class="text-left font-semibold px-2 py-1.5">Deskripsi</th>
-                  <th class="text-center font-semibold px-2 py-1.5">Aksi</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-slate-100">
-                <tr v-for="(d, i) in docs" :key="d.id">
-                  <td class="px-2.5 py-1.5 font-mono text-slate-800 max-w-[110px] truncate" :title="d.file.name">{{ d.file.name }}</td>
-                  <td class="px-2 py-1.5"><span class="px-1.5 py-0.5 rounded bg-slate-100 font-mono text-[10px] font-bold text-slate-600">{{ d.type }}</span></td>
-                  <td class="px-2 py-1.5"><input v-model="d.description" type="text" placeholder="Deskripsi" class="w-full border-0 border-b border-slate-200 focus:border-blue-500 focus:ring-0 text-[11px] p-0.5 bg-transparent" /></td>
-                  <td class="px-2 py-1.5 text-center whitespace-nowrap">
-                    <button type="button" @click="downloadDoc(d)" class="text-blue-600 hover:text-blue-800 px-1" title="Unduh">&#8681;</button>
-                    <button type="button" @click="docs.splice(i, 1)" class="text-rose-500 hover:text-rose-700 px-1" title="Hapus">&times;</button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- Actions -->
-        <div class="flex items-center justify-end gap-2.5">
-          <router-link to="/knowledge-base" class="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-xs">Batal</router-link>
-          <button type="button" @click="handleSubmit(true)" class="px-4 py-2 border border-blue-300 text-blue-700 hover:bg-blue-50 font-semibold rounded-xl text-xs cursor-pointer">Simpan Draft</button>
-          <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-sm cursor-pointer">Submit for Review</button>
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <span>Unduh Template KB (.docx)</span>
+          </a>
         </div>
-        <p v-if="formError" class="text-[11px] text-rose-600 font-medium text-right">{{ formError }}</p>
+
+        <!-- Drag & Drop Upload Zone -->
+        <div
+          v-if="!docFile"
+          @click="fileInputRef?.click()"
+          @dragover.prevent="isDragging = true"
+          @dragleave.prevent="isDragging = false"
+          @drop.prevent="onFileDrop"
+          class="border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-200"
+          :class="isDragging ? 'border-blue-500 bg-blue-50/60 ring-4 ring-blue-500/10' : 'border-slate-300 hover:border-blue-400 bg-slate-50/50 hover:bg-blue-50/20'"
+        >
+          <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto mb-3 shadow-2xs">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+            </svg>
+          </div>
+          <p class="font-bold text-sm text-slate-800">Klik atau seret file dokumen ke sini</p>
+          <p class="text-xs text-slate-500 mt-1">Mendukung format: <strong class="text-slate-700">DOCX, DOC, PDF</strong> (Maksimal 25MB)</p>
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept=".docx,.doc,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/pdf"
+            class="hidden"
+            @change="onFilePick"
+          />
+        </div>
+
+        <!-- Selected File Preview Card -->
+        <div
+          v-else
+          class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between gap-4 animate-in fade-in duration-150"
+        >
+          <div class="flex items-center space-x-3.5 min-w-0">
+            <!-- Icon Badge based on file extension -->
+            <div
+              class="w-11 h-11 rounded-xl flex items-center justify-center font-black text-xs shrink-0 border"
+              :class="isWordFile ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-rose-50 text-rose-700 border-rose-200'"
+            >
+              {{ isWordFile ? 'DOCX' : 'PDF' }}
+            </div>
+            <div class="min-w-0">
+              <p class="font-bold text-xs sm:text-sm text-slate-900 truncate" :title="docFile.name">
+                {{ docFile.name }}
+              </p>
+              <div class="flex items-center space-x-2 text-[11px] text-slate-500 mt-0.5">
+                <span>{{ formatSize(docFile.size) }}</span>
+                <span>•</span>
+                <span class="text-emerald-700 font-semibold inline-flex items-center gap-1">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                  Dokumen siap diunggah
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center space-x-2 shrink-0">
+            <button
+              type="button"
+              @click="fileInputRef?.click()"
+              class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-semibold rounded-lg text-xs cursor-pointer shadow-2xs"
+            >
+              Ganti File
+            </button>
+            <button
+              type="button"
+              @click="removeFile"
+              class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+              title="Hapus berkas"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+              </svg>
+            </button>
+          </div>
+          <input
+            ref="fileInputRef"
+            type="file"
+            accept=".docx,.doc,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/msword,application/pdf"
+            class="hidden"
+            @change="onFilePick"
+          />
+        </div>
+
+        <p v-if="fileError" class="text-xs text-rose-600 font-medium pl-8">{{ fileError }}</p>
+      </section>
+
+      <!-- Section 2: Informasi Pendukung Dokumen -->
+      <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-4">
+        <div>
+          <h2 class="font-bold text-slate-900 text-sm flex items-center space-x-2">
+            <span class="w-6 h-6 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-bold">2</span>
+            <span>Informasi Pendukung</span>
+          </h2>
+          <p class="text-[11px] text-slate-500 mt-0.5 pl-8">
+            Lengkapi atribut pendukung dan tautkan ke kasus tiket untuk memperkaya referensi operasional.
+          </p>
+        </div>
+
+        <div class="space-y-4 text-xs pt-1">
+          <!-- 1. Pengait ke Kasus Tiket (Opsional, Terutama Tiket yang Sudah Selesai) -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label class="block font-semibold text-slate-700">
+                Kaitkan ke Kasus Tiket <span class="text-slate-400 font-normal">(Opsional — Rujukan Kasus Selesai / Eksisting)</span>
+              </label>
+              <span v-if="selectedTicketInfo" class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                ✓ Tiket Dikaitkan
+              </span>
+            </div>
+
+            <BaseSelect
+              v-model="form.sourceTicket"
+              :options="ticketOptions"
+              searchable
+              placeholder="Pilih tiket rujukan (utamakan tiket yang sudah selesai / resolved)..."
+              @change="onTicketChange"
+            />
+
+            <!-- Info box when ticket is selected -->
+            <div v-if="selectedTicketInfo" class="mt-2.5 p-3 bg-blue-50/70 border border-blue-200 rounded-xl flex items-start space-x-2.5 text-xs text-blue-900 animate-in fade-in duration-200">
+              <div class="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0 mt-0.5">
+                ✓
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center space-x-2 flex-wrap">
+                  <span class="font-mono font-bold text-blue-700">{{ selectedTicketInfo.ticketNumber }}</span>
+                  <span class="text-slate-400">•</span>
+                  <span class="font-semibold text-slate-800 truncate">{{ selectedTicketInfo.title }}</span>
+                  <span
+                    class="px-1.5 py-0.2 rounded text-[10px] font-bold uppercase font-mono"
+                    :class="selectedTicketInfo.status === 'CLOSED' || selectedTicketInfo.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'"
+                  >
+                    {{ selectedTicketInfo.status }}
+                  </span>
+                </div>
+                <p class="text-[11px] text-blue-800/80 mt-1">
+                  Dokumen ini akan otomatis muncul sebagai referensi solusi pada tiket ini dan kasus serupa lainnya di panel <em>Related Knowledge Base</em>.
+                </p>
+              </div>
+              <button
+                type="button"
+                @click="form.sourceTicket = ''; onTicketChange()"
+                class="text-blue-500 hover:text-rose-600 font-bold text-xs p-1 cursor-pointer"
+                title="Batalkan pengaitan tiket"
+              >
+                &times;
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. Judul Dokumen -->
+          <div>
+            <label class="block font-semibold text-slate-700 mb-1">
+              Judul Dokumen / Runbook <span class="text-rose-500 font-bold">*</span>
+            </label>
+            <input
+              v-model="form.title"
+              type="text"
+              required
+              placeholder="Contoh: Prosedur Troubleshooting Datastore Recovery HPE 3PAR FC"
+              class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <!-- 3. Grid Informasi Pendukung (Tipe Case, Kategori, Produk) -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <!-- Tipe Case -->
+            <div>
+              <BaseSelect
+                v-model="form.caseType"
+                :options="caseTypeOptions"
+                label="Tipe Case"
+                required
+                placeholder="Pilih Tipe Case"
+              />
+            </div>
+
+            <!-- Kategori -->
+            <div>
+              <BaseSelect
+                v-model="form.category"
+                :options="categoryOptions"
+                label="Kategori Infrastruktur"
+                required
+                searchable
+                placeholder="Pilih Kategori"
+              />
+            </div>
+
+            <!-- Produk / Platform -->
+            <div>
+              <label class="block font-semibold text-slate-700 mb-1">
+                Produk / Platform <span class="text-rose-500 font-bold">*</span>
+              </label>
+              <input
+                v-model="form.product"
+                type="text"
+                required
+                list="kb-product-suggestions"
+                placeholder="Contoh: HPE 3PAR, Cisco Nexus, VMware"
+                class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <datalist id="kb-product-suggestions">
+                <option value="HPE 3PAR / Primera"></option>
+                <option value="Cisco Nexus Switches"></option>
+                <option value="VMware ESXi / vCenter"></option>
+                <option value="Rubrik CDM"></option>
+                <option value="Brocade SAN Fabric"></option>
+                <option value="Fortinet FortiGate"></option>
+                <option value="Veeam Backup & Replication"></option>
+              </datalist>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <router-link
+          to="/knowledge-base"
+          class="px-4 py-2.5 border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold rounded-xl text-xs transition-colors cursor-pointer"
+        >
+          Batal
+        </router-link>
+
+        <button
+          type="button"
+          @click="handleSubmit(true)"
+          :disabled="isSubmitting"
+          class="px-4 py-2.5 border border-blue-200 bg-blue-50/50 hover:bg-blue-100/60 text-blue-700 font-bold rounded-xl text-xs transition-colors cursor-pointer disabled:opacity-50"
+        >
+          Simpan sebagai Draft
+        </button>
+
+        <button
+          type="submit"
+          :disabled="isSubmitting"
+          class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all flex items-center space-x-2 cursor-pointer disabled:opacity-50"
+        >
+          <svg v-if="isSubmitting" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
+          </svg>
+          <span>{{ isSubmitting ? 'Mengunggah...' : 'Upload & Terbitkan Runbook' }}</span>
+        </button>
       </div>
+
+      <p v-if="formError" class="text-xs text-rose-600 font-medium text-right">{{ formError }}</p>
     </form>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue';
-import { useRouter } from 'vue-router';
+import { ref, reactive, computed, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 import { useTicketStore } from '../stores/ticketStore';
+import { useUiStore } from '../stores/uiStore';
 import { api } from '../services/api';
+import BaseSelect from '../components/BaseSelect.vue';
 
+const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const ticketStore = useTicketStore();
+const uiStore = useUiStore();
 
-const MAX_BYTES = 25 * 1024 * 1024;
-const MAX_DOCS = 5;
+const MAX_BYTES = 25 * 1024 * 1024; // 25MB
 
-const pdfBenefits = [
-  'Sistem akan membaca isi PDF secara otomatis',
-  'Data akan diisi ke form (draft)',
-  'Anda dapat melakukan review dan edit jika diperlukan',
-  'Tidak perlu mengisi form dari awal'
-];
-const manualBenefits = [
-  'Isi form sesuai struktur yang disediakan',
-  'Sistem akan menghasilkan dokumen PDF otomatis',
-  'Cocok untuk pembuatan cepat tanpa dokumen awal'
-];
-const categories = [
-  'SAN & Enterprise Storage',
-  'VMware & Hypervisors',
-  'Network & Switches',
-  'Backup & DR',
-  'Database & Middleware',
-  'Security & Firewall'
-];
-const contentTabs = [
-  { id: 'problem', label: 'Problem & Symptom' },
-  { id: 'root', label: 'Root Cause' },
-  { id: 'resolution', label: 'Resolution Steps' },
-  { id: 'verification', label: 'Verification' },
-  { id: 'rollback', label: 'Rollback' },
-  { id: 'risk', label: 'Risk & Impact' }
-];
-
-const method = ref('pdf');
-const activeTab = ref('problem');
+const fileInputRef = ref(null);
+const docFile = ref(null);
+const fileError = ref('');
+const isDragging = ref(false);
+const isSubmitting = ref(false);
 const formError = ref('');
 
 const form = reactive({
   title: '',
-  categoryGroup: 'SAN & Enterprise Storage',
-  technologyPrincipal: '',
-  productPlatform: '',
-  firmwareVersion: '',
   caseType: 'Incident',
-  tagsText: '',
-  symptom: '',
-  errorCode: '',
-  environment: '',
-  impactScope: '',
-  prerequisites: '',
-  diagnosticSteps: '',
-  rootCause: '',
-  resolutionSteps: '',
-  cliSnippet: '',
-  verificationSteps: '',
-  expectedResult: '',
-  rollbackProcedure: '',
-  riskPotentialImpact: ''
+  category: 'SAN & Enterprise Storage',
+  product: '',
+  sourceTicket: ''
 });
 
-const related = reactive({
-  ticketId: '',
-  caseDate: new Date().toISOString().slice(0, 10),
-  engineerName: authStore.currentUser?.name || '',
-  customerName: '',
-  description: ''
-});
-
-// ---- Related ticket (engineer hanya melihat tiket miliknya) ----
-const selectableTickets = computed(() => {
-  if (authStore.isEngineer) {
-    return ticketStore.tickets.filter(t => t.assignedToId === authStore.currentUser?.id);
-  }
-  return ticketStore.tickets;
-});
-const engineers = computed(() => authStore.users.filter(u => u.roleCode === 'ENGINEER'));
-
-const onTicketChange = () => {
-  const t = ticketStore.tickets.find(x => x.ticketNumber === related.ticketId);
-  if (!t) return;
-  const customer = ticketStore.customers.find(c => c.id === t.customerId);
-  const eng = authStore.users.find(u => u.id === t.assignedToId);
-  related.customerName = customer?.name || related.customerName;
-  if (eng) related.engineerName = eng.name;
-  if (!related.description) related.description = (t.title || '').slice(0, 500);
-  if (t.createdAt) related.caseDate = String(t.createdAt).slice(0, 10);
-};
-
-// ---- PDF upload & simulated metadata extraction ----
-const pdfInputRef = ref(null);
-const pdfFile = ref(null);
-const pdfError = ref('');
-const pdfDragging = ref(false);
-const extracting = ref(false);
-const extractedOnce = ref(false);
-
-const VENDORS = ['HPE', 'Cisco', 'VMware', 'NetApp', 'Brocade', 'Rubrik', 'Veeam', 'Fortinet', 'Dell', 'Huawei', 'Oracle'];
-const CATEGORY_HINTS = [
-  { re: /(3par|primera|san|storage|netapp|brocade|fc\b)/i, cat: 'SAN & Enterprise Storage' },
-  { re: /(esxi|vmware|vcenter|vsan|psod)/i, cat: 'VMware & Hypervisors' },
-  { re: /(switch|vlan|bgp|router|network)/i, cat: 'Network & Switches' },
-  { re: /(backup|rubrik|veeam|commvault|dr\b)/i, cat: 'Backup & DR' },
-  { re: /(sql|oracle|database|middleware)/i, cat: 'Database & Middleware' },
-  { re: /(firewall|fortigate|security)/i, cat: 'Security & Firewall' }
+const caseTypeOptions = [
+  { value: 'Incident', label: 'Incident', subtext: 'Gangguan teknis layanan' },
+  { value: 'Problem', label: 'Problem', subtext: 'Investigasi masalah berulang' },
+  { value: 'Configuration', label: 'Configuration', subtext: 'Panduan konfigurasi teknis' },
+  { value: 'Maintenance', label: 'Maintenance', subtext: 'Prosedur pemeliharaan berkala' }
 ];
 
-const formatSize = (b) => (b > 1024 * 1024 ? (b / 1024 / 1024).toFixed(1) + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB');
+const categoryOptions = [
+  { value: 'SAN & Enterprise Storage', label: 'SAN & Enterprise Storage' },
+  { value: 'VMware & Hypervisors', label: 'VMware & Hypervisors' },
+  { value: 'Network & Switches', label: 'Network & Switches' },
+  { value: 'Backup & DR', label: 'Backup & DR' },
+  { value: 'Database & Middleware', label: 'Database & Middleware' },
+  { value: 'Security & Firewall', label: 'Security & Firewall' }
+];
 
-const acceptPdf = (file) => {
-  pdfError.value = '';
-  if (!file) return;
-  const isPdf = file.type === 'application/pdf' || /\.pdf$/i.test(file.name);
-  if (!isPdf) { pdfError.value = 'Format tidak valid. Hanya file PDF yang diperbolehkan.'; return; }
-  if (file.size > MAX_BYTES) { pdfError.value = 'Ukuran file melebihi batas 25MB.'; return; }
-  pdfFile.value = file;
-  runExtraction(file);
-};
-const onPdfPick = (e) => { acceptPdf(e.target.files[0]); e.target.value = ''; };
-const onPdfDrop = (e) => { pdfDragging.value = false; acceptPdf(e.dataTransfer?.files?.[0]); };
+const isWordFile = computed(() => {
+  if (!docFile.value) return false;
+  return /\.(docx|doc)$/i.test(docFile.value.name);
+});
 
-// Ekstraksi di sisi klien (demo): hanya membaca metadata dari nama file.
-const runExtraction = (file) => {
-  extracting.value = true;
-  setTimeout(() => {
-    const base = file.name.replace(/\.pdf$/i, '');
-    const versionMatch = base.match(/[-_ ]v?(\d+(?:\.\d+)+)$/i);
-    const cleaned = base.replace(/^KB[-_ ]/i, '').replace(/[-_ ]v?\d+(?:\.\d+)+$/i, '');
-    const words = cleaned.split(/[-_ ]+/).filter(Boolean);
-
-    if (!form.title) form.title = words.join(' ');
-    const vendor = VENDORS.find(v => words.some(w => w.toLowerCase() === v.toLowerCase()));
-    if (vendor && !form.technologyPrincipal) form.technologyPrincipal = vendor;
-    const hint = CATEGORY_HINTS.find(h => h.re.test(cleaned));
-    if (hint) form.categoryGroup = hint.cat;
-    if (vendor && !form.productPlatform) {
-      const idx = words.findIndex(w => w.toLowerCase() === vendor.toLowerCase());
-      form.productPlatform = words.slice(idx, idx + 2).join(' ');
-    }
-    if (!form.firmwareVersion && versionMatch) form.firmwareVersion = versionMatch[1];
-    if (!form.tagsText) form.tagsText = words.slice(0, 5).join(', ');
-
-    extracting.value = false;
-    extractedOnce.value = true;
-  }, 700);
+const formatSize = (b) => {
+  if (!b) return '0 KB';
+  return b > 1024 * 1024
+    ? (b / 1024 / 1024).toFixed(1) + ' MB'
+    : Math.max(1, Math.round(b / 1024)) + ' KB';
 };
 
-const removePdf = () => { pdfFile.value = null; extractedOnce.value = false; pdfError.value = ''; };
-const previewPdf = () => {
-  if (!pdfFile.value) return;
-  const url = URL.createObjectURL(pdfFile.value);
-  window.open(url, '_blank');
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
-};
+const selectedTicketInfo = computed(() => {
+  if (!form.sourceTicket) return null;
+  return (ticketStore.tickets || []).find(t => t.ticketNumber === form.sourceTicket) || null;
+});
 
-// ---- Supporting documents ----
-const docInputRef = ref(null);
-const docs = ref([]);
-const docError = ref('');
-const docDragging = ref(false);
-let docSeq = 0;
+const ticketOptions = computed(() => {
+  const allTickets = ticketStore.tickets || [];
+  const completed = allTickets.filter(t => t.status === 'RESOLVED' || t.status === 'CLOSED');
+  const others = allTickets.filter(t => t.status !== 'RESOLVED' && t.status !== 'CLOSED');
 
-const addDocs = (files) => {
-  docError.value = '';
-  for (const file of files) {
-    if (docs.value.length >= MAX_DOCS) { docError.value = `Maksimal ${MAX_DOCS} file pendukung.`; break; }
-    if (file.size > MAX_BYTES) { docError.value = `${file.name} melebihi batas 25MB.`; continue; }
-    const ext = (file.name.split('.').pop() || '').toUpperCase();
-    docs.value.push({ id: ++docSeq, file, type: ext, description: '' });
-  }
-};
-const onDocPick = (e) => { addDocs(Array.from(e.target.files || [])); e.target.value = ''; };
-const onDocDrop = (e) => { docDragging.value = false; addDocs(Array.from(e.dataTransfer?.files || [])); };
-const downloadDoc = (d) => {
-  const url = URL.createObjectURL(d.file);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = d.file.name;
-  a.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-};
-
-// ---- Preview panel ----
-const previewExpanded = ref(false);
-const previewRows = computed(() => [
-  { label: 'Judul', value: form.title },
-  { label: 'Kategori', value: form.categoryGroup },
-  { label: 'Vendor', value: form.technologyPrincipal },
-  { label: 'Produk', value: form.productPlatform },
-  { label: 'Versi', value: form.firmwareVersion },
-  { label: 'Symptom', value: form.symptom },
-  { label: 'Root Cause', value: form.rootCause },
-  { label: 'Resolution', value: form.resolutionSteps }
-]);
-
-// ---- Submit ----
-const handleSubmit = async (asDraft) => {
-  formError.value = '';
-  if (method.value === 'pdf' && !pdfFile.value && !asDraft) {
-    formError.value = 'Upload dokumen PDF terlebih dahulu atau pilih metode manual.';
-    return;
-  }
-  const required = [
-    ['title', 'Judul'], ['technologyPrincipal', 'Principal / Vendor'], ['productPlatform', 'Produk / Platform']
+  const options = [
+    { value: '', label: '— Tanpa Rujukan Tiket (Dokumen SOP Standar Umum) —' }
   ];
-  if (!asDraft) required.push(['symptom', 'Symptom']);
-  const missing = required.filter(([k]) => !String(form[k] || '').trim()).map(([, l]) => l);
-  if (missing.length) {
-    formError.value = `Lengkapi field wajib: ${missing.join(', ')}.`;
-    if (missing.includes('Symptom')) activeTab.value = 'problem';
+
+  completed.forEach(t => {
+    options.push({
+      value: t.ticketNumber,
+      label: `${t.ticketNumber} - ${t.title}`,
+      subtext: `[SELESAI] • Mitra: ${t.customerName || t.customer?.name || '-'} • Kat: ${t.category || '-'}`,
+      badge: 'Selesai',
+      badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+    });
+  });
+
+  others.forEach(t => {
+    options.push({
+      value: t.ticketNumber,
+      label: `${t.ticketNumber} - ${t.title}`,
+      subtext: `[${t.status}] • Mitra: ${t.customerName || t.customer?.name || '-'} • Kat: ${t.category || '-'}`,
+      badge: t.status,
+      badgeClass: 'bg-slate-100 text-slate-700 border border-slate-200'
+    });
+  });
+
+  return options;
+});
+
+const onTicketChange = () => {
+  if (!form.sourceTicket) return;
+  const t = (ticketStore.tickets || []).find(x => x.ticketNumber === form.sourceTicket);
+  if (!t) return;
+
+  // Auto-suggest title if empty or previously generated
+  if (!form.title || form.title.startsWith('SOP Penanganan:')) {
+    form.title = `SOP Penanganan: ${t.title}`;
+  }
+  // Auto-fill product if empty
+  if (!form.product && (t.deviceModel || t.principalVendor)) {
+    form.product = t.deviceModel || t.principalVendor;
+  }
+  // Match category if appropriate
+  if (t.category) {
+    const matched = categoryOptions.find(c => c.value.toLowerCase().includes(t.category.toLowerCase()));
+    if (matched) form.category = matched.value;
+  }
+};
+
+const acceptFile = (file) => {
+  fileError.value = '';
+  if (!file) return;
+
+  const validExts = ['.docx', '.doc', '.pdf'];
+  const ext = (file.name.substring(file.name.lastIndexOf('.')) || '').toLowerCase();
+
+  if (!validExts.includes(ext)) {
+    fileError.value = 'Format berkas tidak valid. Harap pilih dokumen Word (.docx, .doc) atau PDF (.pdf).';
     return;
   }
 
-  const { tagsText, ...rest } = form;
-  const payload = {
-    ...rest,
-    tags: tagsText.split(',').map(t => t.trim()).filter(Boolean),
-    relatedTicketId: related.ticketId,
-    caseDate: related.caseDate,
-    engineerName: related.engineerName,
-    customerName: related.customerName,
-    caseDescription: related.description,
-    creationMethod: method.value === 'pdf' ? 'PDF_UPLOAD' : 'MANUAL',
-    uploadedDocName: pdfFile.value?.name || docs.value[0]?.file.name || '',
-    supportingDocs: docs.value.map(d => ({ name: d.file.name, type: d.type, description: d.description, size: formatSize(d.file.size) })),
-    saveAsDraft: asDraft
-  };
+  if (file.size > MAX_BYTES) {
+    fileError.value = 'Ukuran berkas melebihi batas maksimal 25MB.';
+    return;
+  }
 
-  let created = null;
+  docFile.value = file;
+
+  // Auto-fill title if empty from clean filename
+  if (!form.title) {
+    const rawName = file.name.replace(/\.[^/.]+$/, '');
+    form.title = rawName.replace(/[-_]/g, ' ').trim();
+  }
+};
+
+const onFilePick = (e) => {
+  acceptFile(e.target.files?.[0]);
+  e.target.value = '';
+};
+
+const onFileDrop = (e) => {
+  isDragging.value = false;
+  acceptFile(e.dataTransfer?.files?.[0]);
+};
+
+const removeFile = () => {
+  docFile.value = null;
+  fileError.value = '';
+};
+
+onMounted(async () => {
+  if (!ticketStore.tickets || ticketStore.tickets.length === 0) {
+    await ticketStore.fetchTickets();
+  }
+  if (route.query.ticketNumber) {
+    form.sourceTicket = String(route.query.ticketNumber);
+    onTicketChange();
+  }
+});
+
+const handleSubmit = async (asDraft = false) => {
+  formError.value = '';
+
+  if (!docFile.value && !asDraft) {
+    formError.value = 'Harap pilih berkas dokumen runbook terlebih dahulu.';
+    return;
+  }
+
+  if (!form.title || !form.title.trim()) {
+    formError.value = 'Judul dokumen wajib diisi.';
+    return;
+  }
+
+  if (!form.category) {
+    formError.value = 'Kategori wajib dipilih.';
+    return;
+  }
+
+  if (!form.caseType) {
+    formError.value = 'Tipe case wajib dipilih.';
+    return;
+  }
+
+  if (!form.product || !form.product.trim()) {
+    formError.value = 'Produk / platform wajib diisi.';
+    return;
+  }
+
+  isSubmitting.value = true;
   try {
     const fd = new FormData();
-    Object.entries(payload).forEach(([k, v]) => fd.append(k, typeof v === 'object' ? JSON.stringify(v) : (v ?? '')));
-    if (pdfFile.value) fd.append('pdfFile', pdfFile.value);
-    docs.value.forEach(d => fd.append('supportingFiles', d.file));
-    const res = await api.createArticle(fd);
-    created = res.data;
-  } catch (err) {
-    console.warn('[KnowledgeBase] Gagal submit ke backend, fallback local store:', err.message);
-  }
+    fd.append('title', form.title.trim());
+    fd.append('caseType', form.caseType);
+    fd.append('category', form.category);
+    fd.append('categoryGroup', form.category);
+    fd.append('product', form.product.trim());
+    fd.append('sourceTicket', form.sourceTicket || '');
+    fd.append('status', asDraft ? 'DRAFT' : 'PUBLISHED');
 
-  const item = ticketStore.proposeNewArticle(payload, authStore.currentUser);
-  if (created?.id) item.id = created.id;
-  router.push({ path: '/knowledge-base', query: { created: item.id } });
+    if (docFile.value) {
+      fd.append('file', docFile.value);
+    }
+
+    let createdArticle = null;
+    try {
+      const res = await api.createArticle(fd);
+      createdArticle = res?.data || res;
+    } catch (apiErr) {
+      console.warn('[KnowledgeBase] Gagal submit ke backend REST API, menggunakan fallback pinia store:', apiErr);
+    }
+
+    // Refresh store from backend or fallback
+    await ticketStore.fetchKnowledgeBase();
+
+    // Fallback store update if needed
+    if (!createdArticle || !ticketStore.knowledgeBase.some(k => k.id === createdArticle.id)) {
+      ticketStore.proposeNewArticle({
+        title: form.title.trim(),
+        caseType: form.caseType,
+        category: form.category,
+        product: form.product.trim(),
+        sourceTicket: form.sourceTicket || null,
+        uploadedDocName: docFile.value?.name || null,
+        uploadedDocSize: formatSize(docFile.value?.size),
+        saveAsDraft: asDraft
+      }, authStore.currentUser);
+    }
+
+    uiStore.toastSuccess(asDraft ? 'Draft dokumen berhasil disimpan.' : 'Dokumen Knowledge Base berhasil diunggah.');
+    router.push('/knowledge-base');
+  } catch (err) {
+    console.error('Submit KB error:', err);
+    formError.value = 'Terjadi kesalahan saat mengunggah dokumen. Silakan coba lagi.';
+    uiStore.toastError('Gagal mengunggah dokumen Knowledge Base.');
+  } finally {
+    isSubmitting.value = false;
+  }
 };
 </script>

@@ -16,7 +16,6 @@ export async function createSlaPolicy(req, res) {
   try {
     const actor = req.user;
     const {
-      tierCode,
       tierName,
       operatingHours,
       p1ResponseHours,
@@ -31,18 +30,17 @@ export async function createSlaPolicy(req, res) {
       isActive
     } = req.body;
 
-    if (!tierCode || !tierName || !operatingHours) {
-      return res.status(400).json({ message: 'tierCode, tierName, dan operatingHours wajib diisi.' });
+    if (!tierName || !operatingHours) {
+      return res.status(400).json({ message: 'tierName dan operatingHours wajib diisi.' });
     }
 
-    const existing = await prisma.slaPolicy.findUnique({ where: { tierCode } });
+    const existing = await prisma.slaPolicy.findUnique({ where: { tierName } });
     if (existing) {
-      return res.status(409).json({ message: `Kode kebijakan SLA "${tierCode}" sudah digunakan.` });
+      return res.status(409).json({ message: `Nama kebijakan SLA "${tierName}" sudah digunakan.` });
     }
 
     const created = await prisma.slaPolicy.create({
       data: {
-        tierCode: tierCode.toUpperCase().replace(/\s+/g, '_'),
         tierName,
         operatingHours,
         p1ResponseHours: parseFloat(p1ResponseHours) || 0.5,
@@ -63,8 +61,8 @@ export async function createSlaPolicy(req, res) {
       role: actor?.role?.code || 'ADMIN',
       action: 'SLA_POLICY_CREATED',
       entityType: 'SLA_POLICY',
-      entityId: created.tierCode,
-      description: `Menambahkan kebijakan SLA baru: ${created.tierName} (${created.tierCode})`,
+      entityId: String(created.id),
+      description: `Menambahkan kebijakan SLA baru: ${created.tierName}`,
       ipAddress: req.ip
     });
 
@@ -122,7 +120,7 @@ export async function updateSlaPolicy(req, res) {
       role: actor?.role?.code || 'ADMIN',
       action: 'SLA_POLICY_UPDATED',
       entityType: 'SLA_POLICY',
-      entityId: updated.tierCode,
+      entityId: String(updated.id),
       description: `Memperbarui matriks batas waktu kontrak SLA ${updated.tierName} (P1 Response: ${updated.p1ResponseHours}j, Resolution: ${updated.p1ResolutionHours}j)`,
       ipAddress: req.ip
     });
@@ -150,8 +148,8 @@ export async function deleteSlaPolicy(req, res) {
       role: actor?.role?.code || 'ADMIN',
       action: 'SLA_POLICY_DELETED',
       entityType: 'SLA_POLICY',
-      entityId: policy.tierCode,
-      description: `Menghapus kebijakan SLA: ${policy.tierName} (${policy.tierCode})`,
+      entityId: String(policy.id),
+      description: `Menghapus kebijakan SLA: ${policy.tierName}`,
       ipAddress: req.ip
     });
 

@@ -96,7 +96,9 @@ export const api = {
   getArticleById: (id) => request(`/kb/${id}`),
   createArticle: (formData) => request('/kb', { method: 'POST', body: formData, isFormData: true }),
   publishArticle: (id) => request(`/kb/${id}/publish`, { method: 'PATCH' }),
-  getDownloadPdfUrl: (id) => `${API_BASE_URL}/kb/${id}/download-pdf`,
+  deleteArticle: (id) => request(`/kb/${id}`, { method: 'DELETE' }),
+  getDownloadPdfUrl: (id) => `${API_BASE_URL}/kb/${id}/download`,
+  getDownloadDocUrl: (id) => `${API_BASE_URL}/kb/${id}/download`,
 
   // Audit Logs
   getAuditLogs: (params = {}) => {

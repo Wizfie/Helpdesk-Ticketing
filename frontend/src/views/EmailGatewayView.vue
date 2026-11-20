@@ -339,16 +339,11 @@
 
             <div>
               <label class="block text-[11px] font-medium text-slate-300 mb-1">Uji Coba Menggunakan Driver:</label>
-              <select 
+              <BaseSelect 
                 v-model="testDriverOverride"
-                class="w-full text-xs px-3.5 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700 text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
-              >
-                <option value="">Sesuai Driver Aktif Sekarang ({{ config.driver?.toUpperCase() }})</option>
-                <option value="gmail">Paksa Pakai: Gmail SMTP</option>
-                <option value="resend">Paksa Pakai: Resend API</option>
-                <option value="sumopod">Paksa Pakai: Sumopod SMTP</option>
-                <option value="mock">Paksa Pakai: Simulator (Mock)</option>
-              </select>
+                :options="driverOverrideOptions"
+                placeholder="Pilih driver uji coba..."
+              />
             </div>
 
             <button 
@@ -440,6 +435,14 @@ const inputPass = ref({
 const testEmailTarget = ref('wiz.fie@gmail.com');
 const testDriverOverride = ref('');
 const testResult = ref(null);
+
+const driverOverrideOptions = computed(() => [
+  { value: '', label: `Sesuai Driver Aktif Sekarang (${config.value.driver?.toUpperCase() || 'GMAIL'})`, badge: 'Default' },
+  { value: 'gmail', label: 'Paksa Pakai: Gmail SMTP', subtext: 'Google OAuth/App Password', badge: 'Gmail' },
+  { value: 'resend', label: 'Paksa Pakai: Resend API', subtext: 'Resend transactional HTTP API', badge: 'Resend' },
+  { value: 'sumopod', label: 'Paksa Pakai: Sumopod SMTP', subtext: 'Private dedicated SMTP server', badge: 'Sumopod' },
+  { value: 'mock', label: 'Paksa Pakai: Simulator (Mock)', subtext: 'Uji coba lokal tanpa kirim internet', badge: 'Mock' }
+]);
 
 function getStatusBadgeClass(driver) {
   switch (driver) {
