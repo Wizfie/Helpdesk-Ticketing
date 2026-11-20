@@ -17,37 +17,29 @@ async function resetForDemo() {
   const auditCount = await prisma.auditLog.deleteMany({});
   console.log(`✅ AuditLog      : ${auditCount.count} baris dihapus`);
 
-  // 2. Attachments (FK ke Ticket)
-  const attachCount = await prisma.attachment.deleteMany({});
-  console.log(`✅ Attachment    : ${attachCount.count} baris dihapus`);
-
-  // 3. SLA Hold Logs (FK ke Ticket)
-  const holdCount = await prisma.slaHoldLog.deleteMany({});
-  console.log(`✅ SlaHoldLog    : ${holdCount.count} baris dihapus`);
-
-  // 4. Ticket Milestones (FK ke Ticket & User)
+  // 2. Ticket Milestones (FK ke Ticket & User)
   const msCount = await prisma.ticketMilestone.deleteMany({});
   console.log(`✅ TicketMilestone: ${msCount.count} baris dihapus`);
 
-  // 5. Tickets (FK ke Customer, CustomerPic, Category, User)
+  // 3. Tickets (FK ke Customer, CustomerPic, KbOption, User)
   const ticketCount = await prisma.ticket.deleteMany({});
   console.log(`✅ Ticket        : ${ticketCount.count} baris dihapus`);
 
-  // 6. Customer PICs (FK ke Customer)
+  // 4. Customer PICs (FK ke Customer)
   const picCount = await prisma.customerPic.deleteMany({});
   console.log(`✅ CustomerPic   : ${picCount.count} baris dihapus`);
 
-  // 7. Customers
+  // 5. Customers
   const custCount = await prisma.customer.deleteMany({});
   console.log(`✅ Customer      : ${custCount.count} baris dihapus`);
 
-  // 8. Knowledge Base
+  // 6. Knowledge Base
   const kbCount = await prisma.knowledgeBase.deleteMany({});
   console.log(`✅ KnowledgeBase : ${kbCount.count} baris dihapus`);
 
-  // 9. Categories
-  const catCount = await prisma.category.deleteMany({});
-  console.log(`✅ Category      : ${catCount.count} baris dihapus`);
+  // 7. Master KB Options
+  const kbOptionCount = await prisma.kbOption.deleteMany({});
+  console.log(`✅ KbOption      : ${kbOptionCount.count} baris dihapus`);
 
   // 11. Principals
   const princCount = await prisma.principal.deleteMany({});

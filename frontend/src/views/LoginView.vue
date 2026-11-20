@@ -154,90 +154,26 @@
             Klik salah satu akun di bawah untuk menguji pembatasan hak akses dan isolasi tiket antar staf teknisi:
           </p>
 
-          <!-- List of Quick Demo Accounts -->
+          <!-- List of Quick Demo Accounts (Dinamis dari Database MySQL) -->
           <div class="space-y-2.5">
-            <!-- 1. Admin: Rina Anggraini -->
             <button 
-              @click="quickLogin('rina.cpig@glotratech.com')"
+              v-for="user in activeUsers" 
+              :key="user.id"
+              @click="quickLogin(user.email)"
               type="button"
               class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-blue-50/60 hover:border-blue-300 transition-all shadow-2xs group cursor-pointer"
             >
               <div class="flex items-center justify-between mb-1">
-                <span class="font-bold text-xs text-slate-900 group-hover:text-blue-700">Rina Anggraini</span>
-                <span class="text-[10px] font-bold px-2 py-0.2 rounded bg-purple-100 text-purple-700 border border-purple-200">
-                  ADMIN / CPIG
+                <span class="font-bold text-xs text-slate-900 group-hover:text-blue-700">{{ user.name }}</span>
+                <span 
+                  class="text-[10px] font-bold px-2 py-0.2 rounded border"
+                  :class="(user.roleCode || user.role) === 'ADMIN' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-blue-100 text-blue-700 border-blue-200'"
+                >
+                  {{ user.roleCode || user.role }}
                 </span>
               </div>
               <p class="text-[11px] text-slate-500 leading-tight">
-                Melihat seluruh antrean semua teknisi, SLA Master, jejak audit, dan alokasi tiket.
-              </p>
-            </button>
-
-            <!-- 2. Engineer: Budi Santoso -->
-            <button 
-              @click="quickLogin('budi.eng@glotratech.com')"
-              type="button"
-              class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-blue-50/60 hover:border-blue-300 transition-all shadow-2xs group cursor-pointer"
-            >
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-bold text-xs text-slate-900 group-hover:text-blue-700">Budi Santoso</span>
-                <span class="text-[10px] font-bold px-2 py-0.2 rounded bg-blue-100 text-blue-700 border border-blue-200">
-                  ENGINEER (8 Tiket)
-                </span>
-              </div>
-              <p class="text-[11px] text-slate-500 leading-tight">
-                Lead SysOps & SAN. Hanya menampilkan 8 tiket insiden yang ditugaskan kepadanya.
-              </p>
-            </button>
-
-            <!-- 3. Engineer: Dwi Prasetyo -->
-            <button 
-              @click="quickLogin('dwi.eng@glotratech.com')"
-              type="button"
-              class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-blue-50/60 hover:border-blue-300 transition-all shadow-2xs group cursor-pointer"
-            >
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-bold text-xs text-slate-900 group-hover:text-blue-700">Dwi Prasetyo</span>
-                <span class="text-[10px] font-bold px-2 py-0.2 rounded bg-amber-100 text-amber-800 border border-amber-200">
-                  ENGINEER (3 Tiket)
-                </span>
-              </div>
-              <p class="text-[11px] text-slate-500 leading-tight">
-                Storage & Backup. Hanya melihat 3 tiket miliknya (Rubrik CDM, Brocade SAN, Tangsel).
-              </p>
-            </button>
-
-            <!-- 4. Engineer: Rizky Pratama -->
-            <button 
-              @click="quickLogin('rizky.eng@glotratech.com')"
-              type="button"
-              class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-blue-50/60 hover:border-blue-300 transition-all shadow-2xs group cursor-pointer"
-            >
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-bold text-xs text-slate-900 group-hover:text-blue-700">Rizky Pratama</span>
-                <span class="text-[10px] font-bold px-2 py-0.2 rounded bg-emerald-100 text-emerald-800 border border-emerald-200">
-                  ENGINEER (6 Tiket)
-                </span>
-              </div>
-              <p class="text-[11px] text-slate-500 leading-tight">
-                Network Specialist. Menangani kendala FortiGate HA, BGP Uplink, dan VSS Snapshot JAH.
-              </p>
-            </button>
-
-            <!-- 5. Engineer: Andi Wijaya -->
-            <button 
-              @click="quickLogin('andi.eng@glotratech.com')"
-              type="button"
-              class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-blue-50/60 hover:border-blue-300 transition-all shadow-2xs group cursor-pointer"
-            >
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-bold text-xs text-slate-900 group-hover:text-blue-700">Andi Wijaya</span>
-                <span class="text-[10px] font-bold px-2 py-0.2 rounded bg-blue-100 text-blue-700 border border-blue-200">
-                  ENGINEER (8 Tiket)
-                </span>
-              </div>
-              <p class="text-[11px] text-slate-500 leading-tight">
-                Security & Infrastructure. Menangani Artajasa Failover, Linux Kernel & Cloud Infra.
+                {{ user.email }} &bull; {{ user.phone || 'Staf Operasional' }}
               </p>
             </button>
           </div>
@@ -305,19 +241,28 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 
 const router = useRouter();
 const authStore = useAuthStore();
 
-const email = ref('budi.eng@glotratech.com');
+const email = ref('admin@glotratech.com');
 const password = ref('password123');
 const showPassword = ref(false);
 const showForgotPasswordModal = ref(false);
 const isLoading = ref(false);
 const errorMessage = ref('');
+
+const activeUsers = computed(() => (authStore.users || []).filter(u => u.isActive));
+
+onMounted(async () => {
+  await authStore.fetchUsersFromApi();
+  if (activeUsers.value.length > 0 && !email.value) {
+    email.value = activeUsers.value[0].email;
+  }
+});
 
 const handleLogin = () => {
   errorMessage.value = '';

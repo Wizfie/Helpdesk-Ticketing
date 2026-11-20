@@ -28,7 +28,6 @@ export async function cleanAllTransactionalData(actorUser = null) {
   console.log('🧹 [SystemService] Membersihkan semua data tiket & transaksi...');
 
   // Urutan penghapusan sesuai foreign key cascade
-  await prisma.attachment.deleteMany({});
   await prisma.ticketMilestone.deleteMany({});
   await prisma.ticket.deleteMany({});
   await prisma.customerPic.deleteMany({});

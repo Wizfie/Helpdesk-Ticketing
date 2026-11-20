@@ -66,21 +66,6 @@ model CustomerPic {
 }
 
 // ----------------------------------------------------
-// 3. Ticket Categories & Master SLA Policies
-// ----------------------------------------------------
-model Category {
-  id        Int      @id @default(autoincrement())
-  name      String
-  code      String   @unique
-  desc      String?  @db.Text
-  tickets   Ticket[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("categories")
-}
-
-// ----------------------------------------------------
 // 3b. Master Principals & Technology Vendors (OEM)
 // ----------------------------------------------------
 model Principal {
@@ -132,8 +117,8 @@ model Ticket {
   customer                 Customer          @relation(fields: [customerId], references: [id])
   customerPicId            Int?
   customerPic              CustomerPic?      @relation(fields: [customerPicId], references: [id])
-  categoryId               Int
-  category                 Category          @relation(fields: [categoryId], references: [id])
+  categoryId               Int?
+  category                 KbOption?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   severity                 String            @default("MEDIUM") // 'HIGH', 'MEDIUM', 'LOW'
   channel                  String            @default("EMAIL")  // 'EMAIL', 'WHATSAPP', 'PORTAL'
   title                    String
@@ -188,13 +173,12 @@ model Ticket {
   recommendation           String?           @db.Text
 
   milestones               TicketMilestone[]
-  attachments              Attachment[]
 
   @@map("tickets")
 }
 
 // ----------------------------------------------------
-// 5. Troubleshooting Timeline & Attachments
+// 5. Troubleshooting Timeline & Milestones
 // ----------------------------------------------------
 model TicketMilestone {
   id           Int      @id @default(autoincrement())
@@ -213,53 +197,43 @@ model TicketMilestone {
   @@map("ticket_milestones")
 }
 
-model Attachment {
-  id           Int      @id @default(autoincrement())
-  ticketId     Int
-  ticket       Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  name         String
-  originalName String
-  filePath     String?
-  fileType     String
-  size         String
-  uploadedBy   String
-  uploadedAt   DateTime @default(now())
-  source       String   @default("Milestone Upload")
-
-  @@map("attachments")
-}
-
 // ----------------------------------------------------
-// 7. ITIL Knowledge Base & Runbooks (With PDF Support)
+// 7. ITIL Knowledge Base & Runbooks (With Document Support)
 // ----------------------------------------------------
 model KnowledgeBase {
   id                     Int      @id @default(autoincrement())
   kbCode                 String   @unique // 'KB-1024'
   title                  String
-  caseType               String?  // 'Incident', 'Problem', 'Configuration', 'Maintenance'
-  category               String
-  categoryGroup          String?
-  product                String?
-  technologyPrincipal    String?
+  caseType               String?  // Pilihan dinamis dari list lokal
+  category               String   // Pilihan dinamis dari list lokal
+  product                String?  // Free text
   author                 String
   approver               String?
   status                 String   @default("PUBLISHED") // 'DRAFT', 'PENDING_REVIEW', 'PUBLISHED'
   ticketsReferencedCount Int      @default(0)
   sourceTicket           String?
-  symptom                String?  @db.Text
-  rootCause              String?  @db.Text
-  prerequisites          String?  @db.Text
-  cliSnippet             String?  @db.Text
-  verificationSteps      String?  @db.Text
-  rollbackProcedure      String?  @db.Text
-  recommendation         String?  @db.Text
-  pdfAttachmentUrl       String?  // Storage path to uploaded document/PDF runbook
+  pdfAttachmentUrl       String?  // Storage path to uploaded document (.docx / .pdf)
   documentName           String?  // Original uploaded file name
   documentSize           String?  // Formatted file size (e.g., '1.2 MB')
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
   @@map("knowledge_base")
+}
+
+// ----------------------------------------------------
+// 7b. Master Options for Knowledge Base (Case Types & Categories)
+// ----------------------------------------------------
+model KbOption {
+  id        Int      @id @default(autoincrement())
+  type      String   // 'CASE_TYPE', 'CATEGORY'
+  name      String
+  tickets   Ticket[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([type, name])
+  @@map("kb_options")
 }
 
 // ----------------------------------------------------

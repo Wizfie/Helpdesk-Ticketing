@@ -10,11 +10,9 @@ import {
   resumeSla,
   addMilestone,
   resolveTicket,
-  closeTicket,
-  uploadAttachment
+  closeTicket
 } from '../controllers/ticketController.js';
 import { authenticate, authorizeRoles } from '../middlewares/authMiddleware.js';
-import { upload } from '../middlewares/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -32,6 +30,5 @@ router.post('/:id/resume-sla', authenticate, resumeSla);
 router.post('/:id/milestones', authenticate, addMilestone);
 router.patch('/:id/resolve', authenticate, resolveTicket);
 router.patch('/:id/close', authenticate, authorizeRoles(['ADMIN']), closeTicket);
-router.post('/:id/attachments', authenticate, upload.single('file'), uploadAttachment);
 
 export default router;

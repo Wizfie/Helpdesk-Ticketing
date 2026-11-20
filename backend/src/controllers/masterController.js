@@ -1,14 +1,21 @@
 import prisma from '../lib/prisma.js';
 
 // ==========================================
-// 1. Categories Master
+// 1. Categories Master (Linked to kb_options)
 // ==========================================
 export async function getCategories(req, res) {
   try {
-    const categories = await prisma.category.findMany({
-      orderBy: { id: 'asc' }
+    const categories = await prisma.kbOption.findMany({
+      where: { type: 'CATEGORY' },
+      orderBy: { name: 'asc' }
     });
-    res.json({ success: true, data: categories });
+    const mapped = categories.map(c => ({
+      id: c.id,
+      name: c.name,
+      code: c.name,
+      desc: c.name
+    }));
+    res.json({ success: true, data: mapped });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -16,20 +23,27 @@ export async function getCategories(req, res) {
 
 export async function createCategory(req, res) {
   try {
-    const { name, code, desc } = req.body;
-    if (!name || !code) {
-      return res.status(400).json({ success: false, message: 'Name dan Code kategori wajib diisi.' });
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Nama kategori wajib diisi.' });
     }
 
-    const newCategory = await prisma.category.create({
+    const normalizedName = name.trim();
+    const existing = await prisma.kbOption.findFirst({
+      where: { type: 'CATEGORY', name: normalizedName }
+    });
+    if (existing) {
+      return res.status(200).json({ success: true, data: { ...existing, code: existing.name, desc: existing.name } });
+    }
+
+    const newCategory = await prisma.kbOption.create({
       data: {
-        name,
-        code: code.toUpperCase().trim(),
-        desc: desc || null
+        type: 'CATEGORY',
+        name: normalizedName
       }
     });
 
-    res.status(201).json({ success: true, data: newCategory });
+    res.status(201).json({ success: true, data: { ...newCategory, code: newCategory.name, desc: newCategory.name } });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

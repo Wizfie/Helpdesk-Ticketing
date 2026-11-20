@@ -70,7 +70,6 @@ export const api = {
   addMilestone: (id, data) => request(`/tickets/${id}/milestones`, { method: 'POST', body: JSON.stringify(data) }),
   resolveTicket: (id, data) => request(`/tickets/${id}/resolve`, { method: 'PATCH', body: JSON.stringify(data) }),
   closeTicket: (id, data) => request(`/tickets/${id}/close`, { method: 'PATCH', body: JSON.stringify(data) }),
-  uploadAttachment: (id, formData) => request(`/tickets/${id}/attachments`, { method: 'POST', body: formData, isFormData: true }),
 
   // SLA Policies
   getSlaPolicies: () => request('/sla/policies'),
@@ -99,6 +98,14 @@ export const api = {
   deleteArticle: (id) => request(`/kb/${id}`, { method: 'DELETE' }),
   getDownloadPdfUrl: (id) => `${API_BASE_URL}/kb/${id}/download`,
   getDownloadDocUrl: (id) => `${API_BASE_URL}/kb/${id}/download`,
+
+  // Knowledge Base Master Options (Case Types & Categories from MySQL)
+  getKbOptions: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return request(`/kb/options${query ? `?${query}` : ''}`);
+  },
+  createKbOption: (data) => request('/kb/options', { method: 'POST', body: JSON.stringify(data) }),
+  deleteKbOption: (id) => request(`/kb/options/${id}`, { method: 'DELETE' }),
 
   // Audit Logs
   getAuditLogs: (params = {}) => {

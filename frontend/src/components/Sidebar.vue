@@ -513,7 +513,9 @@ const ticketStore = useTicketStore();
 const uiStore = useUiStore();
 
 const handleLogout = () => {
-  uiStore.closeSidebar();
+  if (typeof uiStore.closeSidebar === 'function') {
+    uiStore.closeSidebar();
+  }
   authStore.logout();
   router.push("/login");
 };

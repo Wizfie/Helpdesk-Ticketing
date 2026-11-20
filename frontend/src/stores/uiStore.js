@@ -1,7 +1,10 @@
+
 import { defineStore } from 'pinia';
 
 export const useUiStore = defineStore('ui', {
   state: () => ({
+    isSidebarOpen: false, // Mobile drawer state (< 1024px)
+    isSidebarCollapsed: false, // Desktop sidebar collapse state (>= 1024px)
     toasts: [],
     dialog: {
       isOpen: false,
@@ -16,6 +19,24 @@ export const useUiStore = defineStore('ui', {
   }),
 
   actions: {
+    // ------------------------------------------------------------------------
+    // 0. Sidebar & Drawer Navigation State
+    // ------------------------------------------------------------------------
+    toggleSidebar() {
+      if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+        this.isSidebarOpen = !this.isSidebarOpen;
+      } else {
+        this.isSidebarCollapsed = !this.isSidebarCollapsed;
+      }
+    },
+    openSidebar() {
+      this.isSidebarOpen = true;
+      this.isSidebarCollapsed = false;
+    },
+    closeSidebar() {
+      this.isSidebarOpen = false;
+    },
+
     // ------------------------------------------------------------------------
     // 1. Toast Notification Management
     // ------------------------------------------------------------------------

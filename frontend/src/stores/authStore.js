@@ -10,7 +10,16 @@ export const DEFAULT_USERS = [
     roleCode: 'ADMIN',
     name: 'Ahmad Fauzi',
     email: 'admin@glotratech.com',
-    phone: '0812-9876-5432',
+    phone: '0811-9988-771',
+    isActive: true
+  },
+  {
+    id: 10,
+    role: 'ENGINEER',
+    roleCode: 'ENGINEER',
+    name: 'Farhan Pratama',
+    email: 'farhan.eng@glotratech.com',
+    phone: '0812-9999-8888',
     isActive: true
   }
 ];
@@ -20,7 +29,7 @@ const STORAGE_KEY_ROLE = 'gtt_current_role';
 const STORAGE_KEY_USERS = 'gtt_users_data';
 
 const USER_DATA_VERSION_KEY = 'gtt_user_data_version';
-const CURRENT_USER_DATA_VERSION = 'v9.0-no-roles-table';
+const CURRENT_USER_DATA_VERSION = 'v10.0-synced-db-session-clear';
 
 function getStoredUsers() {
   if (typeof window === 'undefined' || !window.localStorage) {
@@ -30,6 +39,17 @@ function getStoredUsers() {
     const ver = localStorage.getItem(USER_DATA_VERSION_KEY);
     if (ver !== CURRENT_USER_DATA_VERSION) {
       localStorage.setItem(USER_DATA_VERSION_KEY, CURRENT_USER_DATA_VERSION);
+      localStorage.removeItem('gtt_jwt_token');
+      localStorage.removeItem(STORAGE_KEY_USER_ID);
+      localStorage.removeItem(STORAGE_KEY_ROLE);
+      localStorage.removeItem(STORAGE_KEY_USERS);
+      localStorage.removeItem('gtt_tickets_data');
+      localStorage.removeItem('gtt_customers_data');
+      localStorage.removeItem('gtt_customers_data_v3');
+      localStorage.removeItem('gtt_sla_policies_clean_v2');
+      localStorage.removeItem('gtt_knowledge_base_data');
+      localStorage.removeItem('gtt_audit_logs_data');
+      localStorage.removeItem('gtt_selected_ticket_id');
       localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(DEFAULT_USERS));
       localStorage.setItem(STORAGE_KEY_USER_ID, '1');
       localStorage.setItem(STORAGE_KEY_ROLE, 'ADMIN');
@@ -50,9 +70,12 @@ function getStoredUsers() {
 
 function getStoredCurrentUser(users) {
   if (typeof window === 'undefined' || !window.localStorage) {
-    return users[0] || null;
+    return null;
   }
   try {
+    if (localStorage.getItem('gtt_is_logged_out') === 'true') {
+      return null;
+    }
     const storedUserId = localStorage.getItem(STORAGE_KEY_USER_ID);
     if (storedUserId) {
       const matched = users.find(u => u.id === Number(storedUserId));
@@ -62,7 +85,7 @@ function getStoredCurrentUser(users) {
     console.error('Failed to load current user from localStorage:', e);
   }
 
-  return users[0] || null;
+  return null;
 }
 
 function saveCurrentAuthState(user) {
@@ -150,22 +173,54 @@ export const useAuthStore = defineStore('auth', {
         return { success: false, message: 'Kata sandi tidak sesuai. Gunakan kata sandi akun Anda atau password123.' };
       }
 
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem('gtt_is_logged_out');
+      }
       this.currentUser = user;
       saveCurrentAuthState(user);
       return { success: true, user };
     },
     loginAs(user) {
       if (!user) return;
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem('gtt_is_logged_out');
+      }
       this.currentUser = user;
       saveCurrentAuthState(user);
     },
     logout() {
       this.currentUser = null;
       saveCurrentAuthState(null);
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.setItem('gtt_is_logged_out', 'true');
+        localStorage.removeItem('gtt_jwt_token');
+        localStorage.removeItem(STORAGE_KEY_USER_ID);
+        localStorage.removeItem(STORAGE_KEY_ROLE);
+      }
+    },
+    clearCurrentSession() {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        localStorage.removeItem('gtt_jwt_token');
+        localStorage.removeItem(STORAGE_KEY_USER_ID);
+        localStorage.removeItem(STORAGE_KEY_ROLE);
+        localStorage.removeItem(STORAGE_KEY_USERS);
+        localStorage.removeItem('gtt_tickets_data');
+        localStorage.removeItem('gtt_customers_data');
+        localStorage.removeItem('gtt_customers_data_v3');
+        localStorage.removeItem('gtt_sla_policies_clean_v2');
+        localStorage.removeItem('gtt_knowledge_base_data');
+        localStorage.removeItem('gtt_audit_logs_data');
+        localStorage.removeItem('gtt_selected_ticket_id');
+        localStorage.setItem('gtt_is_logged_out', 'true');
+      }
+      this.currentUser = null;
     },
     switchUser(userId) {
       const user = this.users.find(u => u.id === Number(userId));
       if (user) {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          localStorage.removeItem('gtt_is_logged_out');
+        }
         this.currentUser = user;
         saveCurrentAuthState(user);
       }

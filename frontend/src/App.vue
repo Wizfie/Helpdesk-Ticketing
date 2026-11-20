@@ -1,6 +1,6 @@
 <template>
-  <!-- Public Standalone Layout (e.g. Customer Self-Service Tracking Portal) -->
-  <div v-if="isPublicRoute" class="min-h-screen bg-slate-100 flex flex-col font-sans antialiased text-slate-800">
+  <!-- Public Standalone Layout (e.g. Login, Customer Self-Service Tracking Portal) -->
+  <div v-if="isPublicRoute || !authStore.isAuthenticated" class="min-h-screen bg-slate-100 flex flex-col font-sans antialiased text-slate-800">
     <router-view />
   </div>
 
@@ -44,21 +44,27 @@ const isPublicRoute = computed(() => Boolean(route.meta && route.meta.public));
 let pollTimer = null;
 
 onMounted(() => {
-  // 1. Initial live fetch from MySQL
-  ticketStore.fetchInitialDataFromApi();
-  authStore.fetchUsersFromApi();
+  // 1. Initial live fetch from MySQL hanya jika user sudah login dan bukan di halaman publik
+  if (authStore.isAuthenticated && !isPublicRoute.value) {
+    ticketStore.fetchInitialDataFromApi();
+    authStore.fetchUsersFromApi();
+  }
 
   // 2. Realtime sync on window focus (saat user beralih dari HeidiSQL/Laragon/DB kembali ke browser)
   const onFocusSync = () => {
-    ticketStore.fetchInitialDataFromApi();
-    authStore.fetchUsersFromApi();
+    if (authStore.isAuthenticated && !isPublicRoute.value) {
+      ticketStore.fetchInitialDataFromApi();
+      authStore.fetchUsersFromApi();
+    }
   };
   window.addEventListener('focus', onFocusSync);
 
-  // 3. Periodic background sync setiap 6 detik agar data selalu real-time
+  // 3. Periodic background sync setiap 10 detik agar data selalu real-time (hanya untuk sesi aktif)
   pollTimer = setInterval(() => {
-    ticketStore.fetchInitialDataFromApi();
-  }, 6000);
+    if (authStore.isAuthenticated && !isPublicRoute.value) {
+      ticketStore.fetchInitialDataFromApi();
+    }
+  }, 10000);
 
   onUnmounted(() => {
     window.removeEventListener('focus', onFocusSync);

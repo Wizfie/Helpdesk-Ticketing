@@ -9,10 +9,7 @@ export async function getArticles(req, res) {
     const where = {};
 
     if (category && category !== 'ALL') {
-      where.OR = [
-        { category: category },
-        { categoryGroup: category }
-      ];
+      where.category = category;
     }
 
     if (status && status !== 'ALL') {
@@ -29,7 +26,6 @@ export async function getArticles(req, res) {
         { kbCode: { contains: search } },
         { sourceTicket: { contains: search } },
         { product: { contains: search } },
-        { technologyPrincipal: { contains: search } },
         { category: { contains: search } },
         { documentName: { contains: search } }
       ];
@@ -105,11 +101,9 @@ export async function createArticle(req, res) {
       data: {
         kbCode,
         title: title.trim(),
-        caseType: caseType || 'Incident',
+        caseType: caseType || 'General',
         category: category || 'General',
-        categoryGroup: category || 'General',
         product: product || '',
-        technologyPrincipal: product || category,
         sourceTicket: sourceTicket || null,
         ticketsReferencedCount: sourceTicket ? 1 : 0,
         author: actor?.name || 'Support Engineer',
@@ -117,9 +111,7 @@ export async function createArticle(req, res) {
         status: assignedStatus,
         pdfAttachmentUrl,
         documentName,
-        documentSize,
-        symptom: req.body.symptom || '',
-        rootCause: req.body.rootCause || ''
+        documentSize
       }
     });
 
@@ -240,5 +232,68 @@ export async function downloadPdf(req, res) {
     return res.download(fullPath, downloadName);
   } catch (error) {
     return res.status(500).json({ message: 'Gagal mengunduh berkas dokumen.', error: error.message });
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Dynamic Master Options (Case Types & Categories)
+// -----------------------------------------------------------------------------
+export async function getOptions(req, res) {
+  try {
+    const { type } = req.query;
+    const where = {};
+    if (type) {
+      where.type = type.toUpperCase();
+    }
+    const options = await prisma.kbOption.findMany({
+      where,
+      orderBy: { name: 'asc' }
+    });
+    return res.json(options);
+  } catch (error) {
+    return res.status(500).json({ message: 'Gagal mengambil opsi Knowledge Base.', error: error.message });
+  }
+}
+
+export async function createOption(req, res) {
+  try {
+    const { type, name } = req.body;
+    if (!type || !name || !name.trim()) {
+      return res.status(400).json({ message: 'Type dan nama opsi wajib diisi.' });
+    }
+    const normalizedType = type.trim().toUpperCase();
+    const normalizedName = name.trim();
+
+    const existing = await prisma.kbOption.findFirst({
+      where: {
+        type: normalizedType,
+        name: normalizedName
+      }
+    });
+    if (existing) {
+      return res.status(200).json(existing);
+    }
+
+    const created = await prisma.kbOption.create({
+      data: {
+        type: normalizedType,
+        name: normalizedName
+      }
+    });
+    return res.status(201).json(created);
+  } catch (error) {
+    return res.status(500).json({ message: 'Gagal menambahkan opsi Knowledge Base.', error: error.message });
+  }
+}
+
+export async function deleteOption(req, res) {
+  try {
+    const { id } = req.params;
+    await prisma.kbOption.delete({
+      where: { id: Number(id) }
+    });
+    return res.json({ message: 'Opsi berhasil dihapus.' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Gagal menghapus opsi Knowledge Base.', error: error.message });
   }
 }

@@ -82,9 +82,6 @@ export async function getTicketById(req, res) {
         createdBy: true,
         milestones: {
           orderBy: { timestampUtc: 'asc' }
-        },
-        attachments: {
-          orderBy: { id: 'desc' }
         }
       }
     });
@@ -193,7 +190,7 @@ export async function createTicket(req, res) {
         ticketNumber,
         customerId: Number(customerId),
         customerPicId: customerPicId ? Number(customerPicId) : null,
-        categoryId: Number(categoryId),
+        categoryId: categoryId ? Number(categoryId) : null,
         severity,
         channel,
         title,
@@ -631,37 +628,5 @@ export async function closeTicket(req, res) {
     return res.json(updated);
   } catch (error) {
     return res.status(500).json({ message: 'Gagal menutup tiket.', error: error.message });
-  }
-}
-
-export async function uploadAttachment(req, res) {
-  try {
-    const { id } = req.params;
-    const actor = req.user;
-    const file = req.file;
-
-    if (!file) {
-      return res.status(400).json({ message: 'Tidak ada berkas yang diunggah.' });
-    }
-
-    const ticket = await prisma.ticket.findUnique({ where: { id: Number(id) } });
-    if (!ticket) return res.status(404).json({ message: 'Tiket tidak ditemukan.' });
-
-    const attachment = await prisma.attachment.create({
-      data: {
-        ticketId: ticket.id,
-        name: file.filename,
-        originalName: file.originalname,
-        filePath: file.path,
-        fileType: file.mimetype,
-        size: `${Math.round(file.size / 1024)} KB`,
-        uploadedBy: actor.name,
-        source: req.body.source || 'Lampiran Bukti Milestone'
-      }
-    });
-
-    return res.status(201).json(attachment);
-  } catch (error) {
-    return res.status(500).json({ message: 'Gagal mengunggah lampiran.', error: error.message });
   }
 }

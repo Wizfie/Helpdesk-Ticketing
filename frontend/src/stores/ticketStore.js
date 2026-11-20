@@ -81,7 +81,7 @@ export const DATA_MODES = {
 
 const DATA_MODE_KEY = 'gtt_app_data_mode';
 const DATA_VERSION_KEY = 'gtt_data_version';
-const CURRENT_DATA_VERSION = 'v8.0-clean-all-zero';
+const CURRENT_DATA_VERSION = 'v10.0-synced-db-session-clear';
 
 function getStoredDataMode() {
   if (typeof window === 'undefined' || !window.localStorage) return DATA_MODES.CLEAN_TESTING;
@@ -98,14 +98,19 @@ function checkAndMigrateData() {
       // Clean stale storage keys on version upgrade
       localStorage.removeItem(STORAGE_KEYS.TICKETS);
       localStorage.removeItem(STORAGE_KEYS.CUSTOMERS);
+      localStorage.removeItem('gtt_customers_data');
+      localStorage.removeItem('gtt_customers_data_v3');
       localStorage.removeItem(STORAGE_KEYS.KNOWLEDGE_BASE);
       localStorage.removeItem(STORAGE_KEYS.CATEGORIES);
       localStorage.removeItem(STORAGE_KEYS.SLA_POLICIES);
+      localStorage.removeItem('gtt_sla_policies_clean_v1');
+      localStorage.removeItem('gtt_sla_policies_clean_v2');
       localStorage.removeItem(STORAGE_KEYS.AUDIT_LOGS);
       localStorage.removeItem(STORAGE_KEYS.SELECTED_TICKET_ID);
       localStorage.removeItem(DATA_MODE_KEY);
       localStorage.removeItem('gtt_read_notifications');
       localStorage.removeItem('gtt_dismissed_notifications_map');
+      localStorage.removeItem('gtt_jwt_token');
       localStorage.setItem(STORAGE_KEYS.TICKETS, JSON.stringify([]));
       localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify([]));
       localStorage.setItem(STORAGE_KEYS.KNOWLEDGE_BASE, JSON.stringify([]));

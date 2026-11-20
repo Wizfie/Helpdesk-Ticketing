@@ -932,59 +932,34 @@ const incidentReusabilityRate = computed(() => {
   return Math.min(100, Math.round((withKb / closedOrResolved.length) * 100));
 });
 
-const categoryTabs = computed(() => [
-  { id: 'all', label: 'All Technologies', count: ticketStore.knowledgeBase.length },
-  { 
-    id: 'vmware', 
-    label: 'VMware & Hypervisors', 
-    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('VMware') || (k.category || '').toLowerCase().includes('vmware')).length 
-  },
-  { 
-    id: 'storage', 
-    label: 'SAN & Enterprise Storage', 
-    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('Storage') || (k.category || '').toLowerCase().includes('storage')).length 
-  },
-  { 
-    id: 'network', 
-    label: 'Network & Switches', 
-    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('Network') || (k.category || '').toLowerCase().includes('network')).length 
-  },
-  { 
-    id: 'backup', 
-    label: 'Backup & DR', 
-    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('Backup') || (k.category || '').toLowerCase().includes('backup')).length 
-  },
-  { 
-    id: 'database', 
-    label: 'Database & Middleware', 
-    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('Database') || (k.category || '').toLowerCase().includes('database')).length 
-  },
-  { 
-    id: 'security', 
-    label: 'Security & Firewall', 
-    count: ticketStore.knowledgeBase.filter(k => (k.categoryGroup || '').includes('Security') || (k.category || '').toLowerCase().includes('security')).length 
+const categoryTabs = computed(() => {
+  const tabs = [
+    { id: 'all', label: 'Semua Kategori', count: ticketStore.knowledgeBase.length }
+  ];
+  const catMap = new Map();
+  (ticketStore.knowledgeBase || []).forEach(k => {
+    const c = (k.category || '').trim();
+    if (c) {
+      catMap.set(c, (catMap.get(c) || 0) + 1);
+    }
+  });
+  for (const [name, count] of catMap.entries()) {
+    tabs.push({ id: name, label: name, count });
   }
-]);
+  return tabs;
+});
 
 const filteredRunbooks = computed(() => {
   return ticketStore.knowledgeBase.filter(item => {
     // 1. Tab filter
     if (selectedCategoryTab.value !== 'all') {
-      const matchTab = {
-        'vmware': item.categoryGroup?.includes('VMware') || item.category?.toLowerCase().includes('vmware'),
-        'storage': item.categoryGroup?.includes('Storage') || item.category?.toLowerCase().includes('storage'),
-        'network': item.categoryGroup?.includes('Network') || item.category?.toLowerCase().includes('network'),
-        'backup': item.categoryGroup?.includes('Backup') || item.category?.toLowerCase().includes('backup'),
-        'database': item.categoryGroup?.includes('Database') || item.category?.toLowerCase().includes('database'),
-        'security': item.categoryGroup?.includes('Security') || item.category?.toLowerCase().includes('security')
-      }[selectedCategoryTab.value];
-      if (!matchTab) return false;
+      if ((item.category || '').trim() !== selectedCategoryTab.value) return false;
     }
 
-    // 2. Principal filter
+    // 2. Principal / Product filter
     if (selectedPrincipal.value) {
       const p = selectedPrincipal.value.toLowerCase();
-      const matchPrincipal = item.technologyPrincipal?.toLowerCase().includes(p) || item.title?.toLowerCase().includes(p);
+      const matchPrincipal = (item.product || '').toLowerCase().includes(p) || (item.title || '').toLowerCase().includes(p);
       if (!matchPrincipal) return false;
     }
 
@@ -1000,10 +975,11 @@ const filteredRunbooks = computed(() => {
       const q = searchQuery.value.toLowerCase().trim();
       const matchCode = (item.kbCode || '').toLowerCase().includes(q);
       const matchTitle = (item.title || '').toLowerCase().includes(q);
-      const matchSymptom = (item.symptom || '').toLowerCase().includes(q);
-      const matchPrincipal = (item.technologyPrincipal || '').toLowerCase().includes(q);
-      const matchRoot = (item.rootCause || '').toLowerCase().includes(q);
-      if (!matchCode && !matchTitle && !matchSymptom && !matchPrincipal && !matchRoot) return false;
+      const matchCategory = (item.category || '').toLowerCase().includes(q);
+      const matchProduct = (item.product || '').toLowerCase().includes(q);
+      const matchCaseType = (item.caseType || '').toLowerCase().includes(q);
+      const matchDocName = (item.documentName || '').toLowerCase().includes(q);
+      if (!matchCode && !matchTitle && !matchCategory && !matchProduct && !matchCaseType && !matchDocName) return false;
     }
 
     return true;

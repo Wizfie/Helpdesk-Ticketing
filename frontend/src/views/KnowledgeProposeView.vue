@@ -217,51 +217,191 @@
 
           <!-- 3. Grid Informasi Pendukung (Tipe Case, Kategori, Produk) -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <!-- Tipe Case -->
-            <div>
-              <BaseSelect
-                v-model="form.caseType"
-                :options="caseTypeOptions"
-                label="Tipe Case"
-                required
-                placeholder="Pilih Tipe Case"
-              />
+            <!-- Tipe Case (Dinamis List Lokal, Add/Delete, Default Kosong) -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label class="block font-semibold text-slate-700 text-xs">
+                  Tipe Case <span class="text-rose-500 font-bold">*</span>
+                </label>
+                <button
+                  v-if="!isAddingCaseType"
+                  type="button"
+                  @click="isAddingCaseType = true"
+                  class="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center space-x-0.5 cursor-pointer"
+                  title="Tambah opsi tipe case baru"
+                >
+                  <span>+ Tambah</span>
+                </button>
+              </div>
+
+              <!-- Inline Add Input Tipe Case -->
+              <div v-if="isAddingCaseType" class="p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2 animate-in fade-in duration-150">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold text-blue-900">Tambah Tipe Case:</span>
+                  <button @click="isAddingCaseType = false; newCaseTypeName = ''" type="button" class="text-slate-400 hover:text-slate-600 text-xs font-bold">&times;</button>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                  <input
+                    v-model="newCaseTypeName"
+                    type="text"
+                    placeholder="Misal: Incident, Problem..."
+                    @keydown.enter.prevent="handleAddCaseType"
+                    class="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    @click="handleAddCaseType"
+                    :disabled="!newCaseTypeName.trim()"
+                    class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg disabled:opacity-50 cursor-pointer"
+                  >
+                    Simpan
+                  </button>
+                </div>
+              </div>
+
+              <!-- Empty State Tipe Case -->
+              <div v-else-if="caseTypesList.length === 0" class="p-3 bg-slate-50 border border-dashed border-slate-200 rounded-xl text-center">
+                <p class="text-[11px] text-slate-500 mb-1.5">Belum ada tipe case</p>
+                <button
+                  type="button"
+                  @click="isAddingCaseType = true"
+                  class="px-2.5 py-1 bg-white border border-slate-200 hover:bg-blue-50 text-blue-600 font-bold text-[11px] rounded-lg shadow-2xs cursor-pointer inline-flex items-center space-x-1"
+                >
+                  <span>+ Tambah Opsi</span>
+                </button>
+              </div>
+
+              <!-- Dropdown Selector & Tag Pills -->
+              <div v-else class="space-y-1.5">
+                <select
+                  v-model="form.caseType"
+                  required
+                  class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="" disabled>-- Pilih Tipe Case --</option>
+                  <option v-for="item in caseTypesList" :key="item.id || item.name" :value="item.name">{{ item.name }}</option>
+                </select>
+
+                <div class="flex flex-wrap gap-1 pt-0.5">
+                  <span
+                    v-for="item in caseTypesList"
+                    :key="item.id || item.name"
+                    class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] transition-colors"
+                    :class="form.caseType === item.name ? 'bg-blue-100 text-blue-800 font-bold border border-blue-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                  >
+                    <span @click="form.caseType = item.name" class="cursor-pointer">{{ item.name }}</span>
+                    <button
+                      type="button"
+                      @click.stop="handleDeleteCaseType(item)"
+                      class="text-slate-400 hover:text-rose-600 font-bold ml-1.5 cursor-pointer"
+                      title="Hapus opsi ini dari database"
+                    >
+                      &times;
+                    </button>
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <!-- Kategori -->
-            <div>
-              <BaseSelect
-                v-model="form.category"
-                :options="categoryOptions"
-                label="Kategori Infrastruktur"
-                required
-                searchable
-                placeholder="Pilih Kategori"
-              />
+            <!-- Kategori (Dinamis Database MySQL kb_options, Add/Delete, Default Kosong) -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label class="block font-semibold text-slate-700 text-xs">
+                  Kategori <span class="text-rose-500 font-bold">*</span>
+                </label>
+                <button
+                  v-if="!isAddingCategory"
+                  type="button"
+                  @click="isAddingCategory = true"
+                  class="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center space-x-0.5 cursor-pointer"
+                  title="Tambah opsi kategori baru"
+                >
+                  <span>+ Tambah</span>
+                </button>
+              </div>
+
+              <!-- Inline Add Input Kategori -->
+              <div v-if="isAddingCategory" class="p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2 animate-in fade-in duration-150">
+                <div class="flex items-center justify-between">
+                  <span class="text-[11px] font-bold text-blue-900">Tambah Kategori Baru:</span>
+                  <button @click="isAddingCategory = false; newCategoryName = ''" type="button" class="text-slate-400 hover:text-slate-600 text-xs font-bold">&times;</button>
+                </div>
+                <div class="flex items-center space-x-1.5">
+                  <input
+                    v-model="newCategoryName"
+                    type="text"
+                    placeholder="Misal: Storage, Network, Server..."
+                    @keydown.enter.prevent="handleAddCategory"
+                    class="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  />
+                  <button
+                    type="button"
+                    @click="handleAddCategory"
+                    :disabled="!newCategoryName.trim()"
+                    class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg disabled:opacity-50 cursor-pointer"
+                  >
+                    Simpan
+                  </button>
+                </div>
+              </div>
+
+              <!-- Empty State Kategori -->
+              <div v-else-if="categoriesList.length === 0" class="p-3 bg-slate-50 border border-dashed border-slate-200 rounded-xl text-center">
+                <p class="text-[11px] text-slate-500 mb-1.5">Belum ada kategori</p>
+                <button
+                  type="button"
+                  @click="isAddingCategory = true"
+                  class="px-2.5 py-1 bg-white border border-slate-200 hover:bg-blue-50 text-blue-600 font-bold text-[11px] rounded-lg shadow-2xs cursor-pointer inline-flex items-center space-x-1"
+                >
+                  <span>+ Tambah Opsi</span>
+                </button>
+              </div>
+
+              <!-- Dropdown Selector & Tag Pills -->
+              <div v-else class="space-y-1.5">
+                <select
+                  v-model="form.category"
+                  required
+                  class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="" disabled>-- Pilih Kategori --</option>
+                  <option v-for="item in categoriesList" :key="item.id || item.name" :value="item.name">{{ item.name }}</option>
+                </select>
+
+                <div class="flex flex-wrap gap-1 pt-0.5">
+                  <span
+                    v-for="item in categoriesList"
+                    :key="item.id || item.name"
+                    class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] transition-colors"
+                    :class="form.category === item.name ? 'bg-blue-100 text-blue-800 font-bold border border-blue-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                  >
+                    <span @click="form.category = item.name" class="cursor-pointer">{{ item.name }}</span>
+                    <button
+                      type="button"
+                      @click.stop="handleDeleteCategory(item)"
+                      class="text-slate-400 hover:text-rose-600 font-bold ml-1.5 cursor-pointer"
+                      title="Hapus opsi ini dari database"
+                    >
+                      &times;
+                    </button>
+                  </span>
+                </div>
+              </div>
             </div>
 
-            <!-- Produk / Platform -->
+            <!-- Produk / Platform (Free Text Murni) -->
             <div>
-              <label class="block font-semibold text-slate-700 mb-1">
+              <label class="block font-semibold text-slate-700 text-xs mb-1">
                 Produk / Platform <span class="text-rose-500 font-bold">*</span>
               </label>
               <input
                 v-model="form.product"
                 type="text"
                 required
-                list="kb-product-suggestions"
-                placeholder="Contoh: HPE 3PAR, Cisco Nexus, VMware"
-                class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Contoh: HPE 3PAR, FortiGate, Cisco Nexus, VMware..."
+                class="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <datalist id="kb-product-suggestions">
-                <option value="HPE 3PAR / Primera"></option>
-                <option value="Cisco Nexus Switches"></option>
-                <option value="VMware ESXi / vCenter"></option>
-                <option value="Rubrik CDM"></option>
-                <option value="Brocade SAN Fabric"></option>
-                <option value="Fortinet FortiGate"></option>
-                <option value="Veeam Backup & Replication"></option>
-              </datalist>
+              <span class="text-[10px] text-slate-400 mt-1 block">Teks bebas nama merk, tipe hardware, atau sistem software.</span>
             </div>
           </div>
         </div>
@@ -330,29 +470,110 @@ const isDragging = ref(false);
 const isSubmitting = ref(false);
 const formError = ref('');
 
+const caseTypesList = ref([]);
+const categoriesList = ref([]);
+
+const isAddingCaseType = ref(false);
+const newCaseTypeName = ref('');
+
+const isAddingCategory = ref(false);
+const newCategoryName = ref('');
+
+const fetchOptionsFromApi = async () => {
+  try {
+    const res = await api.getKbOptions();
+    const all = Array.isArray(res) ? res : (res?.data || []);
+    caseTypesList.value = all.filter(o => o.type === 'CASE_TYPE');
+    categoriesList.value = all.filter(o => o.type === 'CATEGORY');
+
+    if (!form.caseType && caseTypesList.value.length > 0) {
+      form.caseType = caseTypesList.value[0].name;
+    }
+    if (!form.category && categoriesList.value.length > 0) {
+      form.category = categoriesList.value[0].name;
+    }
+  } catch (e) {
+    console.warn('Gagal memuat opsi KB dari database:', e);
+  }
+};
+
+const handleAddCaseType = async () => {
+  const val = newCaseTypeName.value.trim();
+  if (!val) return;
+  try {
+    const res = await api.createKbOption({ type: 'CASE_TYPE', name: val });
+    const created = res?.data || res;
+    if (!caseTypesList.value.some(c => c.name.toLowerCase() === val.toLowerCase())) {
+      caseTypesList.value.push(created);
+    }
+    form.caseType = val;
+  } catch (e) {
+    console.error('Failed add case type to database:', e);
+    if (!caseTypesList.value.some(c => c.name.toLowerCase() === val.toLowerCase())) {
+      caseTypesList.value.push({ id: Date.now(), name: val });
+    }
+    form.caseType = val;
+  }
+  newCaseTypeName.value = '';
+  isAddingCaseType.value = false;
+};
+
+const handleDeleteCaseType = async (item) => {
+  try {
+    if (item.id) {
+      await api.deleteKbOption(item.id);
+    }
+  } catch (e) {
+    console.error('Failed delete case type from database:', e);
+  }
+  caseTypesList.value = caseTypesList.value.filter(c => c.name !== item.name);
+  if (form.caseType === item.name) {
+    form.caseType = caseTypesList.value[0]?.name || '';
+  }
+};
+
+const handleAddCategory = async () => {
+  const val = newCategoryName.value.trim();
+  if (!val) return;
+  try {
+    const res = await api.createKbOption({ type: 'CATEGORY', name: val });
+    const created = res?.data || res;
+    if (!categoriesList.value.some(c => c.name.toLowerCase() === val.toLowerCase())) {
+      categoriesList.value.push(created);
+    }
+    form.category = val;
+  } catch (e) {
+    console.error('Failed add category to database:', e);
+    if (!categoriesList.value.some(c => c.name.toLowerCase() === val.toLowerCase())) {
+      categoriesList.value.push({ id: Date.now(), name: val });
+    }
+    form.category = val;
+  }
+  newCategoryName.value = '';
+  isAddingCategory.value = false;
+};
+
+const handleDeleteCategory = async (item) => {
+  try {
+    if (item.id) {
+      await api.deleteKbOption(item.id);
+    }
+  } catch (e) {
+    console.error('Failed delete category from database:', e);
+  }
+  categoriesList.value = categoriesList.value.filter(c => c.name !== item.name);
+  if (form.category === item.name) {
+    form.category = categoriesList.value[0]?.name || '';
+  }
+};
+
 const form = reactive({
   title: '',
-  caseType: 'Incident',
-  category: 'SAN & Enterprise Storage',
+  caseType: '',
+  category: '',
   product: '',
   sourceTicket: ''
 });
-
-const caseTypeOptions = [
-  { value: 'Incident', label: 'Incident', subtext: 'Gangguan teknis layanan' },
-  { value: 'Problem', label: 'Problem', subtext: 'Investigasi masalah berulang' },
-  { value: 'Configuration', label: 'Configuration', subtext: 'Panduan konfigurasi teknis' },
-  { value: 'Maintenance', label: 'Maintenance', subtext: 'Prosedur pemeliharaan berkala' }
-];
-
-const categoryOptions = [
-  { value: 'SAN & Enterprise Storage', label: 'SAN & Enterprise Storage' },
-  { value: 'VMware & Hypervisors', label: 'VMware & Hypervisors' },
-  { value: 'Network & Switches', label: 'Network & Switches' },
-  { value: 'Backup & DR', label: 'Backup & DR' },
-  { value: 'Database & Middleware', label: 'Database & Middleware' },
-  { value: 'Security & Firewall', label: 'Security & Firewall' }
-];
 
 const isWordFile = computed(() => {
   if (!docFile.value) return false;
@@ -418,8 +639,20 @@ const onTicketChange = () => {
   }
   // Match category if appropriate
   if (t.category) {
-    const matched = categoryOptions.find(c => c.value.toLowerCase().includes(t.category.toLowerCase()));
-    if (matched) form.category = matched.value;
+    const existing = categoriesList.value.find(c => c.name.toLowerCase() === t.category.toLowerCase());
+    if (existing) {
+      form.category = existing.name;
+    } else {
+      api.createKbOption({ type: 'CATEGORY', name: t.category })
+        .then(res => {
+          const created = res?.data || res;
+          categoriesList.value.push(created);
+          form.category = t.category;
+        })
+        .catch(() => {
+          form.category = t.category;
+        });
+    }
   }
 };
 
@@ -465,9 +698,40 @@ const removeFile = () => {
 };
 
 onMounted(async () => {
+  await fetchOptionsFromApi();
+
   if (!ticketStore.tickets || ticketStore.tickets.length === 0) {
     await ticketStore.fetchTickets();
   }
+  if (!ticketStore.knowledgeBase || ticketStore.knowledgeBase.length === 0) {
+    await ticketStore.fetchKnowledgeBase();
+  }
+
+  // Jika ada kategori atau tipe case di dokumen database yang belum tercatat di kb_options, sinkronkan ke database
+  for (const k of (ticketStore.knowledgeBase || [])) {
+    if (k.caseType && !caseTypesList.value.some(c => c.name.toLowerCase() === k.caseType.toLowerCase())) {
+      try {
+        const res = await api.createKbOption({ type: 'CASE_TYPE', name: k.caseType });
+        const created = res?.data || res;
+        caseTypesList.value.push(created);
+      } catch (e) {}
+    }
+    if (k.category && !categoriesList.value.some(c => c.name.toLowerCase() === k.category.toLowerCase())) {
+      try {
+        const res = await api.createKbOption({ type: 'CATEGORY', name: k.category });
+        const created = res?.data || res;
+        categoriesList.value.push(created);
+      } catch (e) {}
+    }
+  }
+
+  if (!form.caseType && caseTypesList.value.length > 0) {
+    form.caseType = caseTypesList.value[0].name;
+  }
+  if (!form.category && categoriesList.value.length > 0) {
+    form.category = categoriesList.value[0].name;
+  }
+
   if (route.query.ticketNumber) {
     form.sourceTicket = String(route.query.ticketNumber);
     onTicketChange();
@@ -488,12 +752,12 @@ const handleSubmit = async (asDraft = false) => {
   }
 
   if (!form.category) {
-    formError.value = 'Kategori wajib dipilih.';
+    formError.value = 'Kategori wajib dipilih atau ditambahkan.';
     return;
   }
 
   if (!form.caseType) {
-    formError.value = 'Tipe case wajib dipilih.';
+    formError.value = 'Tipe case wajib dipilih atau ditambahkan.';
     return;
   }
 
@@ -508,7 +772,6 @@ const handleSubmit = async (asDraft = false) => {
     fd.append('title', form.title.trim());
     fd.append('caseType', form.caseType);
     fd.append('category', form.category);
-    fd.append('categoryGroup', form.category);
     fd.append('product', form.product.trim());
     fd.append('sourceTicket', form.sourceTicket || '');
     fd.append('status', asDraft ? 'DRAFT' : 'PUBLISHED');
