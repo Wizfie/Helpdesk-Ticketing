@@ -78,12 +78,17 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log('====================================================');
   console.log(`🚀 Helpdesk REST API PT Glotra Aktif di Port ${PORT}`);
   console.log(`📡 URL API: http://localhost:${PORT}/api`);
   console.log(`📁 Upload Storage: ${uploadDir}`);
   console.log('====================================================');
 });
+
+// Ensure process remains active in daemon / background runner
+if (process.stdin.isTTY === false) {
+  process.stdin.resume();
+}
 
 export default app;
