@@ -5,15 +5,11 @@ import fs from 'fs';
 
 export async function getArticles(req, res) {
   try {
-    const { category, search, status, caseType } = req.query;
+    const { category, search, caseType } = req.query;
     const where = {};
 
     if (category && category !== 'ALL') {
       where.category = category;
-    }
-
-    if (status && status !== 'ALL') {
-      where.status = status;
     }
 
     if (caseType && caseType !== 'ALL') {
@@ -71,7 +67,6 @@ export async function createArticle(req, res) {
       caseType = 'Incident',
       category = 'General',
       product = '',
-      status,
       sourceTicket
     } = req.body;
 
@@ -95,8 +90,6 @@ export async function createArticle(req, res) {
         : Math.max(1, Math.round(sizeBytes / 1024)) + ' KB';
     }
 
-    const assignedStatus = status || (actor?.role?.code === 'ADMIN' ? 'PUBLISHED' : 'PENDING_REVIEW');
-
     const newArticle = await prisma.knowledgeBase.create({
       data: {
         kbCode,
@@ -107,8 +100,6 @@ export async function createArticle(req, res) {
         sourceTicket: sourceTicket || null,
         ticketsReferencedCount: sourceTicket ? 1 : 0,
         author: actor?.name || 'Support Engineer',
-        approver: assignedStatus === 'PUBLISHED' ? `${actor?.name || 'Administrator'} (Verified)` : null,
-        status: assignedStatus,
         pdfAttachmentUrl,
         documentName,
         documentSize
@@ -129,35 +120,6 @@ export async function createArticle(req, res) {
   } catch (error) {
     console.error('Error creating KB article:', error);
     return res.status(500).json({ message: 'Gagal menerbitkan artikel Knowledge Base.', error: error.message });
-  }
-}
-
-export async function publishArticle(req, res) {
-  try {
-    const { id } = req.params;
-    const actor = req.user;
-
-    const updated = await prisma.knowledgeBase.update({
-      where: { id: Number(id) },
-      data: {
-        status: 'PUBLISHED',
-        approver: `${actor.name} (${actor.role?.code || 'ADMIN'})`
-      }
-    });
-
-    await logAuditEvent({
-      userName: actor.name,
-      role: actor.role?.code || 'ADMIN',
-      action: 'KB_PUBLISHED',
-      entityType: 'KB',
-      entityId: updated.kbCode,
-      description: `Menyetujui & mempublikasikan runbook Knowledge Base: ${updated.title}`,
-      ipAddress: req.ip
-    });
-
-    return res.json(updated);
-  } catch (error) {
-    return res.status(500).json({ message: 'Gagal mempublikasikan artikel Knowledge Base.', error: error.message });
   }
 }
 

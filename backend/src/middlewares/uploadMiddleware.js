@@ -2,8 +2,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 
-// Get upload path from .env with fallback
-const uploadDir = process.env.UPLOAD_DIR || './uploads';
+// Get upload path from .env with fallback (resolved to absolute path)
+const uploadDir = path.resolve(process.env.UPLOAD_DIR || './uploads');
 
 // Ensure upload directory exists synchronously on startup
 if (!fs.existsSync(uploadDir)) {
@@ -43,7 +43,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-const maxFileSize = (parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 10) * 1024 * 1024;
+const maxFileSize = (parseInt(process.env.MAX_FILE_SIZE_MB, 10) || 15) * 1024 * 1024;
 
 export const upload = multer({
   storage,

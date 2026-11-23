@@ -339,11 +339,7 @@
                 <span
                   class="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200"
                 >
-                  {{
-                    getSlaTierName(c.contractSla) !== "-"
-                      ? getSlaTierName(c.contractSla)
-                      : c.slaTier || c.contractSla || "-"
-                  }}
+                  {{ getSlaTierName(c.slaTier || c.contractSla) }}
                 </span>
               </td>
 
@@ -1713,12 +1709,12 @@ const availableSlaPolicies = computed(() => {
   return filterCleanSlaPolicies(ticketStore.slaPolicies || []);
 });
 
-const getSlaTierName = (tierCode) => {
-  if (!tierCode) return "-";
+const getSlaTierName = (tier) => {
+  if (!tier) return "-";
   const policy = (availableSlaPolicies.value || []).find(
-    (p) => p.tierCode === tierCode,
+    (p) => p.tierName === tier || p.tierCode === tier,
   );
-  return policy ? policy.tierName : tierCode;
+  return policy ? policy.tierName : tier;
 };
 
 const defaultSlaTierCode = computed(() => {
@@ -1970,7 +1966,7 @@ const openEditCustomerModal = (customer) => {
     id: customer.id,
     name: customer.name,
     industry: customer.industry || "",
-    contractSla: customer.contractSla || defaultSlaTierCode.value,
+    contractSla: customer.slaTier || customer.contractSla || defaultSlaTierCode.value,
     address: customer.address || "",
     maintenanceStart:
       customer.maintenanceStart || new Date().toISOString().slice(0, 10),

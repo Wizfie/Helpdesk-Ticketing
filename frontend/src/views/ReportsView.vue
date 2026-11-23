@@ -15,7 +15,7 @@
           </span>
         </h1>
         <p class="text-xs text-slate-500 mt-1">
-          Analisis kepatuhan SLA multi-klien, komposisi saluran intake, kecepatan penanganan teknisi, dan ekspor berkas audit.
+          Laporan evaluasi kepatuhan kontrak SLA dan performa penanganan tiket helpdesk.
         </p>
       </div>
 
@@ -70,7 +70,7 @@
             placement="right"
             searchable
             placeholder="Semua Mitra Korporat"
-            containerClass="w-56"
+            containerClass="w-72 sm:w-80 md:w-96"
           />
         </div>
       </div>
@@ -101,29 +101,29 @@
     <div id="printable-report" class="w-full space-y-6 print:space-y-0">
 
       <!-- ================= PAGE 1 ================= -->
-      <section class="report-page report-page-1 bg-white border border-slate-200 rounded-2xl p-4 md:p-5 shadow-xs space-y-2 print:space-y-1.5 print:p-0">
+      <section class="report-page report-page-1 bg-white border border-slate-200 rounded-2xl p-4 md:p-6 shadow-xs space-y-3 print:space-y-1.5 print:p-0">
         <!-- Header -->
-        <div class="flex items-center justify-between border-b-2 border-slate-800 pb-2">
-          <div class="flex items-center space-x-3">
-            <img src="/gtt-logo.png" alt="Glotra Technology" class="h-10 w-auto object-contain" />
-            <div>
-              <h2 class="text-sm font-black text-slate-900 leading-tight">PT GLOBAL TRANSFORMASI TEKNOLOGI</h2>
-              <p class="text-[9.5px] text-slate-600 italic">"Think it, Solve it" &bull; IT Enterprise Managed Services &amp; Infrastructure Support</p>
-              <p class="text-[8.5px] text-slate-500">Cyber 2 Tower Lt. 15, Jl. H.R. Rasuna Said, Jakarta Selatan &bull; helpdesk@glotratech.com</p>
+        <div class="flex items-center justify-between border-b-2 border-slate-800 pb-3 print:pb-2 gap-4">
+          <div class="flex items-center space-x-3 md:space-x-4 flex-1 min-w-0">
+            <img src="/gtt-logo.png" alt="Glotra Technology" class="h-12 print:h-9 w-auto object-contain flex-shrink-0" />
+            <div class="flex-1 min-w-0">
+              <h2 class="text-base md:text-lg print:text-sm font-black text-slate-900 leading-tight">PT GLOBAL TRANSFORMASI TEKNOLOGI</h2>
+              <p class="text-xs print:text-[9.5px] text-slate-600 italic">"Think it, Solve it" &bull; IT Enterprise Managed Services &amp; Infrastructure Support</p>
+              <p class="text-[11px] print:text-[8px] text-slate-500 break-words leading-tight">Prudential Center Kota Kasablanka Fl 22 Unit A Jalan Casablanca Kav. 88, RT.7/RW.9, Menteng Dalam, Kec. Tebet, Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12870</p>
             </div>
           </div>
-          <div class="text-right">
-            <span class="text-[9.5px] font-mono font-bold text-blue-700 block bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">REPORT-SLA-{{ currentMonthYear }}</span>
-            <span class="text-[8px] text-slate-400 block mt-0.5">Generated: {{ reportPrintDate.local }}</span>
+          <div class="text-right flex-shrink-0">
+            <span class="text-xs print:text-[9.5px] font-mono font-bold text-blue-700 block bg-blue-50 px-2.5 py-1 print:py-0.5 rounded border border-blue-200">REPORT-SLA-{{ currentMonthYear }}</span>
+            <span class="text-[11px] print:text-[8px] text-slate-400 block mt-1 print:mt-0.5 whitespace-nowrap">Generated: {{ reportPrintDate.local }}</span>
           </div>
         </div>
 
         <!-- Title -->
-        <div class="text-center space-y-0.5 py-0.5">
-          <h3 class="text-xs font-black text-blue-900 uppercase tracking-wide">LAPORAN EKSEKUTIF KINERJA HELPDESK &amp; KEPATUHAN KONTRAK SLA</h3>
-          <p class="text-[9.5px] text-slate-600 font-medium">
+        <div class="text-center space-y-1 print:space-y-0.5 py-1.5 print:py-0.5">
+          <h3 class="text-base md:text-lg print:text-xs font-black text-blue-900 uppercase tracking-wide">LAPORAN EKSEKUTIF KINERJA HELPDESK &amp; KEPATUHAN KONTRAK SLA</h3>
+          <p class="text-xs print:text-[9.5px] text-slate-600 font-medium">
             Periode Evaluasi: <strong class="text-blue-700">{{ activePeriodLabel }}</strong> &bull;
-            Standar Operasional: <strong class="text-emerald-700">Managed Service 24x7 Hybrid SLA</strong>
+            <strong class="text-emerald-700">{{ activeSlaStandardLabel }}</strong>
           </p>
         </div>
 
@@ -233,20 +233,20 @@
             <div class="rpt-panel-title"><span class="material-symbols-outlined">bar_chart</span>
               <div>Incident Priority Distribution<p>Berdasarkan ITIL Severity Matrix (Total: {{ reportStats.total }} Tiket)</p></div>
             </div>
-            <div class="px-1 flex-1 flex flex-col">
+            <div class="px-1 flex-1 flex flex-col justify-between">
               <!-- bars stretch to the bottom of the card; baseline sits at the card's bottom edge -->
-              <div class="flex-1 min-h-[85px] flex items-stretch justify-around gap-2 pt-4 border-b-2 border-slate-400">
-                <div v-for="p in priorityDistribution" :key="p.key" class="relative w-1/4">
+              <div class="flex-1 min-h-[105px] print:min-h-[75px] flex items-stretch justify-around gap-2 pt-4 border-b-2 border-slate-400">
+                <div v-for="p in priorityDistribution" :key="p.key" class="relative w-1/3">
                   <div class="absolute bottom-0 left-0 right-0" :style="{ height: Math.max(p.count / maxPriorityCount * 88, p.count ? 6 : 2) + '%' }">
-                    <span class="absolute -top-3.5 left-0 right-0 text-center text-[8.5px] font-bold text-slate-700 whitespace-nowrap">{{ p.count }} ({{ p.pct }}%)</span>
+                    <span class="absolute -top-4 print:-top-3.5 left-0 right-0 text-center text-[10px] print:text-[8px] font-bold text-slate-700 whitespace-nowrap">{{ p.count }} ({{ p.pct }}%)</span>
                     <div class="w-full h-full rounded-t" :class="p.color"></div>
                   </div>
                 </div>
               </div>
               <div class="flex justify-around gap-2 pt-1 pb-0.5">
-                <div v-for="p in priorityDistribution" :key="p.key + '-l'" class="w-1/4 text-center leading-tight">
-                  <div class="text-[8.5px] font-bold">{{ p.short }}</div>
-                  <div class="text-[7.5px] text-slate-500">{{ p.name }}</div>
+                <div v-for="p in priorityDistribution" :key="p.key + '-l'" class="w-1/3 text-center leading-tight">
+                  <div class="text-xs print:text-[8px] font-bold">{{ p.short }}</div>
+                  <div class="text-[11px] print:text-[7px] text-slate-500">{{ p.name }}</div>
                 </div>
               </div>
             </div>
@@ -307,37 +307,37 @@
         </div>
 
         <!-- Row 6: Formal Sign-off Cards (Area Tanda Tangan Basah / Manual) -->
-        <div class="grid grid-cols-2 gap-3.5 mt-auto pt-1 break-inside-avoid">
+        <div class="grid grid-cols-2 gap-3.5 mt-3 print:mt-2.5 break-inside-avoid">
           <!-- Kotak Kiri: Disiapkan Oleh (Helpdesk Lead) -->
-          <div class="border border-slate-200 rounded-xl p-3 bg-white shadow-2xs flex flex-col items-center justify-between text-center min-h-[118px]">
-            <p class="text-blue-950 font-bold text-[9.5px] tracking-tight">
-              Disiapkan Oleh (Helpdesk Lead):
+          <div class="border border-slate-200 rounded-xl p-4 print:p-2 bg-white shadow-2xs flex flex-col items-center justify-between text-center min-h-[140px] print:min-h-[90px]">
+            <p class="text-blue-950 font-bold text-xs print:text-[8.5px] tracking-tight">
+              Disiapkan Oleh :
             </p>
             
             <!-- Ruang Kosong untuk Tanda Tangan Manual -->
-            <div class="h-12 w-full flex items-center justify-center">
-              <span class="text-[7.5px] text-slate-300 font-mono italic print:hidden">[ Ruang Tanda Tangan ]</span>
+            <div class="h-16 print:h-9 w-full flex items-center justify-center">
+              <span class="text-[10px] print:text-[7px] text-slate-300 font-mono italic print:hidden">[ Ruang Tanda Tangan ]</span>
             </div>
 
             <div class="space-y-0.5">
-              <p class="font-extrabold text-blue-950 text-[10px]">{{ authStore.currentUser.name }}</p>
-              <p class="text-[8.5px] text-slate-500 font-medium">{{ (authStore.currentUser?.role || authStore.currentUser?.roleCode) === 'ADMIN' ? 'System Administrator' : 'Support Engineer' }}</p>
-              <p class="text-[8.5px] text-blue-700 font-medium">{{ reportPrintDate.local.split(',')[0] }}</p>
+              <p class="font-extrabold text-blue-950 text-xs print:text-[9px]">{{ authStore.currentUser.name }}</p>
+              <p class="text-[11px] print:text-[7.5px] text-slate-500 font-medium">{{ (authStore.currentUser?.role || authStore.currentUser?.roleCode) === 'ADMIN' ? 'System Administrator' : 'Support Engineer' }}</p>
+              <p class="text-[11px] print:text-[7.5px] text-blue-700 font-medium">{{ reportPrintDate.local.split(',')[0] }}</p>
             </div>
           </div>
 
           <!-- Kotak Kanan: Disetujui Oleh (Management) -->
-          <div class="border border-slate-200 rounded-xl p-3 bg-white shadow-2xs flex flex-col items-center justify-between text-center min-h-[118px]">
-            <p class="text-blue-950 font-bold text-[9.5px] tracking-tight">
-              Disetujui Oleh (Management):
+          <div class="border border-slate-200 rounded-xl p-4 print:p-2 bg-white shadow-2xs flex flex-col items-center justify-between text-center min-h-[140px] print:min-h-[90px]">
+            <p class="text-blue-950 font-bold text-xs print:text-[8.5px] tracking-tight">
+              Disetujui Oleh :
             </p>
 
             <!-- Ruang Kosong untuk Tanda Tangan Manual -->
-            <div class="h-12 w-full flex items-center justify-center">
-              <span class="text-[7.5px] text-slate-300 font-mono italic print:hidden">[ Ruang Tanda Tangan &amp; Cap ]</span>
+            <div class="h-16 print:h-9 w-full flex items-center justify-center">
+              <span class="text-[10px] print:text-[7px] text-slate-300 font-mono italic print:hidden">[ Ruang Tanda Tangan &amp; Cap ]</span>
             </div>
 
-            <div class="w-full max-w-[155px] space-y-0.5">
+            <div class="w-full max-w-[200px] print:max-w-[140px] space-y-0.5">
               <!-- Garis Tanda Tangan -->
               <div class="border-b-2 border-blue-950 w-full mx-auto pb-0.5 mb-1">
                 <input
@@ -345,15 +345,26 @@
                   v-model="approverName"
                   type="text"
                   placeholder="Nama Penyetuju..."
-                  class="w-full text-center text-[9.5px] font-bold text-blue-950 bg-transparent focus:outline-none print:hidden placeholder:text-slate-300"
+                  class="w-full text-center text-xs print:text-[9px] font-bold text-blue-950 bg-transparent focus:outline-none print:hidden placeholder:text-slate-300"
                 />
-                <p v-if="approverName" class="font-extrabold text-blue-950 text-[10px] hidden print:block">
+                <p v-if="approverName" class="font-extrabold text-blue-950 text-xs print:text-[9px] hidden print:block">
                   {{ approverName }}
                 </p>
               </div>
-              <p class="text-[8.5px] text-slate-600 font-medium">{{ approverTitle || 'Service Operations Manager' }}</p>
-              <p class="text-[8.5px] text-blue-700 font-medium">{{ reportPrintDate.local.split(',')[0] }}</p>
-            </div>
+              <div>
+                <input
+                  v-if="!isPrinting"
+                  v-model="approverTitle"
+                  type="text"
+                  placeholder="Jabatan Penyetuju..."
+                  class="w-full text-center text-[11px] print:text-[7.5px] text-slate-600 font-medium bg-transparent border-b border-dashed border-slate-300 hover:border-slate-400 focus:border-blue-500 focus:outline-none print:hidden placeholder:text-slate-300 py-0.5"
+                  title="Klik untuk mengubah jabatan penyetuju"
+                />
+                <p class="text-[11px] print:text-[7.5px] text-slate-600 font-medium hidden print:block">
+                  {{ approverTitle || 'Service Operations Manager' }}
+                </p>
+              </div>
+            </div>  
           </div>
         </div>
 
@@ -364,29 +375,29 @@
       </section>
 
       <!-- ================= PAGE 2 ================= -->
-      <section class="report-page report-page-2 bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-3">
-        <div class="flex items-center justify-between border-b-2 border-slate-800 pb-3">
-          <div class="flex items-center space-x-3">
-            <img src="/gtt-logo.png" alt="Glotra Technology" class="h-12 w-auto object-contain" />
-            <div>
-              <h2 class="text-base font-black text-slate-900 leading-tight">PT GLOBAL TRANSFORMASI TEKNOLOGI</h2>
-              <p class="text-[10px] text-slate-600 italic">"Think it, Solve it" &bull; IT Enterprise Managed Services &amp; Infrastructure Support</p>
-              <p class="text-[9px] text-slate-500">Cyber 2 Tower Lt. 15, Jl. H.R. Rasuna Said, Jakarta Selatan &bull; helpdesk@glotratech.com</p>
+      <section class="report-page report-page-2 bg-white border border-slate-200 rounded-2xl p-4 md:p-6 shadow-xs space-y-3.5 print:space-y-1.5 print:p-0">
+        <div class="flex items-center justify-between border-b-2 border-slate-800 pb-3 print:pb-2 gap-4">
+          <div class="flex items-center space-x-3 md:space-x-4 flex-1 min-w-0">
+            <img src="/gtt-logo.png" alt="Glotra Technology" class="h-12 print:h-9 w-auto object-contain flex-shrink-0" />
+            <div class="flex-1 min-w-0">
+              <h2 class="text-base md:text-lg print:text-sm font-black text-slate-900 leading-tight">PT GLOBAL TRANSFORMASI TEKNOLOGI</h2>
+              <p class="text-xs print:text-[9.5px] text-slate-600 italic">"Think it, Solve it" &bull; IT Enterprise Managed Services &amp; Infrastructure Support</p>
+              <p class="text-[11px] print:text-[8px] text-slate-500 break-words leading-tight">Prudential Center Kota Kasablanka Fl 22 Unit A Jalan Casablanca Kav. 88, RT.7/RW.9, Menteng Dalam, Kec. Tebet, Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12870</p>
             </div>
           </div>
-          <div class="text-right">
-            <span class="text-[10px] font-mono font-bold text-blue-700 block bg-blue-50 px-2.5 py-1 rounded border border-blue-200">REPORT-SLA-{{ currentMonthYear }}</span>
-            <span class="text-[8px] text-slate-400 block mt-1">Generated: {{ reportPrintDate.local }}</span>
+          <div class="text-right flex-shrink-0">
+            <span class="text-xs print:text-[9.5px] font-mono font-bold text-blue-700 block bg-blue-50 px-2.5 py-1 print:py-0.5 rounded border border-blue-200">REPORT-SLA-{{ currentMonthYear }}</span>
+            <span class="text-[11px] print:text-[8px] text-slate-400 block mt-1 print:mt-0.5 whitespace-nowrap">Generated: {{ reportPrintDate.local }}</span>
           </div>
         </div>
 
-        <div class="text-center space-y-0.5">
-          <h3 class="text-base font-black text-slate-900 uppercase tracking-wide">DAFTAR CASE HELPDESK</h3>
-          <p class="text-[10px] text-slate-600 font-medium">Periode Evaluasi: <strong class="text-blue-700">{{ activePeriodLabel }}</strong> &bull; Standar Operasional: <strong class="text-emerald-700">Managed Service 24x7 Hybrid SLA</strong></p>
+        <div class="text-center space-y-1 print:space-y-0.5 py-1 print:py-0.5">
+          <h3 class="text-base md:text-lg print:text-xs font-black text-slate-900 uppercase tracking-wide">DAFTAR CASE HELPDESK</h3>
+          <p class="text-xs print:text-[9.5px] text-slate-600 font-medium">Periode Evaluasi: <strong class="text-blue-700">{{ activePeriodLabel }}</strong> &bull; <strong class="text-emerald-700">{{ activeSlaStandardLabel }}</strong></p>
         </div>
 
         <!-- Status filter chips (summary counts) -->
-        <div class="flex flex-wrap justify-center gap-1.5 text-[9px] font-bold">
+        <div class="flex flex-wrap justify-center gap-2 print:gap-1 text-xs print:text-[7.5px] font-bold">
           <span class="rpt-chip bg-blue-600 text-white border-blue-600">All ({{ reportStats.total }})</span>
           <span class="rpt-chip bg-orange-50 text-orange-700 border-orange-300">Open ({{ statusCounts.open }})</span>
           <span class="rpt-chip bg-blue-50 text-blue-700 border-blue-300">In Progress ({{ statusCounts.progress }})</span>
@@ -395,52 +406,80 @@
           <span class="rpt-chip bg-slate-50 text-slate-600 border-slate-300">Closed ({{ statusCounts.closed }})</span>
         </div>
 
-        <table class="rpt-table rpt-cases">
-          <thead>
-            <tr>
-              <th>No.</th><th>Ticket ID</th><th>Tanggal &amp; Waktu</th><th>Cust.</th><th>Kategori</th><th>Sev.</th>
-              <th class="text-left">Issue</th><th class="text-left">Resolusi</th><th>Engineer PIC</th><th>Status</th>
-              <th>Resp.</th><th>Resol.</th><th>SLA</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(row, idx) in caseRows" :key="row.id">
-              <td>{{ idx + 1 }}</td>
-              <td class="font-bold text-blue-700 whitespace-nowrap" style="font-size:6.5px">{{ row.ticketNumber }}</td>
-              <td>{{ row.date }}</td>
-              <td>{{ row.customer }}</td>
-              <td>{{ row.category }}</td>
-              <td><span class="rpt-badge" :class="row.sevClass">{{ row.sev }}</span></td>
-              <td class="text-left">{{ row.title }}</td>
-              <td class="text-left">{{ row.resolution }}</td>
-              <td>{{ row.engineer }}</td>
-              <td><span class="rpt-badge" :class="row.statusClass">{{ row.statusLabel }}</span></td>
-              <td>{{ row.responseTime }}</td>
-              <td>{{ row.resolutionTime }}</td>
-              <td><span class="rpt-badge" :class="row.slaClass">{{ row.slaLabel }}</span></td>
-            </tr>
-            <tr v-if="caseRows.length === 0"><td colspan="13" class="text-slate-400 py-4">Belum ada tiket pada periode ini.</td></tr>
-          </tbody>
-        </table>
+        <!-- Table with horizontal scroll on screen and full-fit on print -->
+        <div class="rpt-cases-wrap w-full overflow-x-auto print:overflow-visible">
+          <table class="rpt-table rpt-cases">
+            <thead>
+              <tr>
+                <th>No.</th>
+                <th>Ticket ID</th>
+                <th>Tgl Open</th>
+                <th>Tgl Closed</th>
+                <th>Cust.</th>
+                <th>Device / Kategori</th>
+                <th>Serial Number</th>
+                <th>Severity</th>
+                <th class="text-left">Issue</th>
+                <th class="text-left">Resolusi</th>
+                <th>Engineer PIC</th>
+                <th>Status</th>
+                <th>Resp.</th>
+                <th>Resol.</th>
+                <th>SLA</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(row, idx) in caseRows" :key="row.id">
+                <td>{{ idx + 1 }}</td>
+                <td class="font-bold text-blue-700 whitespace-nowrap">{{ row.ticketNumber }}</td>
+                <td class="leading-tight text-center">
+                  <div class="font-medium text-slate-800">{{ row.openDateObj ? row.openDateObj.date : '-' }}</div>
+                  <div v-if="row.openDateObj" class="text-[10px] print:text-[5.5px] text-slate-500 font-mono">{{ row.openDateObj.time }}</div>
+                </td>
+                <td class="leading-tight text-center">
+                  <template v-if="row.closedDateObj">
+                    <div class="font-medium text-slate-800">{{ row.closedDateObj.date }}</div>
+                    <div class="text-[10px] print:text-[5.5px] text-slate-500 font-mono">{{ row.closedDateObj.time }}</div>
+                  </template>
+                  <span v-else class="text-slate-400 font-mono">-</span>
+                </td>
+                <td :title="row.customerFull" class="font-semibold text-slate-800 text-center">
+                  {{ row.customerShort }}
+                </td>
+                <td class="text-center">{{ row.category }}</td>
+                <td class="font-mono text-slate-700 text-center break-all">{{ row.serialNumber }}</td>
+                <td class="text-center"><span class="rpt-badge" :class="row.sevClass">{{ row.sev }}</span></td>
+                <td class="text-left">{{ row.title }}</td>
+                <td class="text-left">{{ row.resolution }}</td>
+                <td class="text-center">{{ row.engineer }}</td>
+                <td class="text-center"><span class="rpt-badge" :class="row.statusClass">{{ row.statusLabel }}</span></td>
+                <td class="text-center">{{ row.responseTime }}</td>
+                <td class="text-center">{{ row.resolutionTime }}</td>
+                <td class="text-center"><span class="rpt-badge" :class="row.slaClass">{{ row.slaLabel }}</span></td>
+              </tr>
+              <tr v-if="caseRows.length === 0"><td colspan="15" class="text-slate-400 py-4 text-center">Belum ada tiket pada periode ini.</td></tr>
+            </tbody>
+          </table>
+        </div>
 
         <!-- Formal sign-off: placed at the end of the document, kept together on one page -->
-        <div class="grid grid-cols-2 gap-16 pt-8 text-center text-[10px] break-inside-avoid" style="break-inside: avoid; page-break-inside: avoid;">
+        <div class="grid grid-cols-2 gap-16 print:gap-8 pt-6 print:pt-3 text-center text-xs print:text-[8.5px] break-inside-avoid" style="break-inside: avoid; page-break-inside: avoid;">
           <div class="flex flex-col items-center">
-            <p class="text-slate-600 font-semibold">Disiapkan Oleh (Helpdesk Lead):</p>
-            <div class="h-16"></div>
-            <p class="font-bold text-slate-900 underline">{{ authStore.currentUser.name }}</p>
-            <p class="text-slate-500">{{ (authStore.currentUser?.role || authStore.currentUser?.roleCode) === 'ADMIN' ? 'Helpdesk Administrator' : 'Support Engineer' }}</p>
-            <p class="text-slate-500">{{ reportPrintDate.local.split(',')[0] }}</p>
+            <p class="text-slate-600 font-semibold text-xs print:text-[8px]">Disiapkan Oleh :</p>
+            <div class="h-16 print:h-9"></div>
+            <p class="font-bold text-slate-900 underline text-xs print:text-[9px]">{{ authStore.currentUser.name }}</p>
+            <p class="text-slate-500 text-[11px] print:text-[7.5px]">{{ (authStore.currentUser?.role || authStore.currentUser?.roleCode) === 'ADMIN' ? 'Helpdesk Administrator' : 'Support Engineer' }}</p>
+            <p class="text-slate-500 text-[11px] print:text-[7.5px]">{{ reportPrintDate.local.split(',')[0] }}</p>
           </div>
           <div class="flex flex-col items-center">
-            <p class="text-slate-600 font-semibold">Disetujui Oleh (Management):</p>
-            <div class="h-16"></div>
+            <p class="text-slate-600 font-semibold text-xs print:text-[8px]">Disetujui Oleh :</p>
+            <div class="h-16 print:h-9"></div>
             <input v-if="!isPrinting" v-model="approverName" type="text" placeholder="Nama Penyetuju..."
-              class="w-full border-b border-slate-300 text-center text-[10px] font-bold bg-transparent focus:outline-none print:hidden" />
-            <p class="font-bold text-slate-900 underline hidden print:block">{{ approverName || '___________________' }}</p>
+              class="w-full border-b border-slate-300 text-center text-xs print:text-[9px] font-bold bg-transparent focus:outline-none print:hidden placeholder:text-slate-300" />
+            <p class="font-bold text-slate-900 underline hidden print:block text-[9px]">{{ approverName || '___________________' }}</p>
             <input v-if="!isPrinting" v-model="approverTitle" type="text" placeholder="Jabatan..."
-              class="w-full text-center text-[9px] text-slate-500 bg-transparent focus:outline-none mt-1 border-b border-slate-200 print:hidden" />
-            <p class="text-slate-500 hidden print:block">{{ approverTitle || 'Service Operations Manager' }}</p>
+              class="w-full text-center text-[11px] print:text-[7.5px] text-slate-500 bg-transparent focus:outline-none mt-1 border-b border-slate-200 print:hidden placeholder:text-slate-300" />
+            <p class="text-slate-500 hidden print:block text-[7.5px]">{{ approverTitle || 'Service Operations Manager' }}</p>
           </div>
         </div>
         <div class="flex justify-between text-[8px] text-slate-500 border-t border-slate-200 pt-1.5 print:hidden">
@@ -463,7 +502,7 @@ const ticketStore = useTicketStore();
 const authStore = useAuthStore();
 
 const approverName = ref('');
-const approverTitle = ref('');
+const approverTitle = ref('Service Operations Manager');
 const isPrinting = ref(false);
 
 const srcTickets = computed(() => ticketStore.tickets);
@@ -502,6 +541,17 @@ const activePeriodLabel = computed(() => {
   }
   const p = periodOptions.find(item => item.id === selectedPeriod.value);
   return p ? p.label : 'Semua Waktu';
+});
+
+const activeSlaStandardLabel = computed(() => {
+  if (selectedCustomer.value) {
+    const cust = srcCustomers.value.find(c => c.id === Number(selectedCustomer.value));
+    if (cust) {
+      const tier = cust.slaTier || cust.contractTier || 'SLA Korporat';
+      return `Mitra: ${cust.name} — Paket: ${tier}`;
+    }
+  }
+  return 'Cakupan: Konsolidasi Seluruh Mitra Korporat';
 });
 
 const reportTickets = computed(() => {
@@ -562,11 +612,15 @@ const priorityDistribution = computed(() => {
   const t = reportTickets.value;
   const total = t.length;
   return [
-    { key: 'HIGH',   short: 'P1', name: 'Critical', label: 'P1 - High Severity (Critical)',       color: 'bg-rose-500',  textColor: 'text-rose-700' },
-    { key: 'MEDIUM', short: 'P2', name: 'High',     label: 'P2 - Medium Severity (Degradation)',  color: 'bg-amber-500', textColor: 'text-amber-700' },
-    { key: 'LOW',    short: 'P3', name: 'Medium',   label: 'P3 - Low Severity (Minor / Request)', color: 'bg-sky-500',   textColor: 'text-sky-700' }
+    { key: 'HIGH',   short: 'Critical', name: 'Critical', label: 'Critical Severity', color: 'bg-rose-500',  textColor: 'text-rose-700' },
+    { key: 'MEDIUM', short: 'Med',      name: 'Medium',   label: 'Medium Severity',   color: 'bg-amber-500', textColor: 'text-amber-700' },
+    { key: 'LOW',    short: 'Low',      name: 'Low',      label: 'Low Severity',      color: 'bg-sky-500',   textColor: 'text-sky-700' }
   ].map(p => {
-    const count = t.filter(x => (x.severity || '').toUpperCase() === p.key).length;
+    const count = t.filter(x => {
+      const sev = (x.severity || '').toUpperCase();
+      if (p.key === 'HIGH') return sev === 'HIGH' || sev === 'CRITICAL';
+      return sev === p.key;
+    }).length;
     return { ...p, count, pct: total > 0 ? Math.round(count / total * 100) : 0 };
   });
 });
@@ -688,9 +742,58 @@ const STATUS_META = {
 };
 
 const SEV_META = {
-  HIGH:   { label: 'P1', cls: 'bg-red-600 text-white' },
-  MEDIUM: { label: 'P2', cls: 'bg-orange-400 text-white' },
-  LOW:    { label: 'P3', cls: 'bg-yellow-300 text-slate-800' }
+  CRITICAL: { label: 'Critical', cls: 'bg-red-600 text-white' },
+  HIGH:     { label: 'Critical', cls: 'bg-red-600 text-white' },
+  CRIT:     { label: 'Critical', cls: 'bg-red-600 text-white' },
+  MEDIUM:   { label: 'Med',      cls: 'bg-amber-500 text-white' },
+  MED:      { label: 'Med',      cls: 'bg-amber-500 text-white' },
+  LOW:      { label: 'Low',      cls: 'bg-sky-500 text-white' }
+};
+
+const formatReportDateParts = (isoDate) => {
+  if (!isoDate) return null;
+  const d = new Date(isoDate);
+  if (isNaN(d.getTime())) return null;
+
+  const datePart = new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Jakarta'
+  }).format(d);
+
+  const timePart = new Intl.DateTimeFormat('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+    timeZone: 'Asia/Jakarta'
+  }).format(d).replace('.', ':') + ' WIB';
+
+  return {
+    date: datePart,
+    time: timePart,
+    full: `${datePart}, ${timePart}`
+  };
+};
+
+const getCustomerShortName = (customerId) => {
+  const c = srcCustomers.value.find(item => item.id === customerId);
+  if (!c) return '-';
+  if (c.code) return c.code;
+  const name = c.name || '';
+  if (name.includes('Astra Graphia')) return 'AGIT';
+  if (name.includes('BCA') || name.includes('Bank Central Asia')) return 'BCA';
+  if (name.includes('Telkomsel')) return 'Telkomsel';
+  if (name.includes('Mandiri')) return 'Mandiri';
+  if (name.includes('BRI')) return 'BRI';
+  if (name.includes('BNI')) return 'BNI';
+
+  // Strip PT/CV/Tbk
+  const clean = name.replace(/^(PT|CV|PT\.)\s+/i, '').replace(/\s+(Tbk|\(Persero\))\s*/gi, '').trim();
+  if (clean.length > 15) {
+    return clean.slice(0, 14) + '…';
+  }
+  return clean || name;
 };
 
 const caseRows = computed(() => {
@@ -699,7 +802,7 @@ const caseRows = computed(() => {
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
     .map(t => {
       const st = STATUS_META[t.status] || { label: t.status, cls: 'bg-slate-100 text-slate-700' };
-      const sv = SEV_META[(t.severity || '').toUpperCase()] || { label: '-', cls: 'bg-slate-200 text-slate-700' };
+      const sv = SEV_META[(t.severity || '').toUpperCase()] || { label: (t.severity || '-'), cls: 'bg-slate-200 text-slate-700' };
       const done = ['RESOLVED', 'CLOSED'].includes(t.status);
       const created = new Date(t.createdAt).getTime();
       const respMin = t.respondedAt ? (new Date(t.respondedAt).getTime() - created) / 60000 : null;
@@ -721,20 +824,35 @@ const caseRows = computed(() => {
       const cat = srcCategories.value.find(c => c.id === t.categoryId);
       const eng = t.assignedTo || getUserById(t.assignedToId);
       const resolution = t.resolutionStrategy || t.actionTaken || t.resolutionNotes || t.rootCause || '-';
+      
+      const openDateParts = formatReportDateParts(t.createdAt);
+      const closedDateParts = (t.closedAt || (done && t.resolvedAt)) ? formatReportDateParts(t.closedAt || t.resolvedAt) : null;
+      const custShort = getCustomerShortName(t.customerId);
+      const custFull = getCustomerName(t.customerId);
+
       return {
         id: t.id,
         ticketNumber: t.ticketNumber,
-        date: formatUtcToLocal(t.createdAt).local,
-        customer: srcCustomers.value.find(c => c.id === t.customerId)?.code || getCustomerName(t.customerId),
+        openDateObj: openDateParts,
+        closedDateObj: closedDateParts,
+        openDate: openDateParts ? openDateParts.full : '-',
+        closedDate: closedDateParts ? closedDateParts.full : '-',
+        customerShort: custShort,
+        customer: custShort,
+        customerFull: custFull,
         category: cat ? cat.name : '-',
-        sev: sv.label, sevClass: sv.cls,
+        serialNumber: t.serialNumber || '-',
+        sev: sv.label,
+        sevClass: sv.cls,
         title: t.title,
         resolution,
         engineer: eng ? eng.name : '-',
-        statusLabel: st.label, statusClass: st.cls,
+        statusLabel: st.label,
+        statusClass: st.cls,
         responseTime: fmtMinutes(respMin),
         resolutionTime: fmtMinutes(resMin),
-        slaLabel, slaClass
+        slaLabel,
+        slaClass
       };
     });
 });
@@ -749,10 +867,9 @@ const triggerPrint = () => {
   if (!source) return;
   isPrinting.value = true;
 
-  // Render the report in an isolated iframe so the app layout (sidebar, wrappers)
-  // cannot offset or clip it, then print only that document.
+  // Render the report in an isolated iframe
   const iframe = document.createElement('iframe');
-  iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:182mm;height:297mm;border:0;';
+  iframe.style.cssText = 'position:fixed;left:-10000px;top:0;width:100%;height:100%;border:0;';
   document.body.appendChild(iframe);
 
   const doc = iframe.contentDocument;
@@ -762,7 +879,31 @@ const triggerPrint = () => {
   doc.open();
   doc.write(`<!doctype html><html lang="id"><head><meta charset="utf-8"><base href="${base}">
     <title>Laporan SLA - GTT Helpdesk</title>${headStyles}
-    <style>html,body{margin:0;padding:0;background:#fff;} #printable-report{width:100%;}</style>
+    <style>
+      @page {
+        size: A4 portrait;
+        margin: 6mm 6mm 6mm 6mm;
+      }
+      *, *::before, *::after {
+        box-sizing: border-box !important;
+      }
+      html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        overflow: visible !important;
+      }
+      #printable-report {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+      }
+    </style>
     </head><body>${source.outerHTML}</body></html>`);
   doc.close();
 
@@ -804,7 +945,7 @@ const exportExcel = async () => {
     ws.getCell(1, 1).value = title;
     ws.getCell(1, 1).font = { bold: true, size: 14, color: { argb: 'FF1E3A8A' } };
     ws.mergeCells(2, 1, 2, columns.length);
-    ws.getCell(2, 1).value = `PT Global Transformasi Teknologi  |  Periode: ${activePeriodLabel.value}`;
+    ws.getCell(2, 1).value = `PT Global Transformasi Teknologi  |  Periode: ${activePeriodLabel.value}  |  Standar: ${activeSlaStandardLabel.value}`;
     ws.getCell(2, 1).font = { italic: true, size: 10, color: { argb: 'FF475569' } };
 
     const header = ws.getRow(4);
@@ -1090,16 +1231,14 @@ const exportExcel = async () => {
     });
 
     // Table 2 Rows: Severity
-    const p1Count = reportTickets.value.filter(t => t.severity === 'CRITICAL' || (t.severity === 'HIGH' && t.categoryId === 1)).length;
-    const p2Count = reportTickets.value.filter(t => t.severity === 'HIGH' && t.categoryId !== 1).length;
-    const p3Count = reportTickets.value.filter(t => t.severity === 'MEDIUM').length;
-    const p4Count = reportTickets.value.filter(t => t.severity === 'LOW').length;
+    const critCount = reportTickets.value.filter(t => (t.severity || '').toUpperCase() === 'CRITICAL' || (t.severity || '').toUpperCase() === 'HIGH').length;
+    const medCount = reportTickets.value.filter(t => (t.severity || '').toUpperCase() === 'MEDIUM' || (t.severity || '').toUpperCase() === 'MED').length;
+    const lowCount = reportTickets.value.filter(t => (t.severity || '').toUpperCase() === 'LOW').length;
 
     const severityData = [
-      { name: 'P1', count: p1Count },
-      { name: 'P2', count: p2Count },
-      { name: 'P3', count: p3Count },
-      { name: 'P4', count: p4Count }
+      { name: 'Critical', count: critCount },
+      { name: 'Med', count: medCount },
+      { name: 'Low', count: lowCount }
     ];
 
     severityData.forEach((item, idx) => {
@@ -1115,7 +1254,14 @@ const exportExcel = async () => {
       cellVal.font = { name: 'Calibri', size: 9.5, color: { argb: 'FF0F172A' } };
       cellVal.alignment = { horizontal: 'center', vertical: 'middle' };
       cellVal.border = BORDER;
+      ws.getRow(rowNum).height = 18;
     });
+
+    // Clear row 14 cells in Table 2
+    ws.getCell('D14').value = null;
+    ws.getCell('D14').border = {};
+    ws.getCell('E14').value = null;
+    ws.getCell('E14').border = {};
 
     // Table 3 Rows: Kategori (Storage, VMware, Backup, Network, Server, Database, Security)
     const categoryData = [
@@ -1264,19 +1410,44 @@ const exportExcel = async () => {
   // ---- Sheet 2: LIST CASE (Daftar Case Helpdesk Lengkap) ----
   const rawById = new Map(reportTickets.value.map(t => [t.id, t]));
   addTableSheet('LIST CASE', 'DAFTAR CASE HELPDESK', [
-    { header: 'No', width: 6, align: 'center' }, { header: 'Ticket ID', width: 22 },
-    { header: 'Tanggal & Waktu', width: 22 }, { header: 'Customer', width: 12, align: 'center' },
-    { header: 'Kategori', width: 16 }, { header: 'Severity', width: 10, align: 'center' },
-    { header: 'Issue', width: 40, wrap: true }, { header: 'Resolusi', width: 40, wrap: true },
-    { header: 'Engineer PIC', width: 20 }, { header: 'Status', width: 13, align: 'center' },
-    { header: 'Waktu Respon', width: 14, align: 'center' }, { header: 'Waktu Resolusi', width: 15, align: 'center' },
-    { header: 'Target Respon', width: 22 }, { header: 'Target Resolusi', width: 22 },
+    { header: 'No', width: 6, align: 'center' },
+    { header: 'Ticket ID', width: 16 },
+    { header: 'Tgl Open', width: 22 },
+    { header: 'Tgl Closed', width: 22 },
+    { header: 'Customer', width: 24, align: 'left' },
+    { header: 'Device / Kategori', width: 20 },
+    { header: 'Serial Number', width: 18, align: 'center' },
+    { header: 'Severity', width: 12, align: 'center' },
+    { header: 'Issue', width: 40, wrap: true },
+    { header: 'Resolusi', width: 40, wrap: true },
+    { header: 'Engineer PIC', width: 20 },
+    { header: 'Status', width: 13, align: 'center' },
+    { header: 'Waktu Respon', width: 14, align: 'center' },
+    { header: 'Waktu Resolusi', width: 15, align: 'center' },
+    { header: 'Target Respon', width: 22 },
+    { header: 'Target Resolusi', width: 22 },
     { header: 'SLA Status', width: 13, align: 'center' }
   ], caseRows.value.map((r, i) => {
     const raw = rawById.get(r.id) || {};
-    return [i + 1, r.ticketNumber, r.date, r.customer, r.category, r.sev, r.title, r.resolution,
-      r.engineer, r.statusLabel, r.responseTime, r.resolutionTime,
-      fmtDate(raw.responseDeadline), fmtDate(raw.resolutionDeadline), r.slaLabel];
+    return [
+      i + 1,
+      r.ticketNumber,
+      r.openDate,
+      r.closedDate,
+      r.customerFull || r.customer,
+      r.category,
+      r.serialNumber,
+      r.sev,
+      r.title,
+      r.resolution,
+      r.engineer,
+      r.statusLabel,
+      r.responseTime,
+      r.resolutionTime,
+      fmtDate(raw.responseDeadline),
+      fmtDate(raw.resolutionDeadline),
+      r.slaLabel
+    ];
   }));
 
   // ---- Sheet 3: Performa Mitra ----
@@ -1341,35 +1512,79 @@ const exportExcel = async () => {
 
 /* ===== Report building blocks ===== */
 #printable-report { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.report-page { font-size: 10px; }
 
-.rpt-card { display: flex; align-items: center; gap: 6px; border-width: 1px; border-radius: 8px; padding: 3px 6px; }
-.rpt-icon { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 26px; height: 26px; border-radius: 9999px; color: #fff; }
-.rpt-icon .material-symbols-outlined { font-size: 16px; }
-.rpt-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; }
-.rpt-big { font-size: 17px; font-weight: 900; line-height: 1.1; }
-.rpt-sub { font-size: 7px; }
+/* Desktop screen styles (Sharp & readable at standard 100% browser zoom) */
+.rpt-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-width: 1px;
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.rpt-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  border-radius: 9999px;
+  color: #fff;
+}
+.rpt-icon .material-symbols-outlined { font-size: 20px; }
+.rpt-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
+.rpt-big { font-size: 22px; font-weight: 900; line-height: 1.1; }
+.rpt-sub { font-size: 11px; }
 
-.rpt-panel { border: 1px solid #e2e8f0; border-radius: 8px; padding: 4px 6px; background: #fff; }
-.rpt-panel-title { display: flex; align-items: flex-start; gap: 4px; font-size: 8.5px; font-weight: 800; text-transform: uppercase; color: #1e3a8a; margin-bottom: 3px; }
-.rpt-panel-title .material-symbols-outlined { color: #2563eb; font-size: 14px; }
-.rpt-panel-title p { font-size: 7px; font-weight: 400; text-transform: none; color: #64748b; }
+.rpt-panel { border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; background: #fff; }
+.rpt-panel-title { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; font-weight: 800; text-transform: uppercase; color: #1e3a8a; margin-bottom: 8px; }
+.rpt-panel-title .material-symbols-outlined { color: #2563eb; font-size: 18px; }
+.rpt-panel-title p { font-size: 11px; font-weight: 400; text-transform: none; color: #64748b; margin-top: 1px; }
 
-.rpt-table { width: 100%; border-collapse: collapse; font-size: 7px; }
-.rpt-table th { background: #f1f5f9; color: #334155; font-weight: 800; padding: 2px 2px; text-align: center; border-bottom: 1px solid #cbd5e1; font-size: 6.8px; text-transform: uppercase; }
-.rpt-table td { padding: 1.5px 2px; text-align: center; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+.rpt-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.rpt-table th { background: #f1f5f9; color: #334155; font-weight: 800; padding: 8px 8px; text-align: center; border-bottom: 1px solid #cbd5e1; font-size: 11px; text-transform: uppercase; }
+.rpt-table td { padding: 7px 8px; text-align: center; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
 .rpt-table th.text-left, .rpt-table td.text-left { text-align: left; }
-.rpt-cases { font-size: 7.5px; }
-.rpt-cases td { padding: 3px 2px; }
+
+.rpt-badge { display: inline-block; border-radius: 5px; padding: 2.5px 7px; font-weight: 700; font-size: 11px; white-space: nowrap; }
+.rpt-chip { border-width: 1px; border-radius: 6px; padding: 3px 12px; font-size: 11px; }
+
+@media screen {
+  .rpt-cases-wrap {
+    width: 100%;
+    overflow-x: auto;
+  }
+  .rpt-cases {
+    width: 100%;
+    min-width: 1180px;
+    font-size: 11.5px;
+  }
+  .rpt-cases th { padding: 9px 6px; }
+  .rpt-cases td { padding: 8px 6px; }
+  .rpt-cases th:nth-child(1)  { width: 34px; }
+  .rpt-cases th:nth-child(2)  { width: 85px; }
+  .rpt-cases th:nth-child(3)  { width: 105px; }
+  .rpt-cases th:nth-child(4)  { width: 105px; }
+  .rpt-cases th:nth-child(5)  { width: 80px; }
+  .rpt-cases th:nth-child(6)  { width: 110px; }
+  .rpt-cases th:nth-child(7)  { width: 100px; }
+  .rpt-cases th:nth-child(8)  { width: 75px; }
+  .rpt-cases th:nth-child(9)  { min-width: 150px; text-align: left; }
+  .rpt-cases th:nth-child(10) { min-width: 140px; text-align: left; }
+  .rpt-cases th:nth-child(11) { width: 95px; }
+  .rpt-cases th:nth-child(12) { width: 85px; }
+  .rpt-cases th:nth-child(13) { width: 50px; }
+  .rpt-cases th:nth-child(14) { width: 50px; }
+  .rpt-cases th:nth-child(15) { width: 75px; }
+}
+
 .rpt-cases tbody tr:nth-child(even) { background: #f8fafc; }
 .rpt-cases tr { break-inside: avoid; page-break-inside: avoid; }
 
-.rpt-badge { display: inline-block; border-radius: 4px; padding: 1px 3px; font-weight: 800; font-size: 7px; white-space: nowrap; }
-.rpt-chip { border-width: 1px; border-radius: 6px; padding: 2px 10px; }
-
 @page {
   size: A4 portrait;
-  margin: 14mm 14mm 16mm 14mm;
+  margin: 6mm 6mm 6mm 6mm;
 
   @bottom-left {
     content: "GTT Helpdesk Ticketing - PT Global Transformasi Teknologi";
@@ -1385,13 +1600,20 @@ const exportExcel = async () => {
   }
 }
 
+/* ===== Print Overrides (Scaled specifically for A4 PDF export) ===== */
 @media print {
+  *, *::before, *::after {
+    box-sizing: border-box !important;
+  }
+
   html, body {
-    width: auto;
-    height: auto;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
     background: #fff !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: visible !important;
   }
 
   #printable-report {
@@ -1399,6 +1621,8 @@ const exportExcel = async () => {
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
   }
 
   #printable-report > * + * { margin-top: 0 !important; }
@@ -1412,14 +1636,15 @@ const exportExcel = async () => {
     box-sizing: border-box !important;
     padding: 0 !important;
     margin: 0 !important;
+    font-size: 8px !important;
+    overflow: hidden !important;
   }
 
   .report-page-1 {
     display: flex !important;
     flex-direction: column !important;
-    justify-content: space-between !important;
-    min-height: 258mm !important;
-    height: 258mm !important;
+    justify-content: flex-start !important;
+    gap: 5px !important;
     page-break-after: always !important;
     break-after: page !important;
     page-break-inside: avoid !important;
@@ -1431,20 +1656,85 @@ const exportExcel = async () => {
     page-break-before: always;
   }
 
-    .rpt-cases { table-layout: fixed !important; width: 100% !important; }
-  .rpt-cases th:nth-child(1) { width: 3%; }
-  .rpt-cases th:nth-child(2) { width: 13%; }
-  .rpt-cases th:nth-child(3) { width: 10%; }
-  .rpt-cases th:nth-child(4) { width: 6%; }
-  .rpt-cases th:nth-child(5) { width: 8%; }
-  .rpt-cases th:nth-child(6) { width: 5%; }
-  .rpt-cases th:nth-child(7) { width: 12%; }
-  .rpt-cases th:nth-child(8) { width: 11%; }
-  .rpt-cases th:nth-child(9) { width: 8%; }
-  .rpt-cases th:nth-child(10) { width: 7%; }
-  .rpt-cases th:nth-child(11) { width: 6%; }
-  .rpt-cases th:nth-child(12) { width: 5%; }
-  .rpt-cases th:nth-child(13) { width: 6%; }
+  .rpt-card { padding: 3px 5px !important; border-radius: 6px !important; gap: 4px !important; box-sizing: border-box !important; }
+  .rpt-icon { width: 22px !important; height: 22px !important; }
+  .rpt-icon .material-symbols-outlined { font-size: 13px !important; }
+  .rpt-label { font-size: 7.5px !important; font-weight: 800 !important; }
+  .rpt-big { font-size: 15px !important; font-weight: 900 !important; }
+  .rpt-sub { font-size: 6.5px !important; }
+
+  .rpt-panel { padding: 3px 5px !important; border-radius: 6px !important; box-sizing: border-box !important; width: 100% !important; max-width: 100% !important; overflow: hidden !important; }
+  .rpt-panel-title { font-size: 7.5px !important; font-weight: 800 !important; gap: 3px !important; margin-bottom: 2px !important; }
+  .rpt-panel-title .material-symbols-outlined { font-size: 12px !important; }
+  .rpt-panel-title p { font-size: 6px !important; }
+
+  .rpt-table { font-size: 6.5px !important; width: 100% !important; max-width: 100% !important; box-sizing: border-box !important; }
+  .rpt-table th { font-size: 6.2px !important; padding: 1.5px 1.5px !important; box-sizing: border-box !important; }
+  .rpt-table td { font-size: 6.5px !important; padding: 1.5px 1.5px !important; box-sizing: border-box !important; }
+
+  .rpt-cases-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .rpt-cases {
+    table-layout: fixed !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    font-size: 6px !important;
+    border-collapse: collapse !important;
+    box-sizing: border-box !important;
+  }
+
+  .rpt-cases th,
+  .rpt-cases td {
+    min-width: 0 !important;
+    max-width: none !important;
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    box-sizing: border-box !important;
+  }
+
+  .rpt-cases th {
+    font-size: 5.8px !important;
+    padding: 2px 1px !important;
+  }
+  .rpt-cases td {
+    font-size: 6px !important;
+    padding: 2px 1px !important;
+    line-height: 1.15 !important;
+  }
+
+  .rpt-cases th:nth-child(1)  { width: 3%   !important; }
+  .rpt-cases th:nth-child(2)  { width: 7%   !important; }
+  .rpt-cases th:nth-child(3)  { width: 8.5% !important; }
+  .rpt-cases th:nth-child(4)  { width: 8.5% !important; }
+  .rpt-cases th:nth-child(5)  { width: 6%   !important; }
+  .rpt-cases th:nth-child(6)  { width: 7.5% !important; }
+  .rpt-cases th:nth-child(7)  { width: 7.5% !important; }
+  .rpt-cases th:nth-child(8)  { width: 5.5% !important; }
+  .rpt-cases th:nth-child(9)  { width: 12%  !important; }
+  .rpt-cases th:nth-child(10) { width: 11%  !important; }
+  .rpt-cases th:nth-child(11) { width: 7.5% !important; }
+  .rpt-cases th:nth-child(12) { width: 6%   !important; }
+  .rpt-cases th:nth-child(13) { width: 3.5% !important; }
+  .rpt-cases th:nth-child(14) { width: 3.5% !important; }
+  .rpt-cases th:nth-child(15) { width: 6.5% !important; }
+
+  .rpt-badge {
+    font-size: 5.5px !important;
+    padding: 1px 2.5px !important;
+    border-radius: 2.5px !important;
+  }
+  .rpt-chip {
+    padding: 1px 5px !important;
+    font-size: 7px !important;
+  }
 
   th, td {
     word-wrap: break-word !important;

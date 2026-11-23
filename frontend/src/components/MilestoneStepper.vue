@@ -140,12 +140,7 @@ const openProofPreview = (fileName) => {
 };
 
 const getImagePreviewSrc = (fileName) => {
-  if (fileName.includes('cisco')) {
-    return '/mock-attachments/cisco-tac-ticket-confirmation.svg';
-  }
-  if (fileName.includes('ping') || fileName.includes('http')) {
-    return '/mock-attachments/ping-http200-proof.svg';
-  }
-  return '/gtt-logo.png';
+  if (!fileName) return '/gtt-logo.png';
+  return `/uploads/${encodeURIComponent(fileName)}`;
 };
 </script>

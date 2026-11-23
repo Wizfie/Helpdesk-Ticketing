@@ -47,7 +47,10 @@ export async function createCustomer(req, res) {
     const { name, industry, slaTier, address, picName, picPhone, picEmail, ticketQuota, maintenanceStart, maintenanceEnd } = req.body;
     const actor = req.user;
 
-    const assignedSlaTier = slaTier || 'GOLD';
+    if (!slaTier) {
+      return res.status(400).json({ message: 'Kebijakan SLA (slaTier) wajib dipilih. Silakan buat kebijakan SLA terlebih dahulu pada master data jika belum tersedia.' });
+    }
+    const assignedSlaTier = slaTier;
 
     const newCustomer = await prisma.customer.create({
       data: {

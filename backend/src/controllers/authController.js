@@ -105,28 +105,41 @@ export async function createUser(req, res) {
 export async function updateUser(req, res) {
   try {
     const { id } = req.params;
-    const { name, email, role, roleCode, phone, isActive } = req.body;
+    const { name, email, role, roleCode, phone, isActive, password } = req.body;
     const actor = req.user;
 
+    const targetUser = await prisma.user.findUnique({ where: { id: Number(id) } });
+    if (!targetUser) return res.status(404).json({ message: 'Pengguna tidak ditemukan.' });
+
     const dataToUpdate = {};
-    if (name) dataToUpdate.name = name;
-    if (email) dataToUpdate.email = email;
-    if (phone !== undefined) dataToUpdate.phone = phone;
-    if (isActive !== undefined) dataToUpdate.isActive = isActive;
-    if (role || roleCode) dataToUpdate.role = role || roleCode;
+    if (phone !== undefined) dataToUpdate.phone = phone ? phone.trim() : null;
+    if (password && String(password).trim().length >= 6) {
+      dataToUpdate.password = String(password).trim();
+    }
+
+    // Hanya ADMIN yang boleh mengubah nama, email, role, dan status aktif
+    if (actor?.role === 'ADMIN') {
+      if (name) dataToUpdate.name = name.trim();
+      if (email) dataToUpdate.email = email.trim();
+      if (isActive !== undefined) dataToUpdate.isActive = isActive;
+      if (role || roleCode) dataToUpdate.role = role || roleCode;
+    }
 
     const updatedUser = await prisma.user.update({
       where: { id: Number(id) },
       data: dataToUpdate
     });
 
+    const isPasswordChange = !!password;
     await logAuditEvent({
-      userName: actor?.name || 'System Admin',
-      role: actor?.role || 'ADMIN',
-      action: 'USER_UPDATED',
+      userName: actor?.name || updatedUser.name,
+      role: actor?.role || updatedUser.role,
+      action: isPasswordChange ? 'USER_PASSWORD_CHANGED' : 'USER_UPDATED',
       entityType: 'USER',
       entityId: `USER-00${updatedUser.id}`,
-      description: `Memperbarui data profil staf ${updatedUser.name}`,
+      description: isPasswordChange 
+        ? `Pengguna ${updatedUser.name} memperbarui kata sandi akun.`
+        : `Pengguna ${updatedUser.name} memperbarui informasi kontak profil (No. Telp: ${updatedUser.phone || '-'}).`,
       ipAddress: req.ip
     });
 

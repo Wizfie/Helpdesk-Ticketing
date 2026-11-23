@@ -12,6 +12,7 @@ import UsersManagementView from '../views/UsersManagementView.vue';
 import CustomersManagementView from '../views/CustomersManagementView.vue';
 import CustomerTrackingView from '../views/CustomerTrackingView.vue';
 import SlaConfigView from '../views/SlaConfigView.vue';
+import EmailGatewayView from '../views/EmailGatewayView.vue';
 import ProfileView from '../views/ProfileView.vue';
 import { useAuthStore } from '../stores/authStore';
 
@@ -86,6 +87,12 @@ const routes = [
     path: '/admin/sla-configuration',
     name: 'SlaConfiguration',
     component: SlaConfigView,
+    meta: { roles: ['ADMIN'] } // Khusus Admin
+  },
+  {
+    path: '/admin/email-gateway',
+    name: 'EmailGateway',
+    component: EmailGatewayView,
     meta: { roles: ['ADMIN'] } // Khusus Admin
   },
   {

@@ -78,25 +78,6 @@ model IndustrySector {
 }
 
 // ----------------------------------------------------
-// 3b. Master Principals & Technology Vendors (OEM)
-// ----------------------------------------------------
-model Principal {
-  id           Int      @id @default(autoincrement())
-  name         String   @unique
-  code         String   @unique // 'HPE', 'CISCO', 'VMWARE', 'RUBRIK', etc.
-  category     String?  // 'Storage & SAN', 'Network Infrastructure', etc.
-  specialist   String?  // Default specialist / TAC contact
-  supportEmail String?
-  supportPhone String?
-  portalUrl    String?
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@map("principals")
-}
-
-// ----------------------------------------------------
 // 3c. Master SLA Policies
 // ----------------------------------------------------
 model SlaPolicy {
@@ -124,18 +105,21 @@ model SlaPolicy {
 // ----------------------------------------------------
 model Ticket {
   id                       Int               @id @default(autoincrement())
-  ticketNumber             String            @unique // 'TICK-YYYYMMDD-XXXX'
+  ticketNumber             String            @unique // 'TK-26001'
   customerId               Int
   customer                 Customer          @relation(fields: [customerId], references: [id])
   customerPicId            Int?
   customerPic              CustomerPic?      @relation(fields: [customerPicId], references: [id])
+  ticketType               String?           @default("Incident")
   categoryId               Int?
   category                 KbOption?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  serialNumber             String?           // Free-form string
   severity                 String            @default("MEDIUM") // 'HIGH', 'MEDIUM', 'LOW'
-  channel                  String            @default("EMAIL")  // 'EMAIL', 'WHATSAPP', 'PORTAL'
   title                    String
-  rawMessage               String?           @db.Text
   description              String            @db.Text
+  attachmentUrl            String?
+  attachmentName           String?
+  attachmentSize           String?
   status                   String            @default("OPEN") // 'OPEN', 'ASSIGNED', 'IN_PROGRESS', 'PENDING_VENDOR', 'PENDING_CUSTOMER', 'RESOLVED', 'CLOSED'
   trackingToken            String            @unique // Tokenized security tracking link anti-IDOR
   createdById              Int
@@ -144,24 +128,7 @@ model Ticket {
   assignedTo               User?             @relation("TicketAssignedTo", fields: [assignedToId], references: [id])
 
   contractTier             String?           @default("8x5 GOLD ENTERPRISE")
-  cluster                  String?           @default("PROD-CL01")
-  environment              String?           @default("PROD-DC-01")
-  impactScope              String?           @default("Standard Operational")
-  isEmailSync              Boolean           @default(true)
-  isProposeKb              Boolean           @default(false)
-
-  // Escalation Tier sesuai hasil MoM Glotra:
-  // INTERNAL, PROJECT_MANAGER, PARTNER, VENDOR_PRINCIPAL
-  escalationTier           String            @default("INTERNAL")
-  principalVendor          String?           // e.g. 'HPE', 'Cisco', 'VMware'
-  principalCaseId          String?           // e.g. 'HPE-2026-004821'
-  principalSpecialist      String?
-  principalBridgeStatus    String?
-  principalLatestUpdate    String?           @db.Text
-  principalUpdateTimestamp String?
-  partnerName              String?
-  partnerPic               String?
-  projectManager           String?
+  sendEmailNotification    Boolean           @default(false)
 
   createdAt                DateTime          @default(now())
   updatedAt                DateTime          @updatedAt
@@ -174,14 +141,13 @@ model Ticket {
   // SLA Hold / Freeze Mechanism
   isPaused                 Boolean           @default(false)
   pausedAt                 DateTime?
+  pauseReason              String?           // 'PART_HARDWARE', 'PARTNER_CUSTOMER'
   totalPausedDurationSec   Int               @default(0)
-  isSlaResponseBreached     Boolean           @default(false)
-  isSlaResolutionBreached   Boolean           @default(false)
+  isSlaResponseBreached    Boolean           @default(false)
+  isSlaResolutionBreached  Boolean           @default(false)
 
   rootCause                String?           @db.Text
   resolutionStrategy       String?           @db.Text
-  actionTaken              String?           @db.Text
-  resolutionNotes          String?           @db.Text
   recommendation           String?           @db.Text
 
   milestones               TicketMilestone[]
@@ -200,10 +166,9 @@ model TicketMilestone {
   status       String
   actorId      Int?
   actor        User?    @relation("MilestoneActor", fields: [actorId], references: [id])
-  actorName    String
-  actorRole    String
   notes        String   @db.Text
   proofFile    String?
+  progressPercent Int?  @default(0)
   timestampUtc DateTime @default(now())
 
   @@map("ticket_milestones")
@@ -220,8 +185,6 @@ model KnowledgeBase {
   category               String   // Pilihan dinamis dari list lokal
   product                String?  // Free text
   author                 String
-  approver               String?
-  status                 String   @default("PUBLISHED") // 'DRAFT', 'PENDING_REVIEW', 'PUBLISHED'
   ticketsReferencedCount Int      @default(0)
   sourceTicket           String?
   pdfAttachmentUrl       String?  // Storage path to uploaded document (.docx / .pdf)

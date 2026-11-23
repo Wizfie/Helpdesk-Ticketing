@@ -11,6 +11,7 @@ export const DEFAULT_USERS = [
     name: 'Ahmad Fauzi',
     email: 'admin@glotratech.com',
     phone: '0811-9988-771',
+    specialty: 'Lead Helpdesk & System Administrator',
     isActive: true
   },
   {
@@ -20,6 +21,47 @@ export const DEFAULT_USERS = [
     name: 'Farhan Pratama',
     email: 'farhan.eng@glotratech.com',
     phone: '0812-9999-8888',
+    specialty: 'L2 Network & Infrastructure Specialist',
+    isActive: true
+  },
+  {
+    id: 11,
+    role: 'ENGINEER',
+    roleCode: 'ENGINEER',
+    name: 'Budi Santoso',
+    email: 'budi.eng@glotratech.com',
+    phone: '0813-1122-3344',
+    specialty: 'L2 Server & Storage Specialist',
+    isActive: true
+  },
+  {
+    id: 12,
+    role: 'ENGINEER',
+    roleCode: 'ENGINEER',
+    name: 'Rizky Ramadhani',
+    email: 'rizky.eng@glotratech.com',
+    phone: '0812-4455-6677',
+    specialty: 'L3 Security & Firewall Specialist',
+    isActive: true
+  },
+  {
+    id: 13,
+    role: 'ENGINEER',
+    roleCode: 'ENGINEER',
+    name: 'Siti Nurhaliza',
+    email: 'siti.eng@glotratech.com',
+    phone: '0813-7788-9900',
+    specialty: 'L2 Cloud & Virtualization Specialist',
+    isActive: true
+  },
+  {
+    id: 14,
+    role: 'ENGINEER',
+    roleCode: 'ENGINEER',
+    name: 'Dimas Anggara',
+    email: 'dimas.eng@glotratech.com',
+    phone: '0812-3344-5566',
+    specialty: 'L1 NOC Operations Dispatcher',
     isActive: true
   }
 ];
@@ -49,7 +91,7 @@ function getStoredUsers() {
       localStorage.removeItem('gtt_sla_policies_clean_v2');
       localStorage.removeItem('gtt_knowledge_base_data');
       localStorage.removeItem('gtt_audit_logs_data');
-      localStorage.removeItem('gtt_selected_ticket_id');
+      localStorage.removeItem(STORAGE_KEY_SELECTED_TICKET_ID);
       localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(DEFAULT_USERS));
       localStorage.setItem(STORAGE_KEY_USER_ID, '1');
       localStorage.setItem(STORAGE_KEY_ROLE, 'ADMIN');
@@ -59,6 +101,16 @@ function getStoredUsers() {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
+        let changed = false;
+        DEFAULT_USERS.forEach(defU => {
+          if (!parsed.some(u => u.id === defU.id || u.email === defU.email)) {
+            parsed.push(defU);
+            changed = true;
+          }
+        });
+        if (changed) {
+          localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(parsed));
+        }
         return parsed;
       }
     }
@@ -345,24 +397,14 @@ export const useAuthStore = defineStore('auth', {
       }
     },
 
-    changePassword(userId, oldPassword, newPassword, ticketStore) {
+    async changePassword(userId, newPassword, ticketStore) {
       const user = this.users.find(u => u.id === Number(userId));
       if (!user) {
         return { success: false, message: 'Pengguna tidak ditemukan.' };
       }
 
-      // Check existing password if present (default fallback is password123)
-      const currentStoredPass = user.password || 'password123';
-      if (oldPassword !== currentStoredPass) {
-        return { success: false, message: 'Kata sandi saat ini yang Anda masukkan salah.' };
-      }
-
       if (!newPassword || newPassword.length < 6) {
         return { success: false, message: 'Kata sandi baru minimal harus 6 karakter.' };
-      }
-
-      if (newPassword === oldPassword) {
-        return { success: false, message: 'Kata sandi baru tidak boleh sama dengan kata sandi lama.' };
       }
 
       user.password = newPassword;
@@ -374,14 +416,21 @@ export const useAuthStore = defineStore('auth', {
 
       saveUsersState(this.users);
 
+      // Sinkronisasi kata sandi ke backend API MySQL
+      try {
+        await api.updateUser(user.id, { password: newPassword });
+      } catch (err) {
+        console.warn('API update password warning:', err.message);
+      }
+
       if (ticketStore && ticketStore.addAuditLog) {
         ticketStore.addAuditLog({
           userName: user.name,
-          role: user.roleCode,
+          role: user.roleCode || user.role,
           action: 'USER_PASSWORD_CHANGED',
           entityType: 'USER',
           entityId: `USER-00${user.id}`,
-          description: `Pengguna ${user.name} (${user.roleCode}) berhasil memperbarui kata sandi akun secara mandiri.`
+          description: `Pengguna ${user.name} (${user.roleCode || user.role}) berhasil memperbarui kata sandi akun.`
         });
       }
 
@@ -403,6 +452,11 @@ export const useAuthStore = defineStore('auth', {
       if (profileData.phone !== undefined) {
         user.phone = (profileData.phone || '').trim();
         payload.phone = user.phone;
+      }
+
+      if (profileData.email) {
+        user.email = profileData.email.trim();
+        payload.email = user.email;
       }
 
       try {

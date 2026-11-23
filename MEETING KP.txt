@@ -19,17 +19,17 @@ Role Custom kosong
 SLA summary remove
 
 
-Tiket : 
+Form Tiket : 
 
-- Jenis Ticket Custom
-- Customer nonaktif masih dalam list
+- Jenis Ticket Custom bisa add/remove
+- Customer nonaktif masih dalam list (soft delete)
 - Chanel Remove
 - Affetive Service Remove
 - Dampak hapus
-- Serial Number
+- Serial Number tambahkan string bebas
 - Severinity deskripsi tidak perlu
 - lampiran optional 5Mb
-- notif email setelah terbit
+- notif email setelah terbit optional
 - related tidaket hapus
 - Eskalasi hapus 
 
@@ -45,7 +45,7 @@ Ticket Detail :
 Report 
 
 ticket - open - closed - device - serial - severinity - 
-Export , 
+
 
 Dashboard 
 link redirect to , Ring Ticket 

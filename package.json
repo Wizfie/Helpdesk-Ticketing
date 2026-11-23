@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "description": "ITSM Enterprise Helpdesk & SLA Ticketing System - PT Global Transformasi Teknologi",
   "scripts": {
+    "test": "node backend/scripts/test-automation.js",
+    "test:e2e": "playwright test",
     "tunnel": "cloudflared tunnel --url http://localhost:5176",
     "tunnel:backend": "cloudflared tunnel --url http://localhost:5000",
     "dev:frontend": "npm --prefix frontend run dev",
     "dev:backend": "npm --prefix backend run dev",
     "build:frontend": "npm --prefix frontend run build",
+    "seed": "node backend/prisma/seed.js",
+    "db:seed": "node backend/prisma/seed.js",
     "docker:up": "docker compose up -d --build",
     "docker:up:frontend": "docker compose up -d --no-deps --build frontend",
     "docker:up:backend": "docker compose up -d --no-deps --build backend",
@@ -25,5 +29,8 @@
     "cloudflare"
   ],
   "author": "Mahasiswa KP Unpam",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "^1.65.1"
+  }
 }

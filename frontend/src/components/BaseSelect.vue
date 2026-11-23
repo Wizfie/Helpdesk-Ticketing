@@ -1,5 +1,5 @@
 <template>
-  <div class="relative w-full text-left" :class="containerClass" ref="dropdownRef">
+  <div class="relative w-full text-left" :class="[containerClass, isOpen ? 'z-[9999]' : '']" ref="dropdownRef">
     <!-- Optional Label -->
     <label v-if="label" class="block font-semibold text-slate-700 text-xs sm:text-sm mb-1">
       {{ label }}
@@ -80,7 +80,7 @@
     >
       <div
         v-if="isOpen"
-        class="absolute z-50 mt-1 bg-white rounded-xl shadow-xl shadow-slate-200/80 border border-slate-200 py-1.5 overflow-hidden focus:outline-none max-w-[calc(100vw-1.5rem)]"
+        class="absolute z-[9999] mt-1 bg-white rounded-xl shadow-xl shadow-slate-200/80 border border-slate-200 py-1.5 overflow-hidden focus:outline-none max-w-[calc(100vw-1.5rem)]"
         :class="[
           menuAlign === 'right' ? 'right-0 origin-top-right' : 'left-0 origin-top-left',
           menuWidthClass,

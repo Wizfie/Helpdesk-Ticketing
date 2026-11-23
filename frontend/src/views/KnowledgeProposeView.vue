@@ -68,7 +68,7 @@
             </svg>
           </div>
           <p class="font-bold text-sm text-slate-800">Klik atau seret file dokumen ke sini</p>
-          <p class="text-xs text-slate-500 mt-1">Mendukung format: <strong class="text-slate-700">DOCX, DOC, PDF</strong> (Maksimal 25MB)</p>
+          <p class="text-xs text-slate-500 mt-1">Mendukung format: <strong class="text-slate-700">DOCX, DOC, PDF</strong> (Maksimal 15MB)</p>
           <input
             ref="fileInputRef"
             type="file"
@@ -217,9 +217,9 @@
 
           <!-- 3. Grid Informasi Pendukung (Tipe Case, Kategori, Produk) -->
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <!-- Tipe Case (Dinamis List Lokal, Add/Delete, Default Kosong) -->
+            <!-- Tipe Case (Dinamis List Lokal, Add/Delete, BaseSelect Standar Project) -->
             <div class="space-y-1.5">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between min-h-[22px]">
                 <label class="block font-semibold text-slate-700 text-xs">
                   Tipe Case <span class="text-rose-500 font-bold">*</span>
                 </label>
@@ -227,10 +227,11 @@
                   v-if="!isAddingCaseType"
                   type="button"
                   @click="isAddingCaseType = true"
-                  class="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center space-x-0.5 cursor-pointer"
+                  class="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center space-x-1 cursor-pointer transition-colors"
                   title="Tambah opsi tipe case baru"
                 >
-                  <span>+ Tambah</span>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                  <span>Tambah Opsi</span>
                 </button>
               </div>
 
@@ -238,13 +239,13 @@
               <div v-if="isAddingCaseType" class="p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2 animate-in fade-in duration-150">
                 <div class="flex items-center justify-between">
                   <span class="text-[11px] font-bold text-blue-900">Tambah Tipe Case:</span>
-                  <button @click="isAddingCaseType = false; newCaseTypeName = ''" type="button" class="text-slate-400 hover:text-slate-600 text-xs font-bold">&times;</button>
+                  <button @click="isAddingCaseType = false; newCaseTypeName = ''" type="button" class="text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer">&times;</button>
                 </div>
                 <div class="flex items-center space-x-1.5">
                   <input
                     v-model="newCaseTypeName"
                     type="text"
-                    placeholder="Misal: Incident, Problem..."
+                    placeholder="Misal: Incident, Problem, Request..."
                     @keydown.enter.prevent="handleAddCaseType"
                     class="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
@@ -252,7 +253,7 @@
                     type="button"
                     @click="handleAddCaseType"
                     :disabled="!newCaseTypeName.trim()"
-                    class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg disabled:opacity-50 cursor-pointer"
+                    class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg disabled:opacity-50 cursor-pointer shadow-2xs"
                   >
                     Simpan
                   </button>
@@ -267,33 +268,32 @@
                   @click="isAddingCaseType = true"
                   class="px-2.5 py-1 bg-white border border-slate-200 hover:bg-blue-50 text-blue-600 font-bold text-[11px] rounded-lg shadow-2xs cursor-pointer inline-flex items-center space-x-1"
                 >
-                  <span>+ Tambah Opsi</span>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                  <span>Tambah Opsi</span>
                 </button>
               </div>
 
-              <!-- Dropdown Selector & Tag Pills -->
+              <!-- Standard Project Dropdown (BaseSelect) & Tag Pills -->
               <div v-else class="space-y-1.5">
-                <select
+                <BaseSelect
                   v-model="form.caseType"
-                  required
-                  class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="" disabled>-- Pilih Tipe Case --</option>
-                  <option v-for="item in caseTypesList" :key="item.id || item.name" :value="item.name">{{ item.name }}</option>
-                </select>
+                  :options="caseTypeOptions"
+                  placeholder="-- Pilih Tipe Case --"
+                  menu-width-class="w-full"
+                />
 
-                <div class="flex flex-wrap gap-1 pt-0.5">
+                <div class="flex flex-wrap gap-1 pt-0.5 max-h-20 overflow-y-auto">
                   <span
                     v-for="item in caseTypesList"
                     :key="item.id || item.name"
-                    class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] transition-colors"
-                    :class="form.caseType === item.name ? 'bg-blue-100 text-blue-800 font-bold border border-blue-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                    class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] transition-colors shadow-2xs"
+                    :class="form.caseType === item.name ? 'bg-blue-100 text-blue-800 font-bold border border-blue-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/60'"
                   >
                     <span @click="form.caseType = item.name" class="cursor-pointer">{{ item.name }}</span>
                     <button
                       type="button"
                       @click.stop="handleDeleteCaseType(item)"
-                      class="text-slate-400 hover:text-rose-600 font-bold ml-1.5 cursor-pointer"
+                      class="text-slate-400 hover:text-rose-600 font-bold ml-1.5 cursor-pointer leading-none"
                       title="Hapus opsi ini dari database"
                     >
                       &times;
@@ -303,9 +303,9 @@
               </div>
             </div>
 
-            <!-- Kategori (Dinamis Database MySQL kb_options, Add/Delete, Default Kosong) -->
+            <!-- Kategori (Dinamis Database MySQL kb_options, Add/Delete, BaseSelect Standar Project) -->
             <div class="space-y-1.5">
-              <div class="flex items-center justify-between">
+              <div class="flex items-center justify-between min-h-[22px]">
                 <label class="block font-semibold text-slate-700 text-xs">
                   Kategori <span class="text-rose-500 font-bold">*</span>
                 </label>
@@ -313,10 +313,11 @@
                   v-if="!isAddingCategory"
                   type="button"
                   @click="isAddingCategory = true"
-                  class="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center space-x-0.5 cursor-pointer"
+                  class="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center space-x-1 cursor-pointer transition-colors"
                   title="Tambah opsi kategori baru"
                 >
-                  <span>+ Tambah</span>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                  <span>Tambah Opsi</span>
                 </button>
               </div>
 
@@ -324,13 +325,13 @@
               <div v-if="isAddingCategory" class="p-2.5 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2 animate-in fade-in duration-150">
                 <div class="flex items-center justify-between">
                   <span class="text-[11px] font-bold text-blue-900">Tambah Kategori Baru:</span>
-                  <button @click="isAddingCategory = false; newCategoryName = ''" type="button" class="text-slate-400 hover:text-slate-600 text-xs font-bold">&times;</button>
+                  <button @click="isAddingCategory = false; newCategoryName = ''" type="button" class="text-slate-400 hover:text-slate-600 text-xs font-bold cursor-pointer">&times;</button>
                 </div>
                 <div class="flex items-center space-x-1.5">
                   <input
                     v-model="newCategoryName"
                     type="text"
-                    placeholder="Misal: Storage, Network, Server..."
+                    placeholder="Misal: Storage, Network, Server, Security..."
                     @keydown.enter.prevent="handleAddCategory"
                     class="flex-1 px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500"
                   />
@@ -338,7 +339,7 @@
                     type="button"
                     @click="handleAddCategory"
                     :disabled="!newCategoryName.trim()"
-                    class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg disabled:opacity-50 cursor-pointer"
+                    class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-lg disabled:opacity-50 cursor-pointer shadow-2xs"
                   >
                     Simpan
                   </button>
@@ -353,33 +354,33 @@
                   @click="isAddingCategory = true"
                   class="px-2.5 py-1 bg-white border border-slate-200 hover:bg-blue-50 text-blue-600 font-bold text-[11px] rounded-lg shadow-2xs cursor-pointer inline-flex items-center space-x-1"
                 >
-                  <span>+ Tambah Opsi</span>
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                  <span>Tambah Opsi</span>
                 </button>
               </div>
 
-              <!-- Dropdown Selector & Tag Pills -->
+              <!-- Standard Project Dropdown (BaseSelect) & Tag Pills -->
               <div v-else class="space-y-1.5">
-                <select
+                <BaseSelect
                   v-model="form.category"
-                  required
-                  class="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="" disabled>-- Pilih Kategori --</option>
-                  <option v-for="item in categoriesList" :key="item.id || item.name" :value="item.name">{{ item.name }}</option>
-                </select>
+                  :options="categoryOptions"
+                  searchable
+                  placeholder="-- Pilih Kategori --"
+                  menu-width-class="w-full"
+                />
 
-                <div class="flex flex-wrap gap-1 pt-0.5">
+                <div class="flex flex-wrap gap-1 pt-0.5 max-h-20 overflow-y-auto">
                   <span
                     v-for="item in categoriesList"
                     :key="item.id || item.name"
-                    class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] transition-colors"
-                    :class="form.category === item.name ? 'bg-blue-100 text-blue-800 font-bold border border-blue-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                    class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] transition-colors shadow-2xs"
+                    :class="form.category === item.name ? 'bg-blue-100 text-blue-800 font-bold border border-blue-200' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200/60'"
                   >
                     <span @click="form.category = item.name" class="cursor-pointer">{{ item.name }}</span>
                     <button
                       type="button"
                       @click.stop="handleDeleteCategory(item)"
-                      class="text-slate-400 hover:text-rose-600 font-bold ml-1.5 cursor-pointer"
+                      class="text-slate-400 hover:text-rose-600 font-bold ml-1.5 cursor-pointer leading-none"
                       title="Hapus opsi ini dari database"
                     >
                       &times;
@@ -390,18 +391,21 @@
             </div>
 
             <!-- Produk / Platform (Free Text Murni) -->
-            <div>
-              <label class="block font-semibold text-slate-700 text-xs mb-1">
-                Produk / Platform <span class="text-rose-500 font-bold">*</span>
-              </label>
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between min-h-[22px]">
+                <label class="block font-semibold text-slate-700 text-xs">
+                  Produk / Platform <span class="text-rose-500 font-bold">*</span>
+                </label>
+                <span class="text-[10px] font-medium text-slate-400">Hardware / OS</span>
+              </div>
               <input
                 v-model="form.product"
                 type="text"
                 required
                 placeholder="Contoh: HPE 3PAR, FortiGate, Cisco Nexus, VMware..."
-                class="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                class="w-full px-3 py-2.5 min-h-[42px] border border-slate-200 rounded-xl bg-white text-xs sm:text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 shadow-2xs transition-all"
               />
-              <span class="text-[10px] text-slate-400 mt-1 block">Teks bebas nama merk, tipe hardware, atau sistem software.</span>
+              <span class="text-[10px] text-slate-400 block pt-0.5">Teks bebas nama merk, tipe hardware, atau sistem software.</span>
             </div>
           </div>
         </div>
@@ -417,15 +421,6 @@
         </router-link>
 
         <button
-          type="button"
-          @click="handleSubmit(true)"
-          :disabled="isSubmitting"
-          class="px-4 py-2.5 border border-blue-200 bg-blue-50/50 hover:bg-blue-100/60 text-blue-700 font-bold rounded-xl text-xs transition-colors cursor-pointer disabled:opacity-50"
-        >
-          Simpan sebagai Draft
-        </button>
-
-        <button
           type="submit"
           :disabled="isSubmitting"
           class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all flex items-center space-x-2 cursor-pointer disabled:opacity-50"
@@ -437,7 +432,7 @@
           <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
           </svg>
-          <span>{{ isSubmitting ? 'Mengunggah...' : 'Upload & Terbitkan Runbook' }}</span>
+          <span>{{ isSubmitting ? 'Mengunggah...' : 'Upload Dokumen' }}</span>
         </button>
       </div>
 
@@ -461,7 +456,7 @@ const authStore = useAuthStore();
 const ticketStore = useTicketStore();
 const uiStore = useUiStore();
 
-const MAX_BYTES = 25 * 1024 * 1024; // 25MB
+const MAX_BYTES = 15 * 1024 * 1024; // 15MB
 
 const fileInputRef = ref(null);
 const docFile = ref(null);
@@ -472,6 +467,28 @@ const formError = ref('');
 
 const caseTypesList = ref([]);
 const categoriesList = ref([]);
+
+const caseTypeOptions = computed(() => {
+  return [
+    { value: '', label: '-- Pilih Tipe Case --' },
+    ...caseTypesList.value.map(item => ({
+      value: item.name,
+      label: item.name,
+      badge: 'Case'
+    }))
+  ];
+});
+
+const categoryOptions = computed(() => {
+  return [
+    { value: '', label: '-- Pilih Kategori --' },
+    ...categoriesList.value.map(item => ({
+      value: item.name,
+      label: item.name,
+      badge: 'Kategori'
+    }))
+  ];
+});
 
 const isAddingCaseType = ref(false);
 const newCaseTypeName = ref('');
@@ -638,19 +655,20 @@ const onTicketChange = () => {
     form.product = t.deviceModel || t.principalVendor;
   }
   // Match category if appropriate
-  if (t.category) {
-    const existing = categoriesList.value.find(c => c.name.toLowerCase() === t.category.toLowerCase());
+  const ticketCategory = typeof t.category === 'string' ? t.category : (t.category?.name || t.categoryName || '');
+  if (ticketCategory) {
+    const existing = categoriesList.value.find(c => c.name.toLowerCase() === ticketCategory.toLowerCase());
     if (existing) {
       form.category = existing.name;
     } else {
-      api.createKbOption({ type: 'CATEGORY', name: t.category })
+      api.createKbOption({ type: 'CATEGORY', name: ticketCategory })
         .then(res => {
           const created = res?.data || res;
           categoriesList.value.push(created);
-          form.category = t.category;
+          form.category = ticketCategory;
         })
         .catch(() => {
-          form.category = t.category;
+          form.category = ticketCategory;
         });
     }
   }
@@ -669,7 +687,7 @@ const acceptFile = (file) => {
   }
 
   if (file.size > MAX_BYTES) {
-    fileError.value = 'Ukuran berkas melebihi batas maksimal 25MB.';
+    fileError.value = 'Ukuran berkas melebihi batas maksimal 15MB.';
     return;
   }
 
@@ -738,11 +756,11 @@ onMounted(async () => {
   }
 });
 
-const handleSubmit = async (asDraft = false) => {
+const handleSubmit = async () => {
   formError.value = '';
 
-  if (!docFile.value && !asDraft) {
-    formError.value = 'Harap pilih berkas dokumen runbook terlebih dahulu.';
+  if (!docFile.value) {
+    formError.value = 'Harap pilih berkas dokumen /runbook terlebih dahulu.';
     return;
   }
 
@@ -774,7 +792,6 @@ const handleSubmit = async (asDraft = false) => {
     fd.append('category', form.category);
     fd.append('product', form.product.trim());
     fd.append('sourceTicket', form.sourceTicket || '');
-    fd.append('status', asDraft ? 'DRAFT' : 'PUBLISHED');
 
     if (docFile.value) {
       fd.append('file', docFile.value);
@@ -800,12 +817,11 @@ const handleSubmit = async (asDraft = false) => {
         product: form.product.trim(),
         sourceTicket: form.sourceTicket || null,
         uploadedDocName: docFile.value?.name || null,
-        uploadedDocSize: formatSize(docFile.value?.size),
-        saveAsDraft: asDraft
+        uploadedDocSize: formatSize(docFile.value?.size)
       }, authStore.currentUser);
     }
 
-    uiStore.toastSuccess(asDraft ? 'Draft dokumen berhasil disimpan.' : 'Dokumen Knowledge Base berhasil diunggah.');
+    uiStore.toastSuccess('Dokumen Knowledge Base berhasil diunggah.');
     router.push('/knowledge-base');
   } catch (err) {
     console.error('Submit KB error:', err);

@@ -12,17 +12,12 @@
         </div>
         <div class="flex items-center gap-2.5">
           <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            {{ authStore.isEngineer ? 'Antrean Tiket Saya (Assigned Engineer)' : 'Antrean Tiket Insiden' }}
+            {{ authStore.isEngineer ? 'Antrean Tiket Saya' : 'Antrean Tiket' }}
           </h1>
           <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-mono">
             {{ filteredTickets.length }} Tiket
           </span>
         </div>
-        <p class="text-xs text-slate-500 mt-1">
-          {{ authStore.isEngineer 
-            ? `Menampilkan khusus tiket insiden yang ditugaskan kepada ${authStore.currentUser?.name || 'Engineer'}.` 
-            : 'Monitor, filter, dan kelola seluruh tiket insiden layanan pelanggan enterprise 24x7 secara real-time.' }}
-        </p>
       </div>
 
       <div class="flex flex-col sm:items-end space-y-1">
@@ -36,17 +31,14 @@
       </div>
     </div>
 
-    <!-- 5 KPI Summary Cards (Mockup Point 6) -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+    <!-- 3 KPI Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <!-- 1. Active Queue Load -->
-      <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs flex items-center justify-between hover:shadow-xs transition-shadow">
+      <div v-if="authStore.isAdmin" class="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs flex items-center justify-between hover:shadow-xs transition-shadow">
         <div>
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Queue Load</span>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ticket</span>
           <div class="flex items-baseline space-x-2 mt-1">
             <span class="text-2xl font-black text-slate-900 font-mono">{{ totalActiveTickets }}</span>
-            <span class="text-[11px] font-bold text-emerald-600 flex items-center">
-              &uarr; 60% dari kemarin
-            </span>
           </div>
           <span class="text-[11px] text-slate-500 mt-0.5 block">Tiket yang sedang ditangani</span>
         </div>
@@ -56,47 +48,8 @@
           </svg>
         </div>
       </div>
-
-      <!-- 2. SLA Near Breach (<2h) -->
-      <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs flex items-center justify-between hover:shadow-xs transition-shadow">
-        <div>
-          <span class="text-[10px] font-bold text-rose-500 uppercase tracking-wider block">SLA Near Breach (&lt;2H)</span>
-          <div class="flex items-baseline space-x-2 mt-1">
-            <span class="text-2xl font-black text-rose-600 font-mono">{{ nearBreachCount }}</span>
-            <span class="text-[11px] font-semibold text-rose-600 flex items-center gap-1">
-              <span>&#9888;</span> Perlu perhatian
-            </span>
-          </div>
-          <span class="text-[11px] text-slate-500 mt-0.5 block">Tiket mendekati batas SLA</span>
-        </div>
-        <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-        </div>
-      </div>
-
-      <!-- 3. Menunggu Principal / Vendor -->
-      <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs flex items-center justify-between hover:shadow-xs transition-shadow">
-        <div>
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Menunggu Principal / Vendor</span>
-          <div class="flex items-baseline space-x-2 mt-1">
-            <span class="text-2xl font-black text-slate-900 font-mono">{{ waitingPrincipalCount }}</span>
-            <span class="text-[11px] font-medium text-amber-700 bg-amber-50 border border-amber-200/80 px-1.5 py-0.2 rounded flex items-center gap-1">
-              <span>&#9203;</span> Menunggu respon
-            </span>
-          </div>
-          <span class="text-[11px] text-slate-500 mt-0.5 block">Tiket dalam eskalasi pihak ketiga</span>
-        </div>
-        <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-          </svg>
-        </div>
-      </div>
-
       <!-- 4. Tiket Saya (PIC) -->
-      <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs flex items-center justify-between hover:shadow-xs transition-shadow">
+      <div v-if="authStore.isEngineer" class="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs flex items-center justify-between hover:shadow-xs transition-shadow">
         <div>
           <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tiket Saya (PIC)</span>
           <div class="flex items-baseline space-x-2 mt-1">
@@ -113,30 +66,43 @@
         </div>
       </div>
 
-      <!-- 5. Avg MTTR (7 Hari) -->
+      <!-- 2. SLA Near Breach (<2h) -->
       <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs flex items-center justify-between hover:shadow-xs transition-shadow">
         <div>
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">AVG MTTR (7 HARI)</span>
+          <span class="text-[10px] font-bold text-rose-500 uppercase tracking-wider block">SLA Near Breach (&lt;2H)</span>
           <div class="flex items-baseline space-x-2 mt-1">
-            <span class="text-2xl font-black text-slate-900 font-mono">3h 25m</span>
-            <span class="text-[11px] font-bold text-emerald-600 flex items-center">
-              &darr; 20%
-            </span>
+            <span class="text-2xl font-black text-rose-600 font-mono">{{ nearBreachCount }}</span>
           </div>
-          <span class="text-[11px] text-slate-500 mt-0.5 block">Dari minggu sebelumnya</span>
+          <span class="text-[11px] text-slate-500 mt-0.5 block">Tiket mendekati batas SLA</span>
         </div>
-        <div class="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0 border border-sky-100">
+        <div class="w-9 h-9 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 3. Tiket Ditahan (SLA Hold) -->
+      <div class="bg-white rounded-xl p-4 border border-slate-200 shadow-2xs flex items-center justify-between hover:shadow-xs transition-shadow">
+        <div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tiket Ditahan (SLA Hold)</span>
+          <div class="flex items-baseline space-x-2 mt-1">
+            <span class="text-2xl font-black text-slate-900 font-mono">{{ pausedTicketsCount }}</span>
+          </div>
+          <span class="text-[11px] text-slate-500 mt-0.5 block">Part/Hardware &amp; Partner/Customer</span>
+        </div>
+        <div class="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
         </div>
       </div>
     </div>
 
     <!-- Main Ticket Monitor Section -->
-    <div class="bg-white rounded-xl border border-slate-200 shadow-xs overflow-hidden">
+    <div class="bg-white rounded-xl border border-slate-200 shadow-xs">
       <!-- 7 Filter Tabs Bar + Action Tools -->
-      <div class="p-3 border-b border-slate-200 bg-slate-50/70 flex flex-wrap items-center justify-between gap-3">
+      <div class="p-3 border-b border-slate-200 bg-slate-50/70 rounded-t-xl flex flex-wrap items-center justify-between gap-3">
         <!-- Filter Tabs -->
         <div class="flex flex-wrap items-center gap-1.5">
           <button
@@ -162,25 +128,8 @@
           </button>
         </div>
 
-        <!-- Right Tools: Auto-refresh & Ekspor CSV -->
+        <!-- Right Tools: Ekspor CSV -->
         <div class="flex items-center space-x-2">
-          <!-- Auto-refresh (30s) -->
-          <button
-            @click="isAutoRefresh = !isAutoRefresh"
-            :class="[
-              'inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer',
-              isAutoRefresh
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-            ]"
-            title="Otomatis muat ulang data setiap 30 detik"
-          >
-            <svg class="w-3.5 h-3.5 text-emerald-600" :class="isAutoRefresh ? 'animate-spin' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-            </svg>
-            <span class="font-medium text-xs">Auto-refresh (30s)</span>
-          </button>
-
           <!-- Ekspor CSV -->
           <button
             @click="exportCsv"
@@ -195,14 +144,14 @@
         </div>
       </div>
 
-      <!-- Filter Controls Toolbar (Search + 5 Dropdowns) -->
-      <div class="p-3 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-12 gap-2.5 bg-white text-xs">
+      <!-- Filter Controls Toolbar (Search + 3 Dropdowns) -->
+      <div class="p-3 border-b border-slate-100 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-12 gap-2.5 bg-white text-xs relative z-20">
         <!-- 1. Search Query (lg:col-span-4) -->
         <div class="lg:col-span-4 relative">
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="Cari No. Tiket, Judul, atau Customer..."
+            placeholder="Cari No. Tiket, Judul, S/N, atau Customer..."
             class="w-full pl-8 pr-3 py-1.5 border border-slate-200 rounded-lg text-xs placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
           <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,8 +159,8 @@
           </svg>
         </div>
 
-        <!-- 2. Mitra Klien (lg:col-span-2) -->
-        <div class="lg:col-span-2">
+        <!-- 2. Mitra Klien (lg:col-span-3) -->
+        <div class="lg:col-span-3">
           <BaseSelect
             v-model="filterCustomer"
             :options="filterCustomerOptions"
@@ -231,36 +180,15 @@
           />
         </div>
 
-        <!-- 4. Kategori (lg:col-span-2) -->
-        <div class="lg:col-span-2">
+        <!-- 4. Kategori (lg:col-span-3) -->
+        <div class="lg:col-span-3">
           <BaseSelect
             v-model="filterCategory"
             :options="filterCategoryOptions"
             size="sm"
             searchable
+            placement="right"
             placeholder="Semua Kategori"
-          />
-        </div>
-
-        <!-- 5. Saluran (lg:col-span-1) -->
-        <div class="lg:col-span-1">
-          <BaseSelect
-            v-model="filterChannel"
-            :options="filterChannelOptions"
-            size="sm"
-            placement="right"
-            placeholder="Semua Saluran"
-          />
-        </div>
-
-        <!-- 6. SLA Status (lg:col-span-1) -->
-        <div class="lg:col-span-1">
-          <BaseSelect
-            v-model="filterSlaStatus"
-            :options="filterSlaStatusOptions"
-            size="sm"
-            placement="right"
-            placeholder="SLA Status"
           />
         </div>
       </div>
@@ -284,11 +212,9 @@
           <span v-if="filterCategory !== 'ALL'" class="bg-white border border-blue-200 text-blue-800 px-2 py-0.5 rounded-md font-mono text-[11px]">
             Kategori: {{ filterCategory }}
           </span>
-          <span v-if="filterChannel !== 'ALL'" class="bg-white border border-blue-200 text-blue-800 px-2 py-0.5 rounded-md font-mono text-[11px]">
-            Saluran: {{ filterChannel }}
-          </span>
-          <span v-if="filterSlaStatus !== 'ALL'" class="bg-white border border-blue-200 text-blue-800 px-2 py-0.5 rounded-md font-mono text-[11px]">
-            SLA: {{ filterSlaStatus }}
+          <span v-if="filterSla === 'breached'" class="bg-white border border-rose-200 text-rose-700 px-2 py-0.5 rounded-md font-mono text-[11px] flex items-center gap-1">
+            <span>SLA: Breached</span>
+            <button @click="filterSla = 'ALL'" class="hover:text-rose-900 cursor-pointer font-bold">&times;</button>
           </span>
         </div>
         <button
@@ -300,7 +226,7 @@
       </div>
 
       <!-- 12-Column High-Density Ticket Table (Point 6 Mockup) -->
-      <div class="overflow-x-auto">
+      <div class="overflow-x-auto relative z-10">
         <table class="w-full text-left border-collapse text-xs">
           <thead>
             <tr class="border-b border-slate-200 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase tracking-wider select-none">
@@ -326,41 +252,26 @@
                 <div class="text-[9px] text-slate-400 font-normal lowercase tracking-normal">Deskripsi Singkat</div>
               </th>
 
-              <!-- 5. KATEGORI -->
-              <th class="py-3 px-2.5 whitespace-nowrap">KATEGORI</th>
+              <!-- 5. KATEGORI & S/N -->
+              <th class="py-3 px-2.5 whitespace-nowrap">
+                <div>KATEGORI</div>
+                <div class="text-[9px] text-slate-400 font-normal lowercase tracking-normal">Serial Number</div>
+              </th>
 
               <!-- 6. SEVERITY -->
               <th class="py-3 px-2.5 text-center whitespace-nowrap">SEVERITY</th>
 
-              <!-- 7. SLA RESPONSE -->
-              <th class="py-3 px-3 whitespace-nowrap">
-                <div>SLA RESPONSE</div>
-                <div class="text-[9px] text-slate-400 font-normal lowercase tracking-normal">Target | Aktual</div>
-              </th>
-
-              <!-- 8. SLA RESOLUTION -->
+              <!-- 7. SLA RESOLUTION -->
               <th class="py-3 px-3 whitespace-nowrap">
                 <div>SLA RESOLUTION</div>
-                <div class="text-[9px] text-slate-400 font-normal lowercase tracking-normal">Target | Sisa Waktu</div>
+                <div class="text-[9px] text-slate-400 font-normal tracking-normal uppercase">Sisa Waktu / Target</div>
               </th>
 
-              <!-- 9. STATUS -->
+              <!-- 8. STATUS -->
               <th class="py-3 px-3 whitespace-nowrap min-w-[130px]">
                 <div>STATUS</div>
                 <div class="text-[9px] text-slate-400 font-normal lowercase tracking-normal">Progress</div>
               </th>
-
-              <!-- 10. PRINCIPAL / VENDOR -->
-              <th class="py-3 px-3 whitespace-nowrap">
-                <div>PRINCIPAL / VENDOR</div>
-                <div class="text-[9px] text-slate-400 font-normal lowercase tracking-normal">Case ID</div>
-              </th>
-
-              <!-- 11. KB MATCH -->
-              <th class="py-3 px-2 text-center whitespace-nowrap">KB Match</th>
-
-              <!-- 12. TINDAKAN -->
-              <th class="py-3 px-3 text-center whitespace-nowrap">TINDAKAN</th>
             </tr>
           </thead>
 
@@ -407,14 +318,17 @@
                 </div>
               </td>
 
-              <!-- 5. KATEGORI (Light pill tag) -->
+              <!-- 5. KATEGORI & SERIAL NUMBER -->
               <td class="py-3 px-2.5 whitespace-nowrap">
                 <span class="inline-block bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-medium px-2 py-0.5 rounded">
                   {{ getCategoryDisplay(ticket) }}
                 </span>
+                <div v-if="ticket.serialNumber" class="text-[9px] font-mono text-slate-400 mt-0.5">
+                  S/N: {{ ticket.serialNumber }}
+                </div>
               </td>
 
-              <!-- 6. SEVERITY (Solid vibrant pill) -->
+              <!-- 6. SEVERITY -->
               <td class="py-3 px-2.5 text-center whitespace-nowrap">
                 <span 
                   :class="[
@@ -428,37 +342,7 @@
                 </span>
               </td>
 
-              <!-- 7. SLA RESPONSE (Target | Aktual) -->
-              <td class="py-3 px-3 whitespace-nowrap font-mono text-[11px]">
-                <div class="flex items-center space-x-1">
-                  <!-- Cross icon if breached, Checkmark if met, or clock if waiting -->
-                  <span 
-                    v-if="isResponseBreached(ticket)" 
-                    class="w-3.5 h-3.5 rounded-full bg-rose-500 text-white flex items-center justify-center text-[9px] font-bold"
-                  >
-                    &times;
-                  </span>
-                  <span 
-                    v-else-if="ticket.respondedAt" 
-                    class="w-3.5 h-3.5 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px] font-bold"
-                  >
-                    &#10003;
-                  </span>
-                  <span 
-                    v-else 
-                    class="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-bold"
-                  >
-                    &#9203;
-                  </span>
-                  <span 
-                    :class="isResponseBreached(ticket) ? 'text-rose-600 font-semibold' : ticket.respondedAt ? 'text-emerald-700 font-medium' : 'text-blue-700 font-medium'"
-                  >
-                    {{ ticket.slaResponseText || (ticket.respondedAt ? '12m / 30m' : 'Menunggu') }}
-                  </span>
-                </div>
-              </td>
-
-              <!-- 8. SLA RESOLUTION (Target | Sisa Waktu) -->
+              <!-- 7. SLA RESOLUTION (Target | Sisa Waktu) -->
               <td class="py-3 px-3 whitespace-nowrap font-mono text-[11px]">
                 <div class="flex items-center space-x-1">
                   <!-- Red cross if breached, Amber clock if near breach / warning, Green check if safe -->
@@ -487,12 +371,12 @@
                       'text-emerald-700 font-medium'
                     ]"
                   >
-                    {{ ticket.slaResolutionText || '4h 10m / 8h' }}
+                    {{ getSlaResolutionDisplay(ticket) }}
                   </span>
                 </div>
               </td>
 
-              <!-- 9. STATUS & Progress -->
+              <!-- 8. STATUS & Progress -->
               <td class="py-3 px-3 whitespace-nowrap">
                 <div>
                   <!-- Status Badges -->
@@ -534,43 +418,11 @@
                   </div>
                 </div>
               </td>
-
-              <!-- 10. PRINCIPAL / VENDOR (Case ID) -->
-              <td class="py-3 px-3 whitespace-nowrap">
-                <div v-if="ticket.principalVendor">
-                  <div class="font-medium text-slate-800 text-xs">{{ ticket.principalVendor }}</div>
-                  <div class="text-[10px] font-mono text-slate-400">#{{ ticket.principalCaseId }}</div>
-                </div>
-                <div v-else class="text-slate-400 font-mono text-xs">
-                  -
-                </div>
-              </td>
-
-              <!-- 11. KB MATCH -->
-              <td class="py-3 px-2 text-center whitespace-nowrap">
-                <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-xs">
-                  {{ ticket.kbMatchCount || (ticket.categoryId === 4 ? 5 : ticket.categoryId === 3 ? 4 : 2) }}
-                </span>
-              </td>
-
-              <!-- 12. TINDAKAN (Langsung Masuk ke Detail) -->
-              <td class="py-3 px-3 text-center whitespace-nowrap" @click.stop>
-                <router-link
-                  :to="`/tickets/${ticket.id}`"
-                  class="inline-flex items-center justify-center space-x-1 px-3 py-1 rounded text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white shadow-2xs transition-colors cursor-pointer"
-                  title="Masuk ke detail tiket"
-                >
-                  <span>Detail</span>
-                  <svg class="w-3 h-3 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                  </svg>
-                </router-link>
-              </td>
             </tr>
 
             <!-- Empty State -->
             <tr v-if="filteredTickets.length === 0">
-              <td colspan="12" class="py-12 text-center text-slate-400 bg-white">
+              <td colspan="8" class="py-12 text-center text-slate-400 bg-white">
                 <div v-if="ticketStore.tickets.length === 0" class="max-w-md mx-auto space-y-3 py-4">
                   <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mx-auto shadow-inner">
                     🎫
@@ -581,13 +433,15 @@
                       Antrean tiket saat ini kosong. Tiket baru yang dilaporkan oleh mitra atau dibuat oleh tim operasional akan tampil di sini.
                     </p>
                   </div>
-                  <router-link
-                    v-if="authStore.isAdmin"
-                    to="/tickets/create"
-                    class="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all"
-                  >
-                    <span>+ Buat Tiket Baru</span>
-                  </router-link>
+                  <div class="flex items-center justify-center gap-2 pt-1">
+                    <router-link
+                      v-if="authStore.isAdmin"
+                      to="/tickets/create"
+                      class="inline-flex items-center space-x-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs shadow-xs transition-all"
+                    >
+                      <span>+ Buat Tiket Baru</span>
+                    </router-link>
+                  </div>
                 </div>
                 <div v-else class="py-4">
                   <svg class="w-10 h-10 mx-auto mb-2 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -651,19 +505,105 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useTicketStore } from '../stores/ticketStore';
 import { useAuthStore } from '../stores/authStore';
+import { useUiStore } from '../stores/uiStore';
 
 const route = useRoute();
 const router = useRouter();
 const ticketStore = useTicketStore();
 const authStore = useAuthStore();
+const uiStore = useUiStore();
+
+let refreshTimer = null;
+
+// Filter States
+const activeTab = ref('ALL');
+const searchQuery = ref('');
+const filterCustomer = ref('ALL');
+const filterSeverity = ref('ALL');
+const filterCategory = ref('ALL');
+const filterSla = ref('ALL');
+
+const applyRouteQuery = () => {
+  if (route.query.tab) {
+    activeTab.value = String(route.query.tab);
+  } else if (route.query.status) {
+    const s = String(route.query.status).toUpperCase();
+    if (s === 'OPEN') activeTab.value = 'OPEN';
+    else if (s === 'IN_PROGRESS') activeTab.value = 'IN_PROGRESS';
+    else if (['HOLD', 'PENDING', 'WAITING'].includes(s)) activeTab.value = 'PENDING';
+    else if (['RESOLVED', 'CLOSED', 'SOLVED'].includes(s)) activeTab.value = 'RESOLVED';
+    else if (s === 'ESCALATED') activeTab.value = 'ESCALATED';
+    else if (s === 'NEAR_BREACH') activeTab.value = 'NEAR_BREACH';
+    else activeTab.value = 'ALL';
+  } else {
+    activeTab.value = 'ALL';
+  }
+
+  if (route.query.severity) {
+    const sev = String(route.query.severity).toUpperCase();
+    if (['HIGH', 'MEDIUM', 'LOW'].includes(sev)) {
+      filterSeverity.value = sev;
+    } else if (['CRITICAL', 'P1', 'P2'].includes(sev)) {
+      filterSeverity.value = 'HIGH';
+    } else if (sev === 'P3') {
+      filterSeverity.value = 'MEDIUM';
+    } else if (sev === 'P4') {
+      filterSeverity.value = 'LOW';
+    } else {
+      filterSeverity.value = 'ALL';
+    }
+  } else {
+    filterSeverity.value = 'ALL';
+  }
+
+  if (route.query.customer) {
+    filterCustomer.value = route.query.customer;
+  } else {
+    filterCustomer.value = 'ALL';
+  }
+
+  if (route.query.category) {
+    filterCategory.value = route.query.category;
+  } else {
+    filterCategory.value = 'ALL';
+  }
+
+  if (route.query.sla === 'breached') {
+    filterSla.value = 'breached';
+  } else {
+    filterSla.value = 'ALL';
+  }
+};
+
+watch(() => route.query, () => {
+  applyRouteQuery();
+}, { deep: true });
 
 onMounted(async () => {
+  applyRouteQuery();
   await ticketStore.fetchTickets();
   await ticketStore.fetchCustomers();
+  await ticketStore.fetchSlaPolicies();
+
+  // Background auto-refresh berjalan otomatis setiap 30 detik
+  refreshTimer = setInterval(async () => {
+    try {
+      await ticketStore.fetchTickets();
+    } catch (err) {
+      console.warn('Auto-refresh background error:', err);
+    }
+  }, 30000);
+});
+
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
 });
 
 // Selected tickets for bulk actions
@@ -679,18 +619,6 @@ const toggleSelectAll = (e) => {
     selectedTicketIds.value = [];
   }
 };
-
-// Filter States
-// Active tab defaults to 'ALL' so all 8 tickets are listed (or query tab if provided)
-const initialTab = route.query.tab || 'ALL';
-const activeTab = ref(initialTab);
-const searchQuery = ref('');
-const filterCustomer = ref('ALL');
-const filterSeverity = ref('ALL');
-const filterCategory = ref('ALL');
-const filterChannel = ref('ALL');
-const filterSlaStatus = ref('ALL');
-const isAutoRefresh = ref(true);
 
 // Filter Dropdown Options
 const filterCustomerOptions = computed(() => [
@@ -716,21 +644,6 @@ const filterCategoryOptions = computed(() => [
     label: cat
   }))
 ]);
-
-const filterChannelOptions = [
-  { value: 'ALL', label: 'Semua Saluran' },
-  { value: 'WHATSAPP', label: 'WhatsApp', subtext: 'WA Business' },
-  { value: 'EMAIL', label: 'Email', subtext: 'Email Support' },
-  { value: 'PHONE', label: 'Telepon', subtext: 'Hotline NOC' },
-  { value: 'PORTAL', label: 'Portal', subtext: 'Customer Portal' }
-];
-
-const filterSlaStatusOptions = [
-  { value: 'ALL', label: 'Semua SLA Status' },
-  { value: 'SAFE', label: 'SLA Aman', badge: 'Normal', badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200' },
-  { value: 'NEAR_BREACH', label: 'Near Breach (<2h)', badge: 'Warning', badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200' },
-  { value: 'BREACHED', label: 'SLA Terlewat', badge: 'Breached', badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200' }
-];
 
 // Pagination
 const currentPage = ref(1);
@@ -765,6 +678,62 @@ const getCategoryDisplay = (ticket) => {
 const formatStatusLabel = (status) => {
   if (!status) return 'IN PROGRESS';
   return status.replace(/_/g, ' ');
+};
+
+const getSlaResolutionDisplay = (ticket) => {
+  if (!ticket) return '-';
+
+  // 1. Status Ditahan (Hold / Paused)
+  if (ticket.isPaused || ticket.status === 'PENDING' || ticket.status === 'PENDING_VENDOR' || ticket.status === 'PENDING_CUSTOMER') {
+    if (ticket.pauseReason === 'PART_HARDWARE' || ticket.status === 'PENDING_VENDOR') {
+      return 'Hold: Part / Vendor';
+    }
+    if (ticket.pauseReason === 'PARTNER_CUSTOMER' || ticket.status === 'PENDING_CUSTOMER') {
+      return 'Hold: Klien / Partner';
+    }
+    return 'Dijeda (SLA Paused)';
+  }
+
+  // 2. Status Selesai / Ditutup (Resolved / Closed)
+  if (['RESOLVED', 'CLOSED'].includes(ticket.status)) {
+    if (ticket.slaResolutionText && ticket.slaResolutionText.includes('Met')) {
+      return ticket.slaResolutionText;
+    }
+    if (ticket.resolvedAt && ticket.resolutionDeadline) {
+      const isMet = new Date(ticket.resolvedAt).getTime() <= new Date(ticket.resolutionDeadline).getTime();
+      return isMet ? 'Tepat Waktu (Met)' : 'Terlewat (Breached)';
+    }
+    return 'Selesai (Resolved)';
+  }
+
+  // 3. Gunakan teks deskriptif riil jika telah dispesifikasikan (selain fallback statis)
+  if (ticket.slaResolutionText && !ticket.slaResolutionText.includes('4h 10m / 8h')) {
+    return ticket.slaResolutionText;
+  }
+
+  // 4. Hitung dinamis: Sisa Waktu / Target SLA
+  if (ticket.resolutionDeadline) {
+    const deadlineMs = new Date(ticket.resolutionDeadline).getTime();
+    const createdMs = ticket.createdAt ? new Date(ticket.createdAt).getTime() : (deadlineMs - 4 * 3600 * 1000);
+    const totalHours = Math.max(1, Math.round((deadlineMs - createdMs) / 3600000));
+    const remainMs = deadlineMs - Date.now();
+
+    if (remainMs <= 0) {
+      const overMin = Math.round(Math.abs(remainMs) / 60000);
+      const overH = Math.floor(overMin / 60);
+      const overM = overMin % 60;
+      const overStr = overH > 0 ? `${overH}h ${overM}m` : `${overM}m`;
+      return `-${overStr} / ${totalHours}h (Breached)`;
+    }
+
+    const remainMin = Math.round(remainMs / 60000);
+    const remainH = Math.floor(remainMin / 60);
+    const remainM = remainMin % 60;
+    const remainStr = remainH > 0 ? `${remainH}h ${remainM}m` : `${remainM}m`;
+    return `${remainStr} / ${totalHours}h`;
+  }
+
+  return '4h / 4h';
 };
 
 const isNearBreach = (ticket) => {
@@ -829,8 +798,8 @@ const nearBreachCount = computed(() => {
   return baseTickets.value.filter(t => isNearBreach(t) || t.isNearBreachFlag || t.status === 'NEAR_BREACH').length;
 });
 
-const waitingPrincipalCount = computed(() => {
-  return baseTickets.value.filter(t => t.status === 'ESCALATED' || t.status === 'PENDING_VENDOR' || Boolean(t.principalVendor)).length;
+const pausedTicketsCount = computed(() => {
+  return baseTickets.value.filter(t => t.isPaused || t.status === 'PENDING').length;
 });
 
 const myAssignedCount = computed(() => {
@@ -841,13 +810,13 @@ const myAssignedCount = computed(() => {
   return currentId ? ticketStore.tickets.filter(t => t.assignedToId === currentId).length : 0;
 });
 
-// 7 Tabs for Status (Point 6 mockup)
+// Status Tabs
 const filterTabs = computed(() => [
   { id: 'ALL', label: 'Semua Tiket', count: baseTickets.value.length },
-  { id: 'ASSIGNED', label: 'Assigned', count: baseTickets.value.filter(t => t.status === 'ASSIGNED').length },
+  { id: 'OPEN', label: 'Open (Baru)', count: baseTickets.value.filter(t => t.status === 'OPEN').length },
   { id: 'IN_PROGRESS', label: 'In Progress', count: baseTickets.value.filter(t => t.status === 'IN_PROGRESS').length },
-  { id: 'PENDING', label: 'Pending', count: baseTickets.value.filter(t => t.status === 'PENDING').length },
-  { id: 'ESCALATED', label: 'Escalated', count: baseTickets.value.filter(t => t.status === 'ESCALATED').length },
+  { id: 'PENDING', label: 'Pending', count: baseTickets.value.filter(t => t.status === 'PENDING' || t.status === 'PENDING_VENDOR' || t.status === 'PENDING_CUSTOMER' || t.isPaused).length },
+  { id: 'ESCALATED', label: 'Escalated', count: baseTickets.value.filter(t => t.status === 'ESCALATED' || t.escalationTier === 'VENDOR_PRINCIPAL' || t.principalVendor).length },
   { id: 'NEAR_BREACH', label: 'Near Breach', count: baseTickets.value.filter(t => isNearBreach(t) || t.status === 'NEAR_BREACH').length },
   { id: 'RESOLVED', label: 'Resolved', count: baseTickets.value.filter(t => t.status === 'RESOLVED' || t.status === 'CLOSED').length }
 ]);
@@ -866,36 +835,31 @@ const setTab = (tabId) => {
 const filteredTickets = computed(() => {
   return baseTickets.value.filter(t => {
     // 1. Status Tab filter
-    if (activeTab.value === 'ASSIGNED') {
-      if (t.status !== 'ASSIGNED') return false;
+    if (activeTab.value === 'OPEN') {
+      if (t.status !== 'OPEN') return false;
     } else if (activeTab.value === 'IN_PROGRESS') {
       if (t.status !== 'IN_PROGRESS') return false;
     } else if (activeTab.value === 'PENDING') {
-      if (t.status !== 'PENDING') return false;
+      if (t.status !== 'PENDING' && t.status !== 'PENDING_VENDOR' && t.status !== 'PENDING_CUSTOMER' && !t.isPaused) return false;
     } else if (activeTab.value === 'ESCALATED') {
-      if (t.status !== 'ESCALATED') return false;
+      if (t.status !== 'ESCALATED' && t.escalationTier !== 'VENDOR_PRINCIPAL' && !t.principalVendor) return false;
     } else if (activeTab.value === 'NEAR_BREACH') {
       if (!isNearBreach(t) && t.status !== 'NEAR_BREACH') return false;
     } else if (activeTab.value === 'RESOLVED') {
       if (t.status !== 'RESOLVED' && t.status !== 'CLOSED') return false;
     }
 
-    // 2. Dropdown filters
+    // 2. SLA filter (if requested e.g. breached)
+    if (filterSla.value === 'breached') {
+      if (!isResolutionBreached(t)) return false;
+    }
+
+    // 3. Dropdown filters
     if (filterCustomer.value !== 'ALL' && t.customerId !== Number(filterCustomer.value)) return false;
     if (filterSeverity.value !== 'ALL' && t.severity !== filterSeverity.value) return false;
     if (filterCategory.value !== 'ALL') {
       const catName = getCategoryDisplay(t);
       if (catName !== filterCategory.value) return false;
-    }
-    if (filterChannel.value !== 'ALL' && t.channel !== filterChannel.value) return false;
-
-    // 3. SLA Status filter
-    if (filterSlaStatus.value === 'SAFE') {
-      if (isResolutionBreached(t) || isResponseBreached(t) || isResolutionWarning(t)) return false;
-    } else if (filterSlaStatus.value === 'NEAR_BREACH') {
-      if (!isResolutionWarning(t)) return false;
-    } else if (filterSlaStatus.value === 'BREACHED') {
-      if (!isResolutionBreached(t) && !isResponseBreached(t)) return false;
     }
 
     // 4. Search query
@@ -905,8 +869,8 @@ const filteredTickets = computed(() => {
       const matchTitle = t.title?.toLowerCase().includes(q);
       const matchCust = getCustomerName(t.customerId).toLowerCase().includes(q);
       const matchDesc = (t.scopeSubtitle || t.description || '').toLowerCase().includes(q);
-      const matchVendor = (t.principalVendor || '').toLowerCase().includes(q);
-      if (!matchNum && !matchTitle && !matchCust && !matchDesc && !matchVendor) return false;
+      const matchSn = (t.serialNumber || '').toLowerCase().includes(q);
+      if (!matchNum && !matchTitle && !matchCust && !matchDesc && !matchSn) return false;
     }
 
     return true;
@@ -919,8 +883,7 @@ const isAnyFilterActive = computed(() => {
     filterCustomer.value !== 'ALL' ||
     filterSeverity.value !== 'ALL' ||
     filterCategory.value !== 'ALL' ||
-    filterChannel.value !== 'ALL' ||
-    filterSlaStatus.value !== 'ALL';
+    filterSla.value !== 'ALL';
 });
 
 const resetAllFilters = () => {
@@ -929,9 +892,11 @@ const resetAllFilters = () => {
   filterCustomer.value = 'ALL';
   filterSeverity.value = 'ALL';
   filterCategory.value = 'ALL';
-  filterChannel.value = 'ALL';
-  filterSlaStatus.value = 'ALL';
+  filterSla.value = 'ALL';
   currentPage.value = 1;
+  if (Object.keys(route.query).length > 0) {
+    router.replace({ path: '/tickets', query: {} });
+  }
 };
 
 // Pagination calculation
@@ -963,29 +928,23 @@ const exportCsv = () => {
     'No. Tiket',
     'Pelanggan',
     'Judul Kendala',
+    'Serial Number',
     'Kategori',
     'Severity',
-    'SLA Response',
     'SLA Resolution',
     'Status',
-    'Progress',
-    'Principal/Vendor',
-    'Case ID',
-    'KB Match'
+    'Progress'
   ];
   const rows = filteredTickets.value.map(t => [
     t.ticketNumber,
     `"${getCustomerName(t.customerId)}"`,
     `"${(t.title || '').replace(/"/g, '""')}"`,
+    `"${t.serialNumber || '-'}"`,
     `"${getCategoryDisplay(t)}"`,
     t.severity,
-    `"${t.slaResponseText || ''}"`,
     `"${t.slaResolutionText || ''}"`,
     t.status,
-    `${t.progressPercent || 0}%`,
-    `"${t.principalVendor || '-'}"`,
-    `"${t.principalCaseId || '-'}"`,
-    t.kbMatchCount || 0
+    `${t.progressPercent || 0}%`
   ]);
 
   const csvContent = '\uFEFF' + [headers.join(','), ...rows.map(r => r.join(','))].join('\r\n');

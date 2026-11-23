@@ -11,20 +11,20 @@
           </div>
           <div>
             <h4 class="font-bold text-sm text-slate-100 flex items-center space-x-2">
-              <span>Format & Template Email Notifikasi Otomatis</span>
+              <span>{{ headerTitle }}</span>
               <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-900/80 text-blue-200 border border-blue-700">
-                SMTP Relay Engine (Nodemailer)
+                Trigger Manual
               </span>
             </h4>
             <p class="text-[11px] text-slate-400">
-              Pratinjau tampilan email HTML standar korporat PT Global Transformasi Teknologi
+              Pratinjau tampilan email korporat PT Global Transformasi Teknologi
             </p>
           </div>
         </div>
 
         <button 
           @click="$emit('close')" 
-          class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+          class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -32,34 +32,56 @@
         </button>
       </div>
 
-      <!-- Navigation Tabs for Email Templates -->
-      <div class="bg-slate-100 px-5 py-2.5 border-b border-slate-200 flex items-center space-x-2 overflow-x-auto text-xs">
-        <button
-          type="button"
-          @click="activeTab = 'customer_created'"
-          class="px-3 py-1.5 rounded-lg font-bold transition-all shrink-0 flex items-center space-x-1.5"
-          :class="activeTab === 'customer_created' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'"
-        >
-          <span>1. Konfirmasi Tiket (Customer)</span>
-        </button>
+      <!-- Navigation & Mode Bar -->
+      <div class="bg-slate-100 px-5 py-2.5 border-b border-slate-200 flex items-center justify-between overflow-x-auto text-xs">
+        <!-- Target All: Show switcher tabs -->
+        <div v-if="props.target === 'all'" class="flex items-center space-x-2 shrink-0">
+          <button
+            type="button"
+            @click="activeTab = 'customer_email'"
+            class="px-3.5 py-1.5 rounded-lg font-bold transition-all shrink-0 flex items-center space-x-1.5 cursor-pointer"
+            :class="activeTab === 'customer_email' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'"
+          >
+            <span>✉️ 1. Email Klien (Tiket & Tracking)</span>
+          </button>
 
-        <button
-          type="button"
-          @click="activeTab = 'engineer_dispatch'"
-          class="px-3 py-1.5 rounded-lg font-bold transition-all shrink-0 flex items-center space-x-1.5"
-          :class="activeTab === 'engineer_dispatch' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'"
-        >
-          <span>2. Penugasan Kerja (Teknisi)</span>
-        </button>
+          <button
+            type="button"
+            @click="activeTab = 'engineer_dispatch'"
+            class="px-3.5 py-1.5 rounded-lg font-bold transition-all shrink-0 flex items-center space-x-1.5 cursor-pointer"
+            :class="activeTab === 'engineer_dispatch' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'"
+          >
+            <span>👷 2. Penugasan Kerja (Teknisi)</span>
+          </button>
+        </div>
 
-        <button
-          type="button"
-          @click="activeTab = 'customer_resolved'"
-          class="px-3 py-1.5 rounded-lg font-bold transition-all shrink-0 flex items-center space-x-1.5"
-          :class="activeTab === 'customer_resolved' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'"
-        >
-          <span>3. Berita Acara Selesai (Customer)</span>
-        </button>
+        <!-- Target Specific: Show target label -->
+        <div v-else class="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full" :class="activeTab === 'engineer_dispatch' ? 'bg-amber-500' : 'bg-blue-600'"></span>
+          <span>{{ activeTab === 'engineer_dispatch' ? 'Email Notifikasi Penugasan Teknisi Lapangan / NOC' : 'Satu Email Resmi Klien (Tautan Tracking & Konfirmasi Mandiri)' }}</span>
+        </div>
+
+        <!-- Simulation Toggle for Customer Email View (Progress vs Resolved) -->
+        <div v-if="activeTab === 'customer_email'" class="flex items-center space-x-1.5 shrink-0 bg-white px-2.5 py-1 rounded-lg border border-slate-200 text-[11px]">
+          <span class="text-slate-400 font-medium">Mode Pratinjau:</span>
+          <button 
+            type="button" 
+            @click="simulatedStatus = 'IN_PROGRESS'" 
+            class="px-2 py-0.5 rounded font-semibold cursor-pointer transition-colors"
+            :class="currentStatusMode === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:text-slate-800'"
+          >
+            Saat Diproses
+          </button>
+          <span class="text-slate-300">|</span>
+          <button 
+            type="button" 
+            @click="simulatedStatus = 'RESOLVED'" 
+            class="px-2 py-0.5 rounded font-semibold cursor-pointer transition-colors"
+            :class="currentStatusMode === 'RESOLVED' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-500 hover:text-slate-800'"
+          >
+            Saat Selesai (BAP)
+          </button>
+        </div>
       </div>
 
       <!-- Modal Body (Email Envelope & Rendered HTML Box) -->
@@ -68,7 +90,7 @@
         <div class="bg-white border border-slate-200 rounded-xl p-3 text-xs space-y-1.5 shadow-sm">
           <div class="flex items-center text-slate-600">
             <span class="w-20 font-bold text-slate-400 text-[11px]">Pengirim:</span>
-            <span class="font-mono text-slate-800 font-semibold">GTT Helpdesk Dispatch &lt;helpdesk-noreply@glotra.co.id&gt;</span>
+            <span class="font-mono text-slate-800 font-semibold">PT Global Transformasi Teknologi (No-Reply) &lt;noreply@gtteknologi.com&gt;</span>
           </div>
           <div class="flex items-center text-slate-600">
             <span class="w-20 font-bold text-slate-400 text-[11px]">Penerima:</span>
@@ -133,21 +155,23 @@
                   <span class="font-medium text-slate-700">{{ formatTime(ticket.createdAt).local }}</span>
                 </div>
                 <div>
-                  <span class="text-slate-400 block">Petugas CPIG:</span>
-                  <span class="font-medium text-slate-700">Rina Anggraini (Helpdesk Staff)</span>
+                  <span class="text-slate-400 block">Status Penanganan:</span>
+                  <span class="font-bold" :class="isCurrentResolved ? 'text-emerald-700' : 'text-blue-700'">
+                    {{ isCurrentResolved ? 'RESOLVED (Perbaikan Selesai)' : (ticket.status || 'IN_PROGRESS') }}
+                  </span>
                 </div>
               </div>
 
               <div class="pt-1">
-                <span class="text-slate-400 block text-[11px]">Rincian Gejala:</span>
+                <span class="text-slate-400 block text-[11px]">Uraian Kendala:</span>
                 <p class="font-medium text-slate-800 bg-white p-2.5 rounded-lg border border-slate-200 mt-1">
                   {{ ticket.title }} - {{ ticket.description }}
                 </p>
               </div>
 
-              <!-- SLA Target Commitment -->
-              <div class="bg-blue-50 border border-blue-200 rounded-lg p-2.5 text-[11px] text-blue-950 flex items-start space-x-2">
-                <span class="font-bold">Target Komitmen SLA:</span>
+              <!-- SLA Target Commitment (During in-progress) -->
+              <div v-if="!isCurrentResolved" class="bg-blue-50 border border-blue-200 rounded-lg p-2.5 text-[11px] text-blue-950 flex items-start space-x-2">
+                <span class="font-bold shrink-0">Target Komitmen SLA:</span>
                 <div>
                   <span>Batas Waktu Respon Teknisi: <strong>{{ formatTime(ticket.responseDeadline).local }}</strong></span>
                   <span class="mx-1.5">•</span>
@@ -155,21 +179,21 @@
                 </div>
               </div>
 
-              <!-- Specific Section for Resolved Email -->
-              <div v-if="activeTab === 'customer_resolved'" class="bg-emerald-50 border border-emerald-200 rounded-lg p-3 space-y-1.5 text-emerald-900 mt-2">
+              <!-- Specific Section when Resolved (BAP Result - High-level & Aman dari Kebocoran Data Perusahaan) -->
+              <div v-if="isCurrentResolved" class="bg-emerald-50 border border-emerald-200 rounded-lg p-3.5 space-y-1.5 text-emerald-900 mt-2">
                 <span class="font-bold text-xs flex items-center space-x-1">
-                  <span>✓ Rangkuman Solusi Perbaikan Teknis:</span>
+                  <span>✓ Berita Acara Pemulihan (BAP):</span>
                 </span>
-                <p class="text-[11px]"><strong>Akar Masalah (Root Cause):</strong> {{ ticket.rootCause || 'Kerusakan hardware transceiver optik SFP port 10.' }}</p>
-                <p class="text-[11px]"><strong>Tindakan Perbaikan (Action Taken):</strong> {{ ticket.actionTaken || 'Penggantian module optik baru dan pengujian uplink stabil.' }}</p>
+                <p class="text-[11px]"><strong>Status Pemulihan:</strong> Layanan operasional telah berhasil dipulihkan normal dan pengujian verifikasi telah tuntas dilaksanakan oleh tim teknisi GTT.</p>
+                <p class="text-[11px]"><strong>Progres:</strong> 100% Selesai (Masa Verifikasi &amp; Pemantauan Stabilitas 72 Jam)</p>
                 <p class="text-[10px] text-emerald-700 italic pt-1 border-t border-emerald-200">
-                  * Penghitungan Resolution SLA resmi berhenti pada {{ formatTime(ticket.resolvedAt || ticket.updatedAt).local }}. Tiket memiliki masa sanggah 72 jam sebelum ditutup permanen.
+                  * Penghitungan Resolution SLA resmi berhenti pada {{ formatTime(ticket.resolvedAt || ticket.updatedAt).local }}. Tiket memiliki masa verifikasi 72 jam sebelum ditutup permanen. Catatan teknis mendalam tersimpan aman di sistem helpdesk internal demi perlindungan kerahasiaan infrastruktur.
                 </p>
               </div>
             </div>
 
-            <!-- Action Button Mockup (Clickable Link to Customer Tracking Portal) -->
-            <div class="py-2 text-center">
+            <!-- Action Button Khusus Email Klien (Tautan Portal Tracking Mandiri Anti-IDOR Tanpa Perlu Login) -->
+            <div v-if="activeTab === 'customer_email'" class="py-2 text-center">
               <router-link
                 :to="`/track/${ticket.ticketNumber}?token=${ticket.trackingToken}`"
                 target="_blank"
@@ -178,23 +202,42 @@
                 {{ emailMeta.buttonText }} &rarr;
               </router-link>
               <p class="text-[10px] text-slate-400 mt-1 font-mono">
-                Tautan Asli Email: /track/{{ ticket.ticketNumber }}?token={{ ticket.trackingToken }} (Anti-IDOR Secured)
+                Tautan Asli Email: /track/{{ ticket.ticketNumber }}?token={{ ticket.trackingToken }} (Anti-IDOR Secured Tanpa Perlu Login)
               </p>
+            </div>
+
+            <!-- Petunjuk Masuk untuk Teknisi (Email Murni Sebagai Alert Penugasan Cepat) -->
+            <div v-else class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 text-[11px] leading-relaxed flex items-center gap-2">
+              <span class="text-base shrink-0">📌</span>
+              <span><strong>Petunjuk Teknisi:</strong> Email ini merupakan notifikasi penugasan resmi (dispatch alert). Silakan login ke aplikasi Helpdesk GTT untuk mulai menangani tiket, menahan/melanjutkan SLA, dan mencatat milestone penanganan.</span>
             </div>
 
             <!-- Instructions -->
             <p class="text-[11px] text-slate-500 italic">
               {{ emailMeta.footerNote }}
             </p>
+
+            <!-- No-Reply Warning Callout Box -->
+            <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-3 text-center text-[11px] text-amber-900 leading-relaxed space-y-1 mt-3">
+              <span class="font-bold flex items-center justify-center gap-1.5 text-amber-800">
+                <svg class="w-3.5 h-3.5 shrink-0 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                Pemberitahuan Sistem (No-Reply)
+              </span>
+              <p>
+                Email ini dikirim secara otomatis oleh sistem helpdesk GTT dan alamat ini <u>tidak dapat menerima pesan balasan</u>. Mohon untuk tidak membalas email ini secara langsung. Jika membutuhkan bantuan atau informasi lebih lanjut, silakan hubungi telepon kantor kami di <strong>(021) 2960-7307</strong> atau email resmi <strong>sales@gtteknologi.com</strong>.
+              </p>
+            </div>
           </div>
 
           <!-- Email Standard Footer -->
           <div class="bg-slate-100 px-6 py-4 border-t border-slate-200 text-[11px] text-slate-500 space-y-1">
             <p class="font-bold text-slate-700">PT Global Transformasi Teknologi (Glotra Technology)</p>
-            <p>Enterprise IT Support & Managed Network Services • <em>"Think it, Solve it"</em></p>
-            <p>Hotline Call Center / WA Darurat 24x7: +62 21-555-GLOTRA (4568) • Email: support@glotra.co.id</p>
+            <p>Telepon Kantor: <strong class="text-slate-700">(021) 2960-7307</strong> • Email Resmi: <strong class="text-slate-700">sales@gtteknologi.com</strong></p>
+            <p>Alamat Kantor: Prudential Center Kota Kasablanka Lt. 22 Unit A, Jl. Casablanca Kav. 88, Jakarta Selatan 12870</p>
             <p class="text-[10px] text-slate-400 pt-1 border-t border-slate-200">
-              Email ini dikirim secara otomatis oleh sistem GTT Helpdesk Ticketing. Mohon tidak membalas langsung ke alamat noreply ini.
+              Pemberitahuan: Alamat pengirim noreply@gtteknologi.com merupakan saluran satu arah (no-reply) khusus untuk distribusi notifikasi sistem dan tidak dipantau untuk email masuk.
             </p>
           </div>
         </div>
@@ -203,11 +246,11 @@
       <!-- Footer Modal -->
       <div class="bg-white px-5 py-3 border-t border-slate-200 flex items-center justify-between text-xs">
         <span class="text-slate-500 font-mono text-[11px]">
-          Engine Template: HTML Responsive Inline CSS (Nodemailer Transporter)
+          {{ activeTab === 'engineer_dispatch' ? 'Template Penugasan Kerja Teknisi' : 'Satu Email Customer Serbaguna (Tracking & Konfirmasi)' }}
         </span>
         <button 
           @click="$emit('close')" 
-          class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-semibold shadow-sm transition-all"
+          class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-semibold shadow-sm transition-all cursor-pointer"
         >
           Tutup Pratinjau
         </button>
@@ -217,13 +260,17 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { formatUtcToLocal } from '../utils/dateFormatter';
 
 const props = defineProps({
   isOpen: {
     type: Boolean,
     default: false
+  },
+  target: {
+    type: String,
+    default: 'all' // 'customer' | 'engineer' | 'all'
   },
   ticket: {
     type: Object,
@@ -245,7 +292,31 @@ const props = defineProps({
 
 defineEmits(['close']);
 
-const activeTab = ref('customer_created');
+const activeTab = ref(props.target === 'engineer' ? 'engineer_dispatch' : 'customer_email');
+const simulatedStatus = ref(null);
+
+watch(() => props.target, (val) => {
+  if (val === 'engineer') {
+    activeTab.value = 'engineer_dispatch';
+  } else {
+    activeTab.value = 'customer_email';
+  }
+}, { immediate: true });
+
+const headerTitle = computed(() => {
+  if (props.target === 'engineer') return 'Pratinjau Format Email Penugasan Teknisi';
+  if (props.target === 'customer') return 'Pratinjau Format Email Resmi Klien';
+  return 'Format & Template Email Notifikasi Resmi';
+});
+
+const isCurrentResolved = computed(() => {
+  if (simulatedStatus.value) return simulatedStatus.value === 'RESOLVED';
+  return ['RESOLVED', 'CLOSED'].includes(props.ticket?.status);
+});
+
+const currentStatusMode = computed(() => {
+  return isCurrentResolved.value ? 'RESOLVED' : 'IN_PROGRESS';
+});
 
 const formatTime = (t) => formatUtcToLocal(t);
 
@@ -256,32 +327,34 @@ const getSlaSummary = (sev) => {
 };
 
 const emailMeta = computed(() => {
-  if (activeTab.value === 'customer_created') {
+  if (activeTab.value === 'customer_email') {
+    if (isCurrentResolved.value) {
+      return {
+        recipient: `${props.pic.name || 'Bpk. Hendrik Pratama'} <${props.pic.email || 'customer@bca.co.id'}>`,
+        subject: `[TICKET #${props.ticket.ticketNumber}] Pemulihan Selesai: ${props.ticket.title || 'Laporan Gangguan'}`,
+        greeting: `Yth. ${props.pic.name || 'Bpk. Hendrik Pratama'} (${props.customer.name || 'PT Bank Central Asia Tbk'}),`,
+        intro: `Dengan hormat kami informasikan bahwa perbaikan teknis terkait laporan Anda telah berhasil diselesaikan oleh tim engineer GTT. Layanan Anda saat ini telah pulih normal.`,
+        buttonText: `Verifikasi Hasil & Konfirmasi Selesai`,
+        footerNote: `Tiket berstatus RESOLVED dan memiliki masa pemantauan 72 jam. Anda dapat memverifikasi operasional dan mengonfirmasi penyelesaian tuntas secara mandiri melalui tombol di atas.`
+      };
+    } else {
+      return {
+        recipient: `${props.pic.name || 'Bpk. Hendrik Pratama'} <${props.pic.email || 'customer@bca.co.id'}>`,
+        subject: `[TICKET #${props.ticket.ticketNumber}] Konfirmasi Penerimaan Laporan Gangguan - PT GTT`,
+        greeting: `Yth. ${props.pic.name || 'Bpk. Hendrik Pratama'} (${props.customer.name || 'PT Bank Central Asia Tbk'}),`,
+        intro: `Terima kasih telah menghubungi Helpdesk PT Global Transformasi Teknologi. Laporan kendala Anda telah kami terima dan dicatat ke dalam sistem dengan rincian berikut:`,
+        buttonText: `Buka Portal Tracking Mandiri`,
+        footerNote: `Simpan tautan di atas untuk memantau progres langsung teknisi kami. Ketika perbaikan selesai, Anda dapat langsung mengonfirmasi penutupan tiket di portal tersebut.`
+      };
+    }
+  } else {
     return {
-      recipient: `${props.pic.name || 'Bpk. Kevin Pratama'} <${props.pic.email || 'kevin.p@bca.co.id'}>`,
-      subject: `[TICKET #${props.ticket.ticketNumber}] Konfirmasi Penerimaan Laporan Gangguan - PT GTT`,
-      greeting: `Yth. ${props.pic.name || 'Bpk. Kevin Pratama'} (${props.customer.name || 'PT Bank Central Asia Tbk'}),`,
-      intro: `Terima kasih telah menghubungi Helpdesk PT Global Transformasi Teknologi. Laporan kendala Anda telah kami terima dan dicatat ke dalam sistem dengan rincian berikut:`,
-      buttonText: `Lihat Status Penanganan Tiket`,
-      footerNote: `Teknisi kami segera merespon tiket Anda sesuai komitmen SLA. Untuk eskalasi mendesak, Anda dapat menghubungi hotline 24x7 kami.`
-    };
-  } else if (activeTab.value === 'engineer_dispatch') {
-    return {
-      recipient: `${props.engineer.name || 'Budi Santoso'} <budi.santoso@glotra.co.id>`,
+      recipient: `${props.engineer.name || 'Budi Santoso'} <budi.santoso@gtteknologi.com>`,
       subject: `[DISPATCH ALERT] Penugasan Tiket Baru: #${props.ticket.ticketNumber} (${props.ticket.severity})`,
       greeting: `Halo ${props.engineer.name || 'Budi Santoso'},`,
       intro: `Anda telah ditugaskan untuk menangani insiden teknis baru dari klien ${props.customer.name || 'BCA'}. Harap segera melakukan respon dan membuka investigasi sebelum batas Response SLA berakhir.`,
-      buttonText: `Buka Lembar Kerja Tiket`,
+      buttonText: ``,
       footerNote: `Pastikan setiap tindakan pemeriksaan dicatat pada Checkpoint Milestones dan melampirkan berkas bukti (KVM log / screenshot).`
-    };
-  } else {
-    return {
-      recipient: `${props.pic.name || 'Bpk. Kevin Pratama'} <${props.pic.email || 'kevin.p@bca.co.id'}>`,
-      subject: `[RESOLVED] Pemberitahuan Penyelesaian Kendala: #${props.ticket.ticketNumber} - PT GTT`,
-      greeting: `Yth. ${props.pic.name || 'Bpk. Kevin Pratama'} (${props.customer.name || 'PT Bank Central Asia Tbk'}),`,
-      intro: `Dengan hormat kami informasikan bahwa perbaikan teknis terkait laporan Anda telah selesai dilaksanakan oleh tim engineer GTT. Layanan Anda saat ini telah pulih normal.`,
-      buttonText: `Konfirmasi Kepuasan Layanan`,
-      footerNote: `Tiket ini berstatus RESOLVED dan memiliki masa validasi 72 jam (3x24 jam). Jika tidak ada kendala lanjutan, tiket otomatis ditutup (CLOSED).`
     };
   }
 });

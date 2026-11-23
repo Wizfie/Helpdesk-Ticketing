@@ -122,15 +122,18 @@ export function addBusinessHours(startDate, hoursToAdd, config) {
 }
 
 export async function calculateSlaDeadlines({ customerId, severity = 'MEDIUM', createdAt = new Date() }) {
-  // 1. Fetch customer with SLA tier
+  // 1. Fetch customer with SLA tier (tidak ada default tier, wajib dikonfigurasi di awal)
   const customer = await prisma.customer.findUnique({
     where: { id: Number(customerId) }
   });
 
-  const slaTier = customer?.slaTier || '8x5 GOLD ENTERPRISE';
+  const slaTier = customer?.slaTier || customer?.contractSla;
+  if (!slaTier) {
+    throw new Error('Tier SLA tidak ditemukan pada data pelanggan. Kebijakan SLA wajib dibuat dan ditetapkan terlebih dahulu.');
+  }
   
-  // 2. Fetch or match corresponding SLA policy
-  let policy = await prisma.slaPolicy.findFirst({
+  // 2. Fetch or match corresponding SLA policy from database
+  const policy = await prisma.slaPolicy.findFirst({
     where: {
       OR: [
         { tierName: slaTier },
@@ -140,43 +143,27 @@ export async function calculateSlaDeadlines({ customerId, severity = 'MEDIUM', c
   });
 
   if (!policy) {
-    const upper = slaTier.toUpperCase();
-    let keyword = 'GOLD';
-    if (upper.includes('PLATINUM')) keyword = 'PLATINUM';
-    else if (upper.includes('SILVER')) keyword = 'SILVER';
-    else if (upper.includes('GOV')) keyword = 'GOV';
-
-    policy = await prisma.slaPolicy.findFirst({
-      where: {
-        tierName: { contains: keyword }
-      }
-    });
+    throw new Error(`Kebijakan SLA untuk tier '${slaTier}' belum dibuat di sistem. Silakan buat kebijakan SLA terlebih dahulu pada menu konfigurasi.`);
   }
 
   let respHours = 1.0;
   let resHours = 8.0;
 
-  if (policy) {
-    if (severity === 'HIGH') {
-      respHours = policy.p1ResponseHours;
-      resHours = policy.p1ResolutionHours;
-    } else if (severity === 'MEDIUM') {
-      respHours = policy.p2ResponseHours;
-      resHours = policy.p2ResolutionHours;
-    } else if (severity === 'LOW') {
-      respHours = policy.p3ResponseHours || policy.p4ResponseHours || 4.0;
-      resHours = policy.p3ResolutionHours || policy.p4ResolutionHours || 24.0;
-    } else {
-      respHours = policy.p4ResponseHours || 4.0;
-      resHours = policy.p4ResolutionHours || 72.0;
-    }
+  if (severity === 'HIGH') {
+    respHours = policy.p1ResponseHours;
+    resHours = policy.p1ResolutionHours;
+  } else if (severity === 'MEDIUM') {
+    respHours = policy.p2ResponseHours;
+    resHours = policy.p2ResolutionHours;
+  } else if (severity === 'LOW') {
+    respHours = policy.p3ResponseHours || policy.p4ResponseHours || 4.0;
+    resHours = policy.p3ResolutionHours || policy.p4ResolutionHours || 24.0;
   } else {
-    // Default fallback
-    respHours = severity === 'HIGH' ? 0.5 : severity === 'MEDIUM' ? 1.0 : 2.0;
-    resHours = severity === 'HIGH' ? 4.0 : severity === 'MEDIUM' ? 8.0 : 16.0;
+    respHours = policy.p4ResponseHours || 4.0;
+    resHours = policy.p4ResolutionHours || 72.0;
   }
 
-  const operatingHoursStr = policy?.operatingHours || '24 Jam x 7 Hari (Non-Stop)';
+  const operatingHoursStr = policy.operatingHours || '24 Jam x 7 Hari (Non-Stop)';
   const windowConfig = parseOperatingWindow(operatingHoursStr);
 
   const effectiveStart = advanceToNextWindow(createdAt, windowConfig);
@@ -187,7 +174,7 @@ export async function calculateSlaDeadlines({ customerId, severity = 'MEDIUM', c
   const resolutionDeadline = addBusinessHours(createdAt, resHours, windowConfig);
 
   return {
-    contractTier: customer?.slaTier || '8x5 GOLD ENTERPRISE',
+    contractTier: slaTier,
     operatingHours: operatingHoursStr,
     isOutsideOperatingWindow,
     effectiveStartTime: effectiveStart,

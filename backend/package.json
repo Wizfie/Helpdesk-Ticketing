@@ -5,6 +5,8 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
+    "test": "node scripts/test-automation.js",
+    "test:e2e": "npm --prefix .. run test:e2e",
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
     "tunnel": "cloudflared tunnel --url http://localhost:5000",

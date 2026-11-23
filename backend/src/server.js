@@ -24,8 +24,10 @@ import kbRoutes from './routes/kbRoutes.js';
 import auditRoutes from './routes/auditRoutes.js';
 import masterRoutes from './routes/masterRoutes.js';
 import systemRoutes from './routes/systemRoutes.js';
+import mailRoutes from './routes/mailRoutes.js';
 
 const app = express();
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 5000;
 
 // Setup Upload Storage Directory from .env
@@ -44,8 +46,13 @@ app.use(cors({
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-// Static file serving for uploads (Read-only security)
-app.use('/uploads', express.static(uploadDir));
+// Static file serving for uploads (Read-only security with MIME protection & hidden files blocked)
+app.use('/uploads', express.static(uploadDir, {
+  dotfiles: 'ignore',
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+  }
+}));
 
 // API Health Check
 app.get('/api/health', (req, res) => {
@@ -66,10 +73,17 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/kb', kbRoutes);
 app.use('/api/audit-logs', auditRoutes);
 app.use('/api/system', systemRoutes);
+app.use('/api/email', mailRoutes);
 app.use('/api', masterRoutes);
 
 // Global Error Handler
 app.use((err, req, res, next) => {
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({
+      success: false,
+      message: `Ukuran berkas melebihi batas maksimal server (${process.env.MAX_FILE_SIZE_MB || 15} MB).`
+    });
+  }
   console.error('❌ Express Server Error:', err);
   res.status(err.status || 500).json({
     message: err.message || 'Terjadi kesalahan internal pada server backend.',

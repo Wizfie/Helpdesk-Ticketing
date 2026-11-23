@@ -31,6 +31,7 @@ export async function getTickets(req, res) {
         { ticketNumber: { contains: search } },
         { title: { contains: search } },
         { description: { contains: search } },
+        { serialNumber: { contains: search } },
         { customer: { name: { contains: search } } }
       ];
     }
@@ -46,16 +47,41 @@ export async function getTickets(req, res) {
         },
         createdBy: {
           select: { id: true, name: true, email: true, role: true }
+        },
+        milestones: {
+          include: {
+            actor: {
+              select: { id: true, name: true, role: true }
+            }
+          },
+          orderBy: { timestampUtc: 'asc' }
         }
       },
       orderBy: { id: 'desc' }
     });
 
-    // Evaluate SLA breach statuses dynamically
+    // Evaluate SLA breach statuses dynamically and attach progressPercent
+    let rawPercentMap = new Map();
+    try {
+      const allRaw = await prisma.$queryRaw`SELECT id, progressPercent FROM ticket_milestones`;
+      rawPercentMap = new Map((allRaw || []).map(m => [Number(m.id), Number(m.progressPercent)]));
+    } catch {
+      // fallback
+    }
+
     const enrichedTickets = tickets.map(t => {
       const { isResponseBreached, isResolutionBreached } = evaluateSlaBreach(t);
+      const enrichedMilestones = (t.milestones || []).map(m => ({
+        ...m,
+        actorName: m.actor?.name || 'Sistem',
+        actorRole: m.actor?.role || 'SYSTEM',
+        progressPercent: rawPercentMap.has(Number(m.id)) && rawPercentMap.get(Number(m.id)) !== null
+          ? rawPercentMap.get(Number(m.id))
+          : (m.progressPercent || 0)
+      }));
       return {
         ...t,
+        milestones: enrichedMilestones,
         isSlaResponseBreached: isResponseBreached,
         isSlaResolutionBreached: isResolutionBreached
       };
@@ -81,6 +107,11 @@ export async function getTicketById(req, res) {
         assignedTo: true,
         createdBy: true,
         milestones: {
+          include: {
+            actor: {
+              select: { id: true, name: true, role: true }
+            }
+          },
           orderBy: { timestampUtc: 'asc' }
         }
       }
@@ -88,6 +119,32 @@ export async function getTicketById(req, res) {
 
     if (!ticket) {
       return res.status(404).json({ message: 'Tiket tidak ditemukan.' });
+    }
+
+    // Anti-IDOR: Jika role adalah ENGINEER, tolak akses jika bukan tiket yang ditugaskan ke dirinya
+    if (req.user?.role === 'ENGINEER' && ticket.assignedToId && ticket.assignedToId !== req.user.id) {
+      return res.status(403).json({
+        message: 'Akses ditolak: Tiket ini berada di bawah wewenang teknisi lain.',
+        assignedToId: ticket.assignedToId
+      });
+    }
+
+    // Attach real progressPercent from MySQL database for all milestones
+    if (ticket.milestones && ticket.milestones.length > 0) {
+      try {
+        const rawMilestones = await prisma.$queryRaw`SELECT id, progressPercent FROM ticket_milestones WHERE ticketId = ${ticket.id}`;
+        const percentMap = new Map((rawMilestones || []).map(m => [Number(m.id), Number(m.progressPercent)]));
+        ticket.milestones = ticket.milestones.map(m => ({
+          ...m,
+          actorName: m.actor?.name || 'Sistem',
+          actorRole: m.actor?.role || 'SYSTEM',
+          progressPercent: percentMap.has(Number(m.id)) && percentMap.get(Number(m.id)) !== null
+            ? percentMap.get(Number(m.id))
+            : (m.progressPercent || 0)
+        }));
+      } catch (err) {
+        console.warn('Could not query raw progressPercent:', err.message);
+      }
     }
 
     const { isResponseBreached, isResolutionBreached } = evaluateSlaBreach(ticket);
@@ -116,6 +173,11 @@ export async function getPublicTicketByToken(req, res) {
           select: { id: true, name: true, email: true, phone: true, role: true }
         },
         milestones: {
+          include: {
+            actor: {
+              select: { id: true, name: true, role: true }
+            }
+          },
           orderBy: { timestampUtc: 'asc' }
         }
       }
@@ -123,6 +185,14 @@ export async function getPublicTicketByToken(req, res) {
 
     if (!ticket) {
       return res.status(404).json({ message: 'Nomor tiket tidak terdaftar dalam database.' });
+    }
+
+    if (ticket.milestones && ticket.milestones.length > 0) {
+      ticket.milestones = ticket.milestones.map(m => ({
+        ...m,
+        actorName: m.actor?.name || 'Teknisi Helpdesk',
+        actorRole: m.actor?.role || 'ENGINEER'
+      }));
     }
 
     // Anti-IDOR Security Check
@@ -153,27 +223,25 @@ export async function createTicket(req, res) {
       customerId,
       customerPicId,
       categoryId,
+      ticketType = 'Incident',
+      serialNumber,
       severity = 'MEDIUM',
-      channel = 'EMAIL',
       title,
-      rawMessage,
       description,
       assignedToId,
-      cluster,
-      environment,
-      impactScope,
-      escalationTier = 'INTERNAL',
-      principalVendor,
-      principalCaseId,
-      partnerName,
-      partnerPic,
-      projectManager
+      sendEmailNotification
     } = req.body;
+
+    if (!customerId || !title || !description || !assignedToId) {
+      return res.status(400).json({ message: 'Customer, judul, deskripsi, dan alokasi teknisi penanganan wajib diisi.' });
+    }
 
     const now = new Date();
     const count = await prisma.ticket.count();
-    const dateStr = now.toISOString().slice(0, 10).replace(/-/g, '');
-    const ticketNumber = `TICK-${dateStr}-${String(count + 1).padStart(4, '0')}`;
+    const year2 = String(now.getFullYear()).slice(-2);
+    // Ticket format: TK-26001, TK-26002, ...
+    const seq = String(count + 1).padStart(3, '0');
+    const ticketNumber = `TK-${year2}${seq}`;
     const trackingToken = 'sec_' + Math.random().toString(36).substring(2, 10) + Math.random().toString(36).substring(2, 6);
 
     // Calculate dynamic SLA deadlines
@@ -183,46 +251,52 @@ export async function createTicket(req, res) {
       createdAt: now
     });
 
-    const initialStatus = assignedToId ? 'ASSIGNED' : 'OPEN';
+    let attachmentUrl = null;
+    let attachmentName = null;
+    let attachmentSize = null;
+
+    if (req.file) {
+      attachmentUrl = `/uploads/${req.file.filename}`;
+      attachmentName = req.file.originalname;
+      const sizeBytes = req.file.size;
+      attachmentSize = sizeBytes > 1024 * 1024
+        ? (sizeBytes / (1024 * 1024)).toFixed(1) + ' MB'
+        : Math.max(1, Math.round(sizeBytes / 1024)) + ' KB';
+    }
+
+    const initialStatus = 'ASSIGNED';
 
     const newTicket = await prisma.ticket.create({
       data: {
         ticketNumber,
         customerId: Number(customerId),
         customerPicId: customerPicId ? Number(customerPicId) : null,
+        ticketType: ticketType || 'Incident',
         categoryId: categoryId ? Number(categoryId) : null,
+        serialNumber: serialNumber ? String(serialNumber).trim() : null,
         severity,
-        channel,
-        title,
-        rawMessage: rawMessage || null,
-        description,
+        title: title.trim(),
+        description: description.trim(),
+        attachmentUrl,
+        attachmentName,
+        attachmentSize,
         status: initialStatus,
         trackingToken,
         createdById: actor.id,
-        assignedToId: assignedToId ? Number(assignedToId) : null,
+        assignedToId: Number(assignedToId),
         contractTier,
-        cluster: cluster || 'PROD-CL01',
-        environment: environment || 'PROD-DC-01',
-        impactScope: impactScope || 'Standard Operational',
-        escalationTier,
-        principalVendor: principalVendor || null,
-        principalCaseId: principalCaseId || null,
-        partnerName: partnerName || null,
-        partnerPic: partnerPic || null,
-        projectManager: projectManager || null,
+        sendEmailNotification: sendEmailNotification === true || sendEmailNotification === 'true',
         createdAt: now,
         responseDeadline,
         resolutionDeadline,
-        respondedAt: assignedToId ? now : null,
+        respondedAt: now,
         milestones: {
           create: [
             {
-              stepName: 'Laporan Diterima (Ticket Created)',
-              status: 'OPEN',
+              stepName: 'Laporan Diterima & Teknisi Dialokasikan',
+              status: 'ASSIGNED',
               actorId: actor.id,
-              actorName: actor.name,
-              actorRole: actor.role,
-              notes: `Tiket diterbitkan oleh ${actor.name}. Target respon SLA: ${respHours * 60} menit.`,
+              notes: `Tiket diterbitkan oleh ${actor.name} dan langsung dialokasikan ke teknisi penanganan. Target respon SLA: ${respHours * 60} menit.`,
               timestampUtc: now
             }
           ]
@@ -244,12 +318,13 @@ export async function createTicket(req, res) {
       action: 'TICKET_CREATED',
       entityType: 'TICKET',
       entityId: ticketNumber,
-      description: `Menerbitkan tiket insiden baru: ${title} (Severity: ${severity}, Klien: ${newTicket.customer.name})`,
+      description: `Menerbitkan tiket ${ticketNumber}: ${title} (Severity: ${severity}, Klien: ${newTicket.customer?.name || '-'})`,
       ipAddress: req.ip
     });
 
     return res.status(201).json(newTicket);
   } catch (error) {
+    console.error('Error creating ticket:', error);
     return res.status(500).json({ message: 'Gagal membuat tiket baru.', error: error.message });
   }
 }
@@ -289,8 +364,6 @@ export async function assignEngineer(req, res) {
         stepName: 'Penugasan Teknisi Bertugas',
         status: updated.status,
         actorId: actor.id,
-        actorName: actor.name,
-        actorRole: actor.role,
         notes: `Tiket dialokasikan kepada ${engineer.name} (${engineer.role || 'Support Engineer'}). Response SLA terpenuhi.`,
         timestampUtc: now
       }
@@ -316,35 +389,20 @@ export async function assignEngineer(req, res) {
 export async function escalateTicket(req, res) {
   try {
     const { id } = req.params;
-    const { escalationTier, principalVendor, principalCaseId, partnerName, partnerPic, projectManager, notes } = req.body;
+    const { escalationTier = 'VENDOR_PRINCIPAL', notes } = req.body;
     const actor = req.user;
     const now = new Date();
 
     const ticket = await prisma.ticket.findUnique({ where: { id: Number(id) } });
     if (!ticket) return res.status(404).json({ message: 'Tiket tidak ditemukan.' });
 
-    const updated = await prisma.ticket.update({
-      where: { id: Number(id) },
-      data: {
-        escalationTier: escalationTier || 'VENDOR_PRINCIPAL',
-        principalVendor: principalVendor || ticket.principalVendor,
-        principalCaseId: principalCaseId || ticket.principalCaseId,
-        partnerName: partnerName || ticket.partnerName,
-        partnerPic: partnerPic || ticket.partnerPic,
-        projectManager: projectManager || ticket.projectManager,
-        updatedAt: now
-      }
-    });
-
     await prisma.ticketMilestone.create({
       data: {
         ticketId: ticket.id,
-        stepName: `Eskalasi Tingkat Lanjut (${escalationTier})`,
+        stepName: `Eskalasi Kasus (${escalationTier})`,
         status: ticket.status,
         actorId: actor.id,
-        actorName: actor.name,
-        actorRole: actor.role,
-        notes: notes || `Eskalasi diaktifkan ke tier ${escalationTier}. Kasus terkait: ${principalCaseId || partnerName || 'Koordinasi PM'}.`,
+        notes: notes || `Eskalasi kasus ditugaskan ke ${escalationTier}.`,
         timestampUtc: now
       }
     });
@@ -355,11 +413,11 @@ export async function escalateTicket(req, res) {
       action: 'TICKET_ESCALATED',
       entityType: 'TICKET',
       entityId: ticket.ticketNumber,
-      description: `Eskalasi tiket ${ticket.ticketNumber} ke tier ${escalationTier}`,
+      description: `Eskalasi tiket ${ticket.ticketNumber} ke ${escalationTier}`,
       ipAddress: req.ip
     });
 
-    return res.json(updated);
+    return res.json(ticket);
   } catch (error) {
     return res.status(500).json({ message: 'Gagal melakukan eskalasi tiket.', error: error.message });
   }
@@ -368,36 +426,48 @@ export async function escalateTicket(req, res) {
 export async function pauseSla(req, res) {
   try {
     const { id } = req.params;
-    const { reasonType = 'PART_INDENT', reasonDetail, principalCaseId } = req.body;
+    const { reasonType, reasonDetail, pendingType, reason, principalCaseId, principalVendor } = req.body;
+    const effectiveType = pendingType || reasonType || 'PART_HARDWARE';
+    const effectiveDetail = reason || reasonDetail || '';
     const actor = req.user;
     const now = new Date();
 
     const ticket = await prisma.ticket.findUnique({ where: { id: Number(id) } });
     if (!ticket) return res.status(404).json({ message: 'Tiket tidak ditemukan.' });
 
-    const nextStatus = reasonType === 'PENDING_CUSTOMER' ? 'PENDING_CUSTOMER' : 'PENDING_VENDOR';
+    const isPartnerCust = effectiveType === 'PARTNER_CUSTOMER' || effectiveType === 'PENDING_CUSTOMER';
+    const nextStatus = isPartnerCust ? 'PENDING_CUSTOMER' : 'PENDING_VENDOR';
+    const reasonLabel = isPartnerCust ? 'Partner / Customer' : 'Part / Hardware';
 
     const updated = await prisma.ticket.update({
       where: { id: Number(id) },
       data: {
         isPaused: true,
         pausedAt: now,
+        pauseReason: isPartnerCust ? 'PARTNER_CUSTOMER' : 'PART_HARDWARE',
         status: nextStatus,
-        principalCaseId: principalCaseId || ticket.principalCaseId,
         updatedAt: now
       }
     });
 
+    // Dapatkan progress berjalan saat ini agar milestone penahanan SLA tidak mengubah/merusak persentase
+    const existingMilestones = await prisma.ticketMilestone.findMany({
+      where: { ticketId: ticket.id },
+      select: { progressPercent: true }
+    });
+    const currentProgress = existingMilestones.reduce((max, m) => Math.max(max, Number(m.progressPercent || 0)), 0);
+
     // Milestone
+    const vendorNote = principalVendor ? ` [Vendor/Distributor: ${principalVendor}]` : '';
+    const caseNote = principalCaseId ? ` [RMA/Case: ${principalCaseId}]` : '';
     await prisma.ticketMilestone.create({
       data: {
         ticketId: ticket.id,
-        stepName: `SLA Ditahan (Freeze Clock: ${nextStatus})`,
+        stepName: `SLA Ditahan (${reasonLabel})`,
         status: nextStatus,
         actorId: actor.id,
-        actorName: actor.name,
-        actorRole: actor.role,
-        notes: `SLA dibekukan sementara. Kategori: ${reasonType}. Keterangan: ${reasonDetail || '-'}.`,
+        notes: `Penahanan SLA aktif: Menunggu ${reasonLabel}.${vendorNote}${caseNote} Keterangan: ${effectiveDetail || '-'}.`,
+        progressPercent: currentProgress,
         timestampUtc: now
       }
     });
@@ -409,7 +479,7 @@ export async function pauseSla(req, res) {
       action: 'SLA_PAUSED',
       entityType: 'TICKET',
       entityId: ticket.ticketNumber,
-      description: `SLA tiket ${ticket.ticketNumber} dibekukan (Alasan: ${reasonType})`,
+      description: `SLA tiket ${ticket.ticketNumber} ditahan (Alasan: ${reasonLabel})`,
       ipAddress: req.ip
     });
 
@@ -449,6 +519,13 @@ export async function resumeSla(req, res) {
       }
     });
 
+    // Dapatkan progress berjalan saat ini agar milestone kelanjutan SLA tetap mewarisi progres
+    const existingMilestones = await prisma.ticketMilestone.findMany({
+      where: { ticketId: ticket.id },
+      select: { progressPercent: true }
+    });
+    const currentProgress = existingMilestones.reduce((max, m) => Math.max(max, Number(m.progressPercent || 0)), 0);
+
     // Milestone
     await prisma.ticketMilestone.create({
       data: {
@@ -456,9 +533,8 @@ export async function resumeSla(req, res) {
         stepName: 'SLA Dilanjutkan (Timer Aktif Kembali)',
         status: 'IN_PROGRESS',
         actorId: actor.id,
-        actorName: actor.name,
-        actorRole: actor.role,
         notes: `Timer SLA aktif kembali setelah tertahan ${Math.round(pausedSeconds / 60)} menit. Batas waktu resolusi otomatis diperpanjang.`,
+        progressPercent: currentProgress,
         timestampUtc: now
       }
     });
@@ -483,7 +559,7 @@ export async function resumeSla(req, res) {
 export async function addMilestone(req, res) {
   try {
     const { id } = req.params;
-    const { stepName, notes, proofFile, nextStatus } = req.body;
+    const { stepName, notes, proofFile, nextStatus, progressPercent } = req.body;
     const actor = req.user;
     const now = new Date();
 
@@ -492,13 +568,35 @@ export async function addMilestone(req, res) {
 
     const statusToSet = nextStatus || ticket.status;
 
+    const ticketUpdateData = {
+      status: statusToSet,
+      updatedAt: now
+    };
+    if (statusToSet === 'RESOLVED' && !ticket.resolvedAt) {
+      ticketUpdateData.resolvedAt = now;
+    }
+    if (statusToSet === 'CLOSED' && !ticket.closedAt) {
+      ticketUpdateData.closedAt = now;
+      if (!ticket.resolvedAt) ticketUpdateData.resolvedAt = now;
+    }
+
     await prisma.ticket.update({
       where: { id: Number(id) },
-      data: {
-        status: statusToSet,
-        updatedAt: now
-      }
+      data: ticketUpdateData
     });
+
+    const prevMilestones = await prisma.ticketMilestone.findMany({
+      where: { ticketId: ticket.id },
+      select: { progressPercent: true }
+    });
+    const maxPrevPercent = prevMilestones.reduce((max, m) => Math.max(max, Number(m.progressPercent || 0)), 0);
+
+    let safePercent = progressPercent !== undefined && progressPercent !== null ? Number(progressPercent) : maxPrevPercent;
+    if (statusToSet === 'RESOLVED' || statusToSet === 'CLOSED') {
+      safePercent = 100;
+    } else {
+      safePercent = Math.min(100, Math.max(maxPrevPercent, safePercent));
+    }
 
     const milestone = await prisma.ticketMilestone.create({
       data: {
@@ -506,13 +604,22 @@ export async function addMilestone(req, res) {
         stepName,
         status: statusToSet,
         actorId: actor.id,
-        actorName: actor.name,
-        actorRole: actor.role,
         notes,
         proofFile: proofFile || null,
+        progressPercent: safePercent,
         timestampUtc: now
+      },
+      include: {
+        actor: { select: { id: true, name: true, role: true } }
       }
     });
+
+    const enrichedMilestone = {
+      ...milestone,
+      actorName: milestone.actor?.name || actor.name || 'Sistem',
+      actorRole: milestone.actor?.role || actor.role || 'SYSTEM',
+      progressPercent: safePercent
+    };
 
     await logAuditEvent({
       userName: actor.name,
@@ -520,11 +627,11 @@ export async function addMilestone(req, res) {
       action: 'PROGRESS_UPDATE',
       entityType: 'TICKET',
       entityId: ticket.ticketNumber,
-      description: `Update milestone penanganan: ${stepName}`,
+      description: `Update milestone penanganan (${statusToSet}, ${safePercent}%): ${stepName}`,
       ipAddress: req.ip
     });
 
-    return res.status(201).json(milestone);
+    return res.status(201).json(enrichedMilestone);
   } catch (error) {
     return res.status(500).json({ message: 'Gagal menambahkan milestone diagnosa.', error: error.message });
   }
@@ -533,7 +640,7 @@ export async function addMilestone(req, res) {
 export async function resolveTicket(req, res) {
   try {
     const { id } = req.params;
-    const { rootCause, resolutionStrategy, actionTaken, resolutionNotes, recommendation } = req.body;
+    const { rootCause, resolutionStrategy, recommendation } = req.body;
     const actor = req.user;
     const now = new Date();
 
@@ -547,8 +654,6 @@ export async function resolveTicket(req, res) {
         resolvedAt: now, // SLA Resolution stops here!
         rootCause: rootCause || ticket.rootCause,
         resolutionStrategy: resolutionStrategy || ticket.resolutionStrategy,
-        actionTaken: actionTaken || '',
-        resolutionNotes: resolutionNotes || '',
         recommendation: recommendation || ticket.recommendation,
         updatedAt: now
       }
@@ -560,9 +665,8 @@ export async function resolveTicket(req, res) {
         stepName: 'Solusi Diterapkan & Layanan Pulih (RESOLVED)',
         status: 'RESOLVED',
         actorId: actor.id,
-        actorName: actor.name,
-        actorRole: actor.role,
         notes: `Pekerjaan teknis tuntas diselesaikan oleh ${actor.name}. Resolution SLA berhenti. Masa validasi 72 jam berjalan.`,
+        progressPercent: 100,
         timestampUtc: now
       }
     });
@@ -608,9 +712,8 @@ export async function closeTicket(req, res) {
         stepName: 'Tiket Ditutup Tuntas (CLOSED)',
         status: 'CLOSED',
         actorId: actor.id,
-        actorName: actor.name,
-        actorRole: actor.role,
         notes: `Tiket resmi diarsipkan: ${confirmationNotes || 'Verifikasi pelanggan tuntas.'}.`,
+        progressPercent: 100,
         timestampUtc: now
       }
     });

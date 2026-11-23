@@ -3,7 +3,6 @@ import {
   getArticles,
   getArticleById,
   createArticle,
-  publishArticle,
   deleteArticle,
   downloadPdf,
   getOptions,
@@ -35,7 +34,6 @@ router.delete('/options/:id', authenticate, deleteOption);
 router.get('/', authenticate, getArticles);
 router.get('/:id', authenticate, getArticleById);
 router.post('/', authenticate, handleUpload, createArticle);
-router.patch('/:id/publish', authenticate, authorizeRoles(['ADMIN']), publishArticle);
 router.delete('/:id', authenticate, authorizeRoles(['ADMIN']), deleteArticle);
 router.get('/:id/download-pdf', authenticate, downloadPdf);
 router.get('/:id/download', authenticate, downloadPdf);

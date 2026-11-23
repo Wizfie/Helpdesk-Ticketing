@@ -31,10 +31,19 @@
     <!-- 2. 6 Executive KPI Metric Cards (Grid 6 Columns) -->
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3.5">
       <!-- 1. Total Tickets -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
-        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">TOTAL TIKET ({{ periodLabel }})</span>
+      <div 
+        @click="goToKpi('total')"
+        class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-blue-400 hover:ring-2 hover:ring-blue-100 group"
+        title="Lihat seluruh tiket insiden"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">TOTAL TIKET ({{ periodLabel }})</span>
+          <svg class="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+        </div>
         <div class="flex items-baseline justify-between mt-2">
-          <span class="text-2xl sm:text-3xl font-black text-slate-900 font-mono tracking-tight">{{ kpiData.total }}</span>
+          <span class="text-2xl sm:text-3xl font-black text-slate-900 group-hover:text-blue-600 font-mono tracking-tight transition-colors">{{ kpiData.total }}</span>
           <span v-if="kpiData.total > 0" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
             <span>&uarr;</span> 12%
           </span>
@@ -44,8 +53,17 @@
       </div>
 
       <!-- 2. Open (Baru) -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
-        <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">OPEN (BARU)</span>
+      <div 
+        @click="goToKpi('open')"
+        class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-amber-400 hover:ring-2 hover:ring-amber-100 group"
+        title="Lihat tiket baru yang belum dialokasikan"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider block">OPEN (BARU)</span>
+          <svg class="w-3.5 h-3.5 text-slate-300 group-hover:text-amber-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+        </div>
         <div class="flex items-baseline justify-between mt-2">
           <span class="text-2xl sm:text-3xl font-black text-rose-600 font-mono tracking-tight">{{ kpiData.open }}</span>
           <span v-if="kpiData.total > 0" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
@@ -57,8 +75,17 @@
       </div>
 
       <!-- 3. In Progress -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
-        <span class="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">IN PROGRESS</span>
+      <div 
+        @click="goToKpi('inProgress')"
+        class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-blue-500 hover:ring-2 hover:ring-blue-100 group"
+        title="Lihat tiket yang sedang ditangani teknisi"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold text-blue-700 uppercase tracking-wider block">IN PROGRESS</span>
+          <svg class="w-3.5 h-3.5 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+        </div>
         <div class="flex items-baseline justify-between mt-2">
           <span class="text-2xl sm:text-3xl font-black text-blue-600 font-mono tracking-tight">{{ kpiData.inProgress }}</span>
           <span v-if="kpiData.total > 0" class="text-[10px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
@@ -70,8 +97,17 @@
       </div>
 
       <!-- 4. Waiting / Hold -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
-        <span class="text-[10px] font-bold text-orange-700 uppercase tracking-wider block">MENUNGGU (HOLD)</span>
+      <div 
+        @click="goToKpi('waiting')"
+        class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-orange-400 hover:ring-2 hover:ring-orange-100 group"
+        title="Lihat tiket yang sedang dijeda (Hold)"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold text-orange-700 uppercase tracking-wider block">MENUNGGU (HOLD)</span>
+          <svg class="w-3.5 h-3.5 text-slate-300 group-hover:text-orange-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+        </div>
         <div class="flex items-baseline justify-between mt-2">
           <span class="text-2xl sm:text-3xl font-black text-amber-800 font-mono tracking-tight">{{ kpiData.waiting }}</span>
           <span v-if="kpiData.total > 0" class="text-[10px] font-bold text-slate-600 bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
@@ -83,8 +119,17 @@
       </div>
 
       <!-- 5. Closed / Solved -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
-        <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">CLOSED / SOLVED</span>
+      <div 
+        @click="goToKpi('solved')"
+        class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-emerald-400 hover:ring-2 hover:ring-emerald-100 group"
+        title="Lihat tiket yang sudah selesai (Resolved / Closed)"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider block">CLOSED / SOLVED</span>
+          <svg class="w-3.5 h-3.5 text-slate-300 group-hover:text-emerald-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+        </div>
         <div class="flex items-baseline justify-between mt-2">
           <span class="text-2xl sm:text-3xl font-black text-emerald-600 font-mono tracking-tight">{{ kpiData.solved }}</span>
           <span v-if="kpiData.total > 0" class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded flex items-center gap-0.5">
@@ -96,10 +141,19 @@
       </div>
 
       <!-- 6. SLA Compliance -->
-      <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between">
-        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">SLA COMPLIANCE</span>
+      <div 
+        @click="goToKpi('sla')"
+        class="bg-white border border-slate-200 rounded-2xl p-4 shadow-xs flex flex-col justify-between cursor-pointer transition-all duration-200 hover:shadow-md hover:-translate-y-1 hover:border-indigo-400 hover:ring-2 hover:ring-indigo-100 group"
+        title="Buka Laporan Eksekutif Kepatuhan SLA"
+      >
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">SLA COMPLIANCE</span>
+          <svg class="w-3.5 h-3.5 text-slate-300 group-hover:text-indigo-600 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+        </div>
         <div class="flex items-baseline justify-between mt-2">
-          <span class="text-2xl sm:text-3xl font-black text-blue-600 font-mono tracking-tight">{{ kpiData.slaRate !== null ? `${kpiData.slaRate}%` : '-' }}</span>
+          <span class="text-2xl sm:text-3xl font-black text-blue-600 group-hover:text-indigo-600 font-mono tracking-tight transition-colors">{{ kpiData.slaRate !== null ? `${kpiData.slaRate}%` : '-' }}</span>
         </div>
         <span class="text-[11px] text-slate-400 mt-2 block leading-snug">{{ kpiData.slaRate !== null ? 'Target 100% Terlaksana' : 'Belum ada tiket insiden' }}</span>
       </div>
@@ -184,13 +238,19 @@
               />
 
               <!-- Blue Dots -->
-              <circle v-for="(pt, idx) in trendData.blueDots" :key="'b-'+idx" :cx="pt.x" :cy="pt.y" r="3.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.5" />
+              <circle v-for="(pt, idx) in trendData.blueDots" :key="'b-'+idx" :cx="pt.x" :cy="pt.y" r="3.5" fill="#2563eb" stroke="#ffffff" stroke-width="1.5">
+                <title>{{ pt.val }} Tiket Baru ({{ trendData.labels[idx] }})</title>
+              </circle>
 
               <!-- Green Dots -->
-              <circle v-for="(pt, idx) in trendData.greenDots" :key="'g-'+idx" :cx="pt.x" :cy="pt.y" r="3" fill="#10b981" stroke="#ffffff" stroke-width="1.5" />
+              <circle v-for="(pt, idx) in trendData.greenDots" :key="'g-'+idx" :cx="pt.x" :cy="pt.y" r="3" fill="#10b981" stroke="#ffffff" stroke-width="1.5">
+                <title>{{ pt.val }} Tiket Selesai ({{ trendData.labels[idx] }})</title>
+              </circle>
 
               <!-- Amber Dots -->
-              <circle v-for="(pt, idx) in trendData.amberDots" :key="'a-'+idx" :cx="pt.x" :cy="pt.y" r="2.5" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5" />
+              <circle v-for="(pt, idx) in trendData.amberDots" :key="'a-'+idx" :cx="pt.x" :cy="pt.y" r="2.5" fill="#f59e0b" stroke="#ffffff" stroke-width="1.5">
+                <title>{{ pt.val }} Belum Selesai ({{ trendData.labels[idx] }})</title>
+              </circle>
 
               <!-- X-Axis Labels -->
               <text v-for="(lbl, idx) in trendData.labels" :key="'lbl-'+idx" :x="40 + idx * 75" y="176" text-anchor="middle" class="text-[10px] fill-slate-400 font-mono">{{ lbl }}</text>
@@ -209,7 +269,7 @@
             </div>
             <div class="flex items-center space-x-2">
               <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
-              <span>Open (Backlog)</span>
+              <span>Belum Selesai (Aktif)</span>
             </div>
           </div>
         </div>
@@ -217,89 +277,187 @@
 
       <!-- Right (5 of 12 cols): Distribusi Tiket berdasarkan Severity Donut -->
       <div class="lg:col-span-5 flex flex-col">
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex-1 flex flex-col">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex-1 flex flex-col hover:border-slate-300 transition-all">
           <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
             <div class="flex items-center space-x-1.5">
               <h2 class="font-bold text-sm text-slate-900">Distribusi Tiket (Severity)</h2>
               <span class="text-slate-400 hover:text-slate-600 cursor-pointer text-xs" title="Proporsi tingkat keparahan insiden">ⓘ</span>
             </div>
+            <router-link
+              to="/tickets"
+              class="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline flex items-center space-x-1"
+            >
+              <span>Lihat Antrean</span>
+              <span>&rarr;</span>
+            </router-link>
           </div>
 
           <div class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
             <!-- Donut Chart SVG with Center Badge -->
-            <div class="relative w-44 h-44 shrink-0 flex items-center justify-center">
-              <svg class="w-44 h-44 -rotate-90 transform" viewBox="0 0 160 160">
+            <div 
+              @click="router.push('/tickets')"
+              class="relative w-44 h-44 shrink-0 flex items-center justify-center cursor-pointer group"
+              title="Klik untuk melihat seluruh antrean tiket"
+            >
+              <svg class="w-44 h-44 -rotate-90 transform overflow-visible" viewBox="0 0 160 160">
                 <!-- Background track -->
                 <circle cx="80" cy="80" r="56" fill="transparent" stroke="#f1f5f9" stroke-width="20" />
+                
                 <!-- 1. Critical (P1) Blue -->
-                <circle
-                  cx="80" cy="80" r="56" fill="transparent"
-                  stroke="#2563eb" stroke-width="20"
-                  :stroke-dasharray="severityDonutArcs.p1.dasharray"
-                  :stroke-dashoffset="severityDonutArcs.p1.offset"
-                  class="transition-all duration-500"
-                />
+                <g 
+                  :style="getSeveritySliceShift('p1')"
+                  class="transition-transform duration-300 ease-out"
+                >
+                  <circle
+                    cx="80" cy="80" r="56" fill="transparent"
+                    stroke="#2563eb" 
+                    :stroke-width="hoveredSeverity === 'p1' ? 24 : 20"
+                    :stroke-dasharray="severityDonutArcs.p1.dasharray"
+                    :stroke-dashoffset="severityDonutArcs.p1.offset"
+                    @click.stop="goToSeverity('HIGH')"
+                    @mouseenter="hoveredSeverity = 'p1'"
+                    @mouseleave="hoveredSeverity = null"
+                    class="transition-all duration-300 cursor-pointer"
+                    :class="hoveredSeverity === 'p1' ? 'filter drop-shadow-md' : ''"
+                  />
+                </g>
+
                 <!-- 2. High (P2) Red -->
-                <circle
-                  cx="80" cy="80" r="56" fill="transparent"
-                  stroke="#ef4444" stroke-width="20"
-                  :stroke-dasharray="severityDonutArcs.p2.dasharray"
-                  :stroke-dashoffset="severityDonutArcs.p2.offset"
-                  class="transition-all duration-500"
-                />
+                <g 
+                  :style="getSeveritySliceShift('p2')"
+                  class="transition-transform duration-300 ease-out"
+                >
+                  <circle
+                    cx="80" cy="80" r="56" fill="transparent"
+                    stroke="#ef4444" 
+                    :stroke-width="hoveredSeverity === 'p2' ? 24 : 20"
+                    :stroke-dasharray="severityDonutArcs.p2.dasharray"
+                    :stroke-dashoffset="severityDonutArcs.p2.offset"
+                    @click.stop="goToSeverity('HIGH')"
+                    @mouseenter="hoveredSeverity = 'p2'"
+                    @mouseleave="hoveredSeverity = null"
+                    class="transition-all duration-300 cursor-pointer"
+                    :class="hoveredSeverity === 'p2' ? 'filter drop-shadow-md' : ''"
+                  />
+                </g>
+
                 <!-- 3. Medium (P3) Amber -->
-                <circle
-                  cx="80" cy="80" r="56" fill="transparent"
-                  stroke="#f59e0b" stroke-width="20"
-                  :stroke-dasharray="severityDonutArcs.p3.dasharray"
-                  :stroke-dashoffset="severityDonutArcs.p3.offset"
-                  class="transition-all duration-500"
-                />
+                <g 
+                  :style="getSeveritySliceShift('p3')"
+                  class="transition-transform duration-300 ease-out"
+                >
+                  <circle
+                    cx="80" cy="80" r="56" fill="transparent"
+                    stroke="#f59e0b" 
+                    :stroke-width="hoveredSeverity === 'p3' ? 24 : 20"
+                    :stroke-dasharray="severityDonutArcs.p3.dasharray"
+                    :stroke-dashoffset="severityDonutArcs.p3.offset"
+                    @click.stop="goToSeverity('MEDIUM')"
+                    @mouseenter="hoveredSeverity = 'p3'"
+                    @mouseleave="hoveredSeverity = null"
+                    class="transition-all duration-300 cursor-pointer"
+                    :class="hoveredSeverity === 'p3' ? 'filter drop-shadow-md' : ''"
+                  />
+                </g>
+
                 <!-- 4. Low (P4) Green -->
-                <circle
-                  cx="80" cy="80" r="56" fill="transparent"
-                  stroke="#10b981" stroke-width="20"
-                  :stroke-dasharray="severityDonutArcs.p4.dasharray"
-                  :stroke-dashoffset="severityDonutArcs.p4.offset"
-                  class="transition-all duration-500"
-                />
+                <g 
+                  :style="getSeveritySliceShift('p4')"
+                  class="transition-transform duration-300 ease-out"
+                >
+                  <circle
+                    cx="80" cy="80" r="56" fill="transparent"
+                    stroke="#10b981" 
+                    :stroke-width="hoveredSeverity === 'p4' ? 24 : 20"
+                    :stroke-dasharray="severityDonutArcs.p4.dasharray"
+                    :stroke-dashoffset="severityDonutArcs.p4.offset"
+                    @click.stop="goToSeverity('LOW')"
+                    @mouseenter="hoveredSeverity = 'p4'"
+                    @mouseleave="hoveredSeverity = null"
+                    class="transition-all duration-300 cursor-pointer"
+                    :class="hoveredSeverity === 'p4' ? 'filter drop-shadow-md' : ''"
+                  />
+                </g>
               </svg>
               <!-- Center Text -->
               <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span class="text-2xl font-black text-slate-900 font-mono tracking-tight">{{ kpiData.total }}</span>
-                <span class="text-[11px] font-medium text-slate-400">Tiket</span>
+                <span class="text-2xl font-black text-slate-900 group-hover:text-blue-600 font-mono tracking-tight transition-colors">{{ kpiData.total }}</span>
+                <span class="text-[11px] font-medium text-slate-400 group-hover:text-blue-500 flex items-center gap-0.5">Tiket <span class="text-[9px]">↗</span></span>
               </div>
             </div>
 
             <!-- Legend with Exact Counts from Mockup -->
-            <div class="space-y-3 w-full sm:w-48 text-xs">
-              <div class="flex items-center justify-between">
+            <div class="space-y-2 w-full sm:w-48 text-xs">
+              <div 
+                @click="goToSeverity('HIGH')"
+                @mouseenter="hoveredSeverity = 'p1'"
+                @mouseleave="hoveredSeverity = null"
+                class="flex items-center justify-between p-1.5 -mx-1.5 rounded-lg cursor-pointer transition-all duration-200 group border"
+                :class="hoveredSeverity === 'p1' ? 'bg-blue-50 border-blue-200 shadow-2xs translate-x-1' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'"
+                title="Filter tiket Critical (P1)"
+              >
                 <div class="flex items-center space-x-2">
-                  <span class="w-3 h-3 rounded-full bg-blue-600"></span>
-                  <span class="text-slate-700 font-medium">Critical (P1)</span>
+                  <span class="w-3 h-3 rounded-full bg-blue-600 transition-transform" :class="hoveredSeverity === 'p1' ? 'scale-125' : ''"></span>
+                  <span class="text-slate-700 font-medium" :class="hoveredSeverity === 'p1' ? 'text-blue-700 font-bold' : ''">Critical (P1)</span>
                 </div>
-                <span class="font-bold text-slate-900 font-mono">{{ severityCounts.p1 }}</span>
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-bold text-slate-900 font-mono" :class="hoveredSeverity === 'p1' ? 'text-blue-600' : ''">{{ severityCounts.p1 }}</span>
+                  <span class="text-slate-400 group-hover:text-blue-600 text-xs transition-opacity" :class="hoveredSeverity === 'p1' ? 'opacity-100' : 'opacity-0'">→</span>
+                </div>
               </div>
-              <div class="flex items-center justify-between">
+
+              <div 
+                @click="goToSeverity('HIGH')"
+                @mouseenter="hoveredSeverity = 'p2'"
+                @mouseleave="hoveredSeverity = null"
+                class="flex items-center justify-between p-1.5 -mx-1.5 rounded-lg cursor-pointer transition-all duration-200 group border"
+                :class="hoveredSeverity === 'p2' ? 'bg-rose-50 border-rose-200 shadow-2xs translate-x-1' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'"
+                title="Filter tiket High (P2)"
+              >
                 <div class="flex items-center space-x-2">
-                  <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-                  <span class="text-slate-700 font-medium">High (P2)</span>
+                  <span class="w-3 h-3 rounded-full bg-rose-500 transition-transform" :class="hoveredSeverity === 'p2' ? 'scale-125' : ''"></span>
+                  <span class="text-slate-700 font-medium" :class="hoveredSeverity === 'p2' ? 'text-rose-700 font-bold' : ''">High (P2)</span>
                 </div>
-                <span class="font-bold text-slate-900 font-mono">{{ severityCounts.p2 }}</span>
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-bold text-slate-900 font-mono" :class="hoveredSeverity === 'p2' ? 'text-rose-600' : ''">{{ severityCounts.p2 }}</span>
+                  <span class="text-slate-400 group-hover:text-rose-600 text-xs transition-opacity" :class="hoveredSeverity === 'p2' ? 'opacity-100' : 'opacity-0'">→</span>
+                </div>
               </div>
-              <div class="flex items-center justify-between">
+
+              <div 
+                @click="goToSeverity('MEDIUM')"
+                @mouseenter="hoveredSeverity = 'p3'"
+                @mouseleave="hoveredSeverity = null"
+                class="flex items-center justify-between p-1.5 -mx-1.5 rounded-lg cursor-pointer transition-all duration-200 group border"
+                :class="hoveredSeverity === 'p3' ? 'bg-amber-50 border-amber-200 shadow-2xs translate-x-1' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'"
+                title="Filter tiket Medium (P3)"
+              >
                 <div class="flex items-center space-x-2">
-                  <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-                  <span class="text-slate-700 font-medium">Medium (P3)</span>
+                  <span class="w-3 h-3 rounded-full bg-amber-500 transition-transform" :class="hoveredSeverity === 'p3' ? 'scale-125' : ''"></span>
+                  <span class="text-slate-700 font-medium" :class="hoveredSeverity === 'p3' ? 'text-amber-700 font-bold' : ''">Medium (P3)</span>
                 </div>
-                <span class="font-bold text-slate-900 font-mono">{{ severityCounts.p3 }}</span>
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-bold text-slate-900 font-mono" :class="hoveredSeverity === 'p3' ? 'text-amber-600' : ''">{{ severityCounts.p3 }}</span>
+                  <span class="text-slate-400 group-hover:text-amber-600 text-xs transition-opacity" :class="hoveredSeverity === 'p3' ? 'opacity-100' : 'opacity-0'">→</span>
+                </div>
               </div>
-              <div class="flex items-center justify-between">
+
+              <div 
+                @click="goToSeverity('LOW')"
+                @mouseenter="hoveredSeverity = 'p4'"
+                @mouseleave="hoveredSeverity = null"
+                class="flex items-center justify-between p-1.5 -mx-1.5 rounded-lg cursor-pointer transition-all duration-200 group border"
+                :class="hoveredSeverity === 'p4' ? 'bg-emerald-50 border-emerald-200 shadow-2xs translate-x-1' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'"
+                title="Filter tiket Low (P4)"
+              >
                 <div class="flex items-center space-x-2">
-                  <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                  <span class="text-slate-700 font-medium">Low (P4)</span>
+                  <span class="w-3 h-3 rounded-full bg-emerald-500 transition-transform" :class="hoveredSeverity === 'p4' ? 'scale-125' : ''"></span>
+                  <span class="text-slate-700 font-medium" :class="hoveredSeverity === 'p4' ? 'text-emerald-700 font-bold' : ''">Low (P4)</span>
                 </div>
-                <span class="font-bold text-slate-900 font-mono">{{ severityCounts.p4 }}</span>
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-bold text-slate-900 font-mono" :class="hoveredSeverity === 'p4' ? 'text-emerald-600' : ''">{{ severityCounts.p4 }}</span>
+                  <span class="text-slate-400 group-hover:text-emerald-600 text-xs transition-opacity" :class="hoveredSeverity === 'p4' ? 'opacity-100' : 'opacity-0'">→</span>
+                </div>
               </div>
             </div>
           </div>
@@ -383,70 +541,143 @@
 
       <!-- Right (5 of 12 cols): SLA Performance Gauge Donut -->
       <div class="lg:col-span-5 flex flex-col">
-        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex-1 flex flex-col">
+        <div class="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs flex-1 flex flex-col hover:border-slate-300 transition-all">
           <div class="p-5 border-b border-slate-100 flex items-center justify-between">
             <div class="flex items-center space-x-1.5">
               <h2 class="font-bold text-sm text-slate-900">SLA Performance</h2>
               <span class="text-slate-400 hover:text-slate-600 cursor-pointer text-xs" title="Persentase kepatuhan resolusi SLA">ⓘ</span>
             </div>
+            <router-link
+              to="/reports"
+              class="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline flex items-center space-x-1"
+            >
+              <span>Laporan SLA</span>
+              <span>&rarr;</span>
+            </router-link>
           </div>
 
           <div class="flex-1 flex flex-col sm:flex-row items-center justify-center gap-6 py-2">
             <!-- Donut Gauge -->
-            <div class="relative w-44 h-44 shrink-0 flex items-center justify-center">
-              <svg class="w-44 h-44 -rotate-90 transform" viewBox="0 0 160 160">
+            <div 
+              @click="router.push('/reports')"
+              class="relative w-44 h-44 shrink-0 flex items-center justify-center cursor-pointer group"
+              title="Buka Laporan Eksekutif Kepatuhan SLA"
+            >
+              <svg class="w-44 h-44 -rotate-90 transform overflow-visible" viewBox="0 0 160 160">
                 <circle cx="80" cy="80" r="56" fill="transparent" stroke="#f1f5f9" stroke-width="18" />
+                
                 <!-- Green = Within SLA -->
-                <circle
-                  cx="80" cy="80" r="56" fill="transparent"
-                  stroke="#10b981" stroke-width="18"
-                  :stroke-dasharray="slaPerformanceData.greenDasharray" stroke-dashoffset="0"
-                  class="transition-all duration-500"
-                />
+                <g 
+                  :style="getSlaSliceShift('within')"
+                  class="transition-transform duration-300 ease-out"
+                >
+                  <circle
+                    cx="80" cy="80" r="56" fill="transparent"
+                    stroke="#10b981" 
+                    :stroke-width="hoveredSla === 'within' ? 22 : 18"
+                    :stroke-dasharray="slaPerformanceData.greenDasharray" stroke-dashoffset="0"
+                    @click.stop="router.push('/reports')"
+                    @mouseenter="hoveredSla = 'within'"
+                    @mouseleave="hoveredSla = null"
+                    class="transition-all duration-300 cursor-pointer"
+                    :class="hoveredSla === 'within' ? 'filter drop-shadow-md' : ''"
+                  />
+                </g>
+
                 <!-- Red = Breached -->
-                <circle
-                  cx="80" cy="80" r="56" fill="transparent"
-                  stroke="#ef4444" stroke-width="18"
-                  :stroke-dasharray="slaPerformanceData.redDasharray" :stroke-dashoffset="slaPerformanceData.redOffset"
-                  class="transition-all duration-500"
-                />
+                <g 
+                  :style="getSlaSliceShift('breached')"
+                  class="transition-transform duration-300 ease-out"
+                >
+                  <circle
+                    cx="80" cy="80" r="56" fill="transparent"
+                    stroke="#ef4444" 
+                    :stroke-width="hoveredSla === 'breached' ? 22 : 18"
+                    :stroke-dasharray="slaPerformanceData.redDasharray" :stroke-dashoffset="slaPerformanceData.redOffset"
+                    @click.stop="router.push({ path: '/tickets', query: { sla: 'breached' } })"
+                    @mouseenter="hoveredSla = 'breached'"
+                    @mouseleave="hoveredSla = null"
+                    class="transition-all duration-300 cursor-pointer"
+                    :class="hoveredSla === 'breached' ? 'filter drop-shadow-md' : ''"
+                  />
+                </g>
               </svg>
               <!-- Center Text -->
               <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span class="text-3xl font-black text-slate-900 font-mono tracking-tight">{{ slaPerformanceData.rate !== null ? `${slaPerformanceData.rate}%` : '-' }}</span>
-                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mt-0.5">{{ slaPerformanceData.rate !== null ? 'Within SLA' : 'Belum Ada Data' }}</span>
+                <span class="text-3xl font-black text-slate-900 group-hover:text-blue-600 font-mono tracking-tight transition-colors">{{ slaPerformanceData.rate !== null ? `${slaPerformanceData.rate}%` : '-' }}</span>
+                <span class="text-[10px] font-bold text-slate-400 group-hover:text-blue-500 uppercase tracking-wider mt-0.5 flex items-center gap-0.5">
+                  {{ slaPerformanceData.rate !== null ? 'Within SLA' : 'Belum Ada Data' }}
+                  <span v-if="slaPerformanceData.rate !== null" class="text-[9px]">↗</span>
+                </span>
               </div>
             </div>
 
             <!-- Breakdown on right -->
-            <div class="space-y-3 w-full sm:w-48 text-xs">
-              <div class="flex items-center justify-between">
+            <div class="space-y-2 w-full sm:w-48 text-xs">
+              <div 
+                @click="router.push('/reports')"
+                @mouseenter="hoveredSla = 'within'"
+                @mouseleave="hoveredSla = null"
+                class="flex items-center justify-between p-1.5 -mx-1.5 rounded-lg cursor-pointer transition-all duration-200 group border"
+                :class="hoveredSla === 'within' ? 'bg-emerald-50 border-emerald-200 shadow-2xs translate-x-1' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'"
+                title="Buka laporan SLA untuk tiket yang tepat waktu (Met)"
+              >
                 <div class="flex items-center space-x-2">
-                  <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
-                  <span class="text-slate-700 font-medium">Within SLA</span>
+                  <span class="w-3 h-3 rounded-full bg-emerald-500 transition-transform" :class="hoveredSla === 'within' ? 'scale-125' : ''"></span>
+                  <span class="text-slate-700 font-medium" :class="hoveredSla === 'within' ? 'text-emerald-700 font-bold' : ''">Within SLA</span>
                 </div>
-                <span class="font-bold text-slate-900 font-mono">{{ slaPerformanceData.within }}</span>
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-bold text-slate-900 font-mono" :class="hoveredSla === 'within' ? 'text-emerald-600' : ''">{{ slaPerformanceData.within }}</span>
+                  <span class="text-slate-400 group-hover:text-emerald-600 text-xs transition-opacity" :class="hoveredSla === 'within' ? 'opacity-100' : 'opacity-0'">→</span>
+                </div>
               </div>
-              <div class="flex items-center justify-between">
+
+              <div 
+                @click="router.push({ path: '/tickets', query: { tab: 'NEAR_BREACH' } })"
+                class="flex items-center justify-between p-1.5 -mx-1.5 rounded-lg cursor-pointer hover:bg-slate-50 hover:shadow-2xs border border-transparent hover:border-slate-200 transition-all duration-150 group"
+                title="Lihat antrean tiket yang mendekati batas SLA (< 2 jam)"
+              >
                 <div class="flex items-center space-x-2">
-                  <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-                  <span class="text-slate-700 font-medium">Near Breach</span>
+                  <span class="w-3 h-3 rounded-full bg-amber-500 group-hover:scale-110 transition-transform"></span>
+                  <span class="text-slate-700 font-medium group-hover:text-amber-700">Near Breach</span>
                 </div>
-                <span class="font-bold text-slate-900 font-mono">{{ slaPerformanceData.nearBreach }}</span>
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-bold text-slate-900 font-mono group-hover:text-amber-600">{{ slaPerformanceData.nearBreach }}</span>
+                  <span class="text-slate-400 group-hover:text-amber-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </div>
               </div>
-              <div class="flex items-center justify-between">
+
+              <div 
+                @click="router.push({ path: '/tickets', query: { tab: 'NEAR_BREACH' } })"
+                class="flex items-center justify-between p-1.5 -mx-1.5 rounded-lg cursor-pointer hover:bg-slate-50 hover:shadow-2xs border border-transparent hover:border-slate-200 transition-all duration-150 group"
+                title="Lihat tiket berisiko pelanggaran SLA (< 1 jam)"
+              >
                 <div class="flex items-center space-x-2">
-                  <span class="w-3 h-3 rounded-full bg-orange-500"></span>
-                  <span class="text-slate-700 font-medium">SLA Risk</span>
+                  <span class="w-3 h-3 rounded-full bg-orange-500 group-hover:scale-110 transition-transform"></span>
+                  <span class="text-slate-700 font-medium group-hover:text-orange-700">SLA Risk</span>
                 </div>
-                <span class="font-bold text-slate-900 font-mono">{{ slaPerformanceData.risk }}</span>
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-bold text-slate-900 font-mono group-hover:text-orange-600">{{ slaPerformanceData.risk }}</span>
+                  <span class="text-slate-400 group-hover:text-orange-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity">→</span>
+                </div>
               </div>
-              <div class="flex items-center justify-between">
+
+              <div 
+                @click="router.push({ path: '/tickets', query: { sla: 'breached' } })"
+                @mouseenter="hoveredSla = 'breached'"
+                @mouseleave="hoveredSla = null"
+                class="flex items-center justify-between p-1.5 -mx-1.5 rounded-lg cursor-pointer transition-all duration-200 group border"
+                :class="hoveredSla === 'breached' ? 'bg-rose-50 border-rose-200 shadow-2xs translate-x-1' : 'border-transparent hover:bg-slate-50 hover:border-slate-200'"
+                title="Lihat tiket yang melewati batas SLA (Breached)"
+              >
                 <div class="flex items-center space-x-2">
-                  <span class="w-3 h-3 rounded-full bg-rose-500"></span>
-                  <span class="text-slate-700 font-medium">SLA Breached</span>
+                  <span class="w-3 h-3 rounded-full bg-rose-500 transition-transform" :class="hoveredSla === 'breached' ? 'scale-125' : ''"></span>
+                  <span class="text-slate-700 font-medium" :class="hoveredSla === 'breached' ? 'text-rose-700 font-bold' : ''">SLA Breached</span>
                 </div>
-                <span class="font-bold text-slate-900 font-mono">{{ slaPerformanceData.breached }}</span>
+                <div class="flex items-center space-x-1.5">
+                  <span class="font-bold text-slate-900 font-mono" :class="hoveredSla === 'breached' ? 'text-rose-600' : ''">{{ slaPerformanceData.breached }}</span>
+                  <span class="text-slate-400 group-hover:text-rose-600 text-xs transition-opacity" :class="hoveredSla === 'breached' ? 'opacity-100' : 'opacity-0'">→</span>
+                </div>
               </div>
             </div>
           </div>
@@ -464,14 +695,9 @@
               <h2 class="font-bold text-sm text-slate-900">Ticket Aktif per Engineer</h2>
               <span class="text-slate-400 hover:text-slate-600 cursor-pointer text-xs" title="Distribusi penugasan tiket aktif per teknisi">ⓘ</span>
             </div>
-            <div class="w-28">
-              <BaseSelect
-                v-model="activeEngineerFilter"
-                :options="engineerFilterOptions"
-                size="sm"
-                placement="right"
-              />
-            </div>
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-100 font-mono">
+              {{ engineerRoster?.length || 0 }} Teknisi Bertugas
+            </span>
           </div>
 
           <!-- Internal Slim Scroll container with Sticky Header (Option 1) -->
@@ -547,7 +773,7 @@
                     <span class="font-mono font-black text-slate-900 text-sm">{{ eng.total }}</span>
                   </td>
                 </tr>
-                <tr v-if="engineerRoster.length === 0">
+                <tr v-if="!engineerRoster || engineerRoster.length === 0">
                   <td colspan="6" class="py-8 text-center text-slate-400">
                     Belum ada akun teknisi / penugasan insiden aktif.
                   </td>
@@ -566,6 +792,13 @@
               <h2 class="font-bold text-sm text-slate-900">Top 5 Kategori Tiket</h2>
               <span class="text-slate-400 hover:text-slate-600 cursor-pointer text-xs" title="Kategori insiden dengan frekuensi tertinggi">ⓘ</span>
             </div>
+            <router-link
+              to="/tickets"
+              class="text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline flex items-center space-x-1"
+            >
+              <span>Lihat Antrean</span>
+              <span>&rarr;</span>
+            </router-link>
           </div>
 
           <div class="overflow-x-auto flex-1">
@@ -578,16 +811,24 @@
                 </tr>
               </thead>
               <tbody class="divide-y divide-slate-100">
-                <tr v-if="ticketStore.tickets.length === 0">
+                <tr v-if="topCategories.length === 0">
                   <td colspan="3" class="py-8 text-center text-slate-400">
                     Belum ada insiden tercatat pada kategori operasional.
                   </td>
                 </tr>
-                <tr v-else v-for="cat in topCategories" :key="cat.name" class="hover:bg-slate-50/60 transition-colors">
-                  <td class="py-3 px-4 font-semibold text-slate-800 whitespace-nowrap">
-                    {{ cat.name }}
+                <tr 
+                  v-else 
+                  v-for="cat in topCategories" 
+                  :key="cat.name" 
+                  @click="router.push({ path: '/tickets', query: { category: cat.name } })"
+                  class="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                  :title="`Klik untuk menyaring antrean tiket kategori ${cat.name}`"
+                >
+                  <td class="py-3 px-4 font-semibold text-slate-800 group-hover:text-blue-600 whitespace-nowrap flex items-center gap-1.5">
+                    <span>{{ cat.name }}</span>
+                    <span class="text-slate-400 group-hover:text-blue-600 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">↗</span>
                   </td>
-                  <td class="py-3 px-4 text-center font-mono font-bold text-slate-900 whitespace-nowrap">
+                  <td class="py-3 px-4 text-center font-mono font-bold text-slate-900 group-hover:text-blue-600 whitespace-nowrap">
                     {{ cat.count }}
                   </td>
                   <td class="py-3 px-4 whitespace-nowrap min-w-[160px]">
@@ -626,18 +867,12 @@ const ticketStore = useTicketStore();
 
 const selectedPeriod = ref('30d');
 const trendFilter = ref('30d');
-const activeEngineerFilter = ref('Aktif');
 
 const periodOptions = [
   { value: '30d', label: 'Last 30 Days' },
   { value: '14d', label: 'Last 14 Days' },
   { value: '7d', label: 'Last 7 Days' },
   { value: 'today', label: 'Hari Ini' }
-];
-
-const engineerFilterOptions = [
-  { value: 'Aktif', label: 'Aktif' },
-  { value: 'Semua', label: 'Semua' }
 ];
 
 // Label helper for period
@@ -655,8 +890,8 @@ const nowTimestamp = ref(Date.now());
 let timerInterval = null;
 
 onMounted(async () => {
-  ticketStore.fetchTickets();
-  ticketStore.fetchCustomers();
+  ticketStore.fetchInitialDataFromApi();
+  authStore.fetchUsers();
   timerInterval = setInterval(() => {
     nowTimestamp.value = Date.now();
   }, 1000);
@@ -843,146 +1078,170 @@ const slaPerformanceData = computed(() => {
   };
 });
 
-// Trend Chart Data: Reacts dynamically to selectedPeriod across 4 ranges
-const trendData = computed(() => {
-  if (!ticketStore.tickets || ticketStore.tickets.length === 0) {
-    return {
-      yLabels: ['0', '1', '2', '3', '4'],
-      labels: ['29 Sep', '30 Sep', '01 Okt', '02 Okt', '03 Okt', '04 Okt', '05 Okt', 'Hari Ini'],
-      areaPoints: '40,160 40,160 115,160 190,160 265,160 340,160 415,160 490,160 565,160 565,160',
-      bluePoly: '40,160 115,160 190,160 265,160 340,160 415,160 490,160 565,160',
-      greenPoly: '40,160 115,160 190,160 265,160 340,160 415,160 490,160 565,160',
-      amberPoly: '40,160 115,160 190,160 265,160 340,160 415,160 490,160 565,160',
-      blueDots: [{ x: 40, y: 160 }, { x: 115, y: 160 }, { x: 190, y: 160 }, { x: 265, y: 160 }, { x: 340, y: 160 }, { x: 415, y: 160 }, { x: 490, y: 160 }, { x: 565, y: 160 }],
-      greenDots: [{ x: 40, y: 160 }, { x: 115, y: 160 }, { x: 190, y: 160 }, { x: 265, y: 160 }, { x: 340, y: 160 }, { x: 415, y: 160 }, { x: 490, y: 160 }, { x: 565, y: 160 }],
-      amberDots: [{ x: 40, y: 160 }, { x: 115, y: 160 }, { x: 190, y: 160 }, { x: 265, y: 160 }, { x: 340, y: 160 }, { x: 415, y: 160 }, { x: 490, y: 160 }, { x: 565, y: 160 }]
-    };
-  }
-
-  const activePeriod = selectedPeriod.value;
-
-  if (activePeriod === 'today') {
-    return {
-      yLabels: ['0', '1', '2', '3', '4'],
-      labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
-      areaPoints: '40,160 40,150 115,145 190,135 265,90 340,55 415,75 490,95 565,110 565,160',
-      bluePoly: '40,150 115,145 190,135 265,90 340,55 415,75 490,95 565,110',
-      greenPoly: '40,155 115,152 190,145 265,115 340,85 415,90 490,105 565,115',
-      amberPoly: '40,155 115,152 190,148 265,135 340,130 415,140 490,145 565,150',
-      blueDots: [
-        { x: 40, y: 150 }, { x: 115, y: 145 }, { x: 190, y: 135 }, { x: 265, y: 90 },
-        { x: 340, y: 55 }, { x: 415, y: 75 }, { x: 490, y: 95 }, { x: 565, y: 110 }
-      ],
-      greenDots: [
-        { x: 40, y: 155 }, { x: 115, y: 152 }, { x: 190, y: 145 }, { x: 265, y: 115 },
-        { x: 340, y: 85 }, { x: 415, y: 90 }, { x: 490, y: 105 }, { x: 565, y: 115 }
-      ],
-      amberDots: [
-        { x: 40, y: 155 }, { x: 115, y: 152 }, { x: 190, y: 148 }, { x: 265, y: 135 },
-        { x: 340, y: 130 }, { x: 415, y: 140 }, { x: 490, y: 145 }, { x: 565, y: 150 }
-      ]
-    };
-  }
-
-  if (activePeriod === '7d') {
-    return {
-      yLabels: ['0', '3', '6', '9', '12'],
-      labels: ['29 Sep', '30 Sep', '01 Okt', '02 Okt', '03 Okt', '04 Okt', '05 Okt', 'Hari Ini'],
-      areaPoints: '40,160 40,130 115,100 190,115 265,80 340,50 415,70 490,85 565,60 565,160',
-      bluePoly: '40,130 115,100 190,115 265,80 340,50 415,70 490,85 565,60',
-      greenPoly: '40,140 115,118 190,125 265,95 340,68 415,85 490,95 565,72',
-      amberPoly: '40,150 115,142 190,140 265,135 340,130 415,135 490,140 565,138',
-      blueDots: [
-        { x: 40, y: 130 }, { x: 115, y: 100 }, { x: 190, y: 115 }, { x: 265, y: 80 },
-        { x: 340, y: 50 }, { x: 415, y: 70 }, { x: 490, y: 85 }, { x: 565, y: 60 }
-      ],
-      greenDots: [
-        { x: 40, y: 140 }, { x: 115, y: 118 }, { x: 190, y: 125 }, { x: 265, y: 95 },
-        { x: 340, y: 68 }, { x: 415, y: 85 }, { x: 490, y: 95 }, { x: 565, y: 72 }
-      ],
-      amberDots: [
-        { x: 40, y: 150 }, { x: 115, y: 142 }, { x: 190, y: 140 }, { x: 265, y: 135 },
-        { x: 340, y: 130 }, { x: 415, y: 135 }, { x: 490, y: 140 }, { x: 565, y: 138 }
-      ]
-    };
-  }
-
-  if (activePeriod === '14d') {
-    return {
-      yLabels: ['0', '5', '10', '15', '20'],
-      labels: ['22 Sep', '24 Sep', '26 Sep', '28 Sep', '30 Sep', '02 Okt', '04 Okt', '05 Okt'],
-      areaPoints: '40,160 40,135 115,115 190,95 265,70 340,48 415,65 490,82 565,50 565,160',
-      bluePoly: '40,135 115,115 190,95 265,70 340,48 415,65 490,82 565,50',
-      greenPoly: '40,148 115,128 190,110 265,85 340,62 415,80 490,94 565,65',
-      amberPoly: '40,155 115,145 190,142 265,138 340,135 415,140 490,144 565,138',
-      blueDots: [
-        { x: 40, y: 135 }, { x: 115, y: 115 }, { x: 190, y: 95 }, { x: 265, y: 70 },
-        { x: 340, y: 48 }, { x: 415, y: 65 }, { x: 490, y: 82 }, { x: 565, y: 50 }
-      ],
-      greenDots: [
-        { x: 40, y: 148 }, { x: 115, y: 128 }, { x: 190, y: 110 }, { x: 265, y: 85 },
-        { x: 340, y: 62 }, { x: 415, y: 80 }, { x: 490, y: 94 }, { x: 565, y: 65 }
-      ],
-      amberDots: [
-        { x: 40, y: 155 }, { x: 115, y: 145 }, { x: 190, y: 142 }, { x: 265, y: 138 },
-        { x: 340, y: 135 }, { x: 415, y: 140 }, { x: 490, y: 144 }, { x: 565, y: 138 }
-      ]
-    };
-  }
-
-  // Default '30d'
+// Helper for dynamic nice Y-axis scale (0 to maxY across 4 intervals)
+function getNiceScale(maxVal) {
+  if (maxVal <= 4) return { step: 1, maxY: 4, labels: ['0', '1', '2', '3', '4'] };
+  if (maxVal <= 8) return { step: 2, maxY: 8, labels: ['0', '2', '4', '6', '8'] };
+  if (maxVal <= 12) return { step: 3, maxY: 12, labels: ['0', '3', '6', '9', '12'] };
+  if (maxVal <= 20) return { step: 5, maxY: 20, labels: ['0', '5', '10', '15', '20'] };
+  if (maxVal <= 40) return { step: 10, maxY: 40, labels: ['0', '10', '20', '30', '40'] };
+  if (maxVal <= 80) return { step: 20, maxY: 80, labels: ['0', '20', '40', '60', '80'] };
+  if (maxVal <= 100) return { step: 25, maxY: 100, labels: ['0', '25', '50', '75', '100'] };
+  const rawStep = Math.ceil(maxVal / 4);
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rawStep)));
+  const step = Math.ceil(rawStep / magnitude) * magnitude;
+  const maxY = step * 4;
   return {
-    yLabels: ['0', '10', '20', '30', '40'],
-    labels: ['06 Sep', '10 Sep', '14 Sep', '18 Sep', '22 Sep', '26 Sep', '30 Sep', '05 Okt'],
-    areaPoints: '40,160 40,145 115,122 190,105 265,88 340,55 415,80 490,90 565,58 565,160',
-    bluePoly: '40,145 115,122 190,105 265,88 340,55 415,80 490,90 565,58',
-    greenPoly: '40,152 115,138 190,125 265,110 340,78 415,98 490,102 565,75',
-    amberPoly: '40,155 115,142 190,140 265,145 340,140 415,145 490,148 565,142',
-    blueDots: [
-      { x: 40, y: 145 }, { x: 115, y: 122 }, { x: 190, y: 105 }, { x: 265, y: 88 },
-      { x: 340, y: 55 }, { x: 415, y: 80 }, { x: 490, y: 90 }, { x: 565, y: 58 }
-    ],
-    greenDots: [
-      { x: 40, y: 152 }, { x: 115, y: 138 }, { x: 190, y: 125 }, { x: 265, y: 110 },
-      { x: 340, y: 78 }, { x: 415, y: 98 }, { x: 490, y: 102 }, { x: 565, y: 75 }
-    ],
-    amberDots: [
-      { x: 40, y: 155 }, { x: 115, y: 142 }, { x: 190, y: 140 }, { x: 265, y: 145 },
-      { x: 340, y: 140 }, { x: 415, y: 145 }, { x: 490, y: 148 }, { x: 565, y: 142 }
-    ]
+    step,
+    maxY,
+    labels: [0, step, step * 2, step * 3, maxY].map(String)
+  };
+}
+
+// Trend Chart Data: 100% data dinamis dari tiket riil dan bereaksi terhadap filter periode
+const trendData = computed(() => {
+  const allTickets = ticketStore.tickets || [];
+  const activePeriod = selectedPeriod.value;
+  const now = nowTimestamp.value;
+  const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+  // Bangun 8 checkpoints waktu & label sumbu X berdasarkan rentang periode
+  const checkpoints = [];
+  if (activePeriod === 'today') {
+    const today = new Date(now);
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0, 0).getTime();
+    for (let i = 0; i < 8; i++) {
+      const timeMs = startOfToday + (i * 3) * 3600 * 1000;
+      const hourStr = `${String(i * 3).padStart(2, '0')}:00`;
+      checkpoints.push({
+        timeMs,
+        label: hourStr
+      });
+    }
+  } else if (activePeriod === '7d') {
+    for (let i = 0; i < 8; i++) {
+      const timeMs = now - (7 - i) * 24 * 3600 * 1000;
+      const d = new Date(timeMs);
+      const label = i === 7 ? 'Hari Ini' : `${String(d.getDate()).padStart(2, '0')} ${monthNames[d.getMonth()]}`;
+      checkpoints.push({ timeMs, label });
+    }
+  } else if (activePeriod === '14d') {
+    for (let i = 0; i < 8; i++) {
+      const timeMs = now - (7 - i) * 2 * 24 * 3600 * 1000;
+      const d = new Date(timeMs);
+      const label = i === 7 ? 'Hari Ini' : `${String(d.getDate()).padStart(2, '0')} ${monthNames[d.getMonth()]}`;
+      checkpoints.push({ timeMs, label });
+    }
+  } else {
+    // Default '30d'
+    for (let i = 0; i < 8; i++) {
+      const timeMs = now - (7 - i) * 4 * 24 * 3600 * 1000;
+      const d = new Date(timeMs);
+      const label = i === 7 ? 'Hari Ini' : `${String(d.getDate()).padStart(2, '0')} ${monthNames[d.getMonth()]}`;
+      checkpoints.push({ timeMs, label });
+    }
+  }
+
+  // Ambil tiket sesuai cakupan periode aktif
+  const ticketsList = activePeriod === '30d' ? allTickets : periodFilteredTickets.value;
+
+  // Hitung jumlah pada setiap checkpoint secara dinamis
+  const pointsData = checkpoints.map((cp, idx) => {
+    const x = 40 + idx * 75;
+    const targetMs = cp.timeMs;
+
+    // 1. Tiket Baru (dibuat pada atau sebelum targetMs)
+    const newCount = ticketsList.filter(t => {
+      if (!t.createdAt) return false;
+      return new Date(t.createdAt).getTime() <= targetMs;
+    }).length;
+
+    // 2. Tiket Selesai (resolved pada atau sebelum targetMs)
+    const resolvedCount = ticketsList.filter(t => {
+      if (t.resolvedAt) {
+        return new Date(t.resolvedAt).getTime() <= targetMs;
+      }
+      if (['RESOLVED', 'CLOSED'].includes(t.status) && t.updatedAt) {
+        return new Date(t.updatedAt).getTime() <= targetMs;
+      }
+      return false;
+    }).length;
+
+    // 3. Open (Backlog = Tiket Baru - Tiket Selesai)
+    const backlogCount = Math.max(0, newCount - resolvedCount);
+
+    return {
+      x,
+      label: cp.label,
+      newVal: newCount,
+      resolvedVal: resolvedCount,
+      backlogVal: backlogCount
+    };
+  });
+
+  // Tentukan skala sumbu Y secara otomatis mengikuti data nyata
+  const maxVal = Math.max(
+    0,
+    ...pointsData.map(p => Math.max(p.newVal, p.resolvedVal, p.backlogVal))
+  );
+  const scale = getNiceScale(maxVal);
+
+  const getYCoord = (v) => {
+    return 160 - (v / scale.maxY) * 140;
+  };
+
+  const points = pointsData.map(p => ({
+    x: p.x,
+    label: p.label,
+    blueY: getYCoord(p.newVal),
+    greenY: getYCoord(p.resolvedVal),
+    amberY: getYCoord(p.backlogVal),
+    blueVal: p.newVal,
+    greenVal: p.resolvedVal,
+    amberVal: p.backlogVal
+  }));
+
+  const bluePoly = points.map(p => `${p.x},${p.blueY.toFixed(1)}`).join(' ');
+  const greenPoly = points.map(p => `${p.x},${p.greenY.toFixed(1)}`).join(' ');
+  const amberPoly = points.map(p => `${p.x},${p.amberY.toFixed(1)}`).join(' ');
+  const areaPoints = `40,160 ${bluePoly} 565,160`;
+
+  return {
+    yLabels: scale.labels,
+    labels: checkpoints.map(c => c.label),
+    areaPoints,
+    bluePoly,
+    greenPoly,
+    amberPoly,
+    blueDots: points.map(p => ({ x: p.x, y: Number(p.blueY.toFixed(1)), val: p.blueVal })),
+    greenDots: points.map(p => ({ x: p.x, y: Number(p.greenY.toFixed(1)), val: p.greenVal })),
+    amberDots: points.map(p => ({ x: p.x, y: Number(p.amberY.toFixed(1)), val: p.amberVal }))
   };
 });
 
-// Real-Time SLA Watch List (Live Ticker matching mockup Frame 09)
+// Real-Time SLA Watch List: Prioritas Risiko Tertinggi (SLA Breached / SLA Risk) & Deadline Terdekat
 const liveSlaWatchTickets = computed(() => {
-  const targetNumbers = [
-    'TICK-20261001-0002',
-    'TICK-20261001-0005',
-    'TICK-20260930-0087',
-    'TICK-20260930-0061',
-    'TICK-20260929-0043'
-  ];
+  const allTickets = ticketStore.tickets || [];
+  // Hanya tiket aktif (belum selesai/tutup)
+  const activeTickets = allTickets.filter(t => !['RESOLVED', 'CLOSED'].includes(t.status));
 
-  const matched = [];
-  targetNumbers.forEach(num => {
-    const found = ticketStore.tickets.find(t => t.ticketNumber === num);
-    if (found) matched.push(found);
-  });
-
-  // If not all 5 found, fill from activeStoreTickets
-  if (matched.length < 5) {
-    const active = ticketStore.tickets.filter(t => !['RESOLVED', 'CLOSED'].includes(t.status) && !matched.some(m => m.id === t.id));
-    matched.push(...active.slice(0, 5 - matched.length));
-  }
-
-  return matched.slice(0, 5).map(t => {
+  const mapped = activeTickets.map(t => {
     const customer = ticketStore.customers.find(c => c.id === t.customerId);
+    const deadlineMs = t.resolutionDeadline ? new Date(t.resolutionDeadline).getTime() : 0;
+    const nowMs = nowTimestamp.value;
+
+    const isBreached = Boolean(
+      t.isSlaResolutionBreached === true || 
+      (deadlineMs > 0 && deadlineMs <= nowMs)
+    );
+
     let diffSec = 0;
-    if (t.resolutionDeadline) {
-      diffSec = Math.max(0, Math.floor((new Date(t.resolutionDeadline).getTime() - nowTimestamp.value) / 1000));
-    } else {
+    if (!isBreached && deadlineMs > nowMs) {
+      diffSec = Math.floor((deadlineMs - nowMs) / 1000);
+    } else if (!isBreached && !deadlineMs) {
       diffSec = 3600 * 2;
     }
+
     const h = Math.floor(diffSec / 3600);
     const m = Math.floor((diffSec % 3600) / 60);
     const s = diffSec % 60;
@@ -990,32 +1249,44 @@ const liveSlaWatchTickets = computed(() => {
 
     let timePillClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
     let statusPillClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
-    let statusLabel = (t.status || 'OPEN').replace('_', ' ');
+    let statusLabel = (t.status || 'OPEN').replace(/_/g, ' ');
+    let riskTier = 4; // 1: Breached, 2: <1h, 3: <3h, 4: Normal active, 5: Hold
 
-    if (t.isPaused) {
+    if (t.isPaused || ['HOLD', 'PENDING_VENDOR', 'PENDING_CUSTOMER'].includes(t.status)) {
       statusLabel = 'HOLD';
       timePillClass = 'bg-amber-50 text-amber-700 border-amber-200';
       statusPillClass = 'bg-amber-100 text-amber-800 border-amber-200';
+      riskTier = 5;
+    } else if (isBreached || diffSec === 0) {
+      statusLabel = 'SLA RISK';
+      timePillClass = 'bg-rose-50 text-rose-700 border-rose-200 font-bold';
+      statusPillClass = 'bg-rose-100 text-rose-800 border-rose-200 font-bold';
+      riskTier = 1; // Prioritas tertinggi
     } else if (diffSec < 3600) {
       statusLabel = 'SLA RISK';
-      timePillClass = 'bg-rose-50 text-rose-700 border-rose-200';
-      statusPillClass = 'bg-rose-100 text-rose-800 border-rose-200';
+      timePillClass = 'bg-rose-50 text-rose-700 border-rose-200 font-bold';
+      statusPillClass = 'bg-rose-100 text-rose-800 border-rose-200 font-bold';
+      riskTier = 2; // Kritis di bawah 1 jam
     } else if (diffSec < 3600 * 3) {
       statusLabel = 'WARNING';
       timePillClass = 'bg-amber-50 text-amber-700 border-amber-200';
       statusPillClass = 'bg-amber-100 text-amber-800 border-amber-200';
+      riskTier = 3; // Peringatan di bawah 3 jam
     } else if (t.status === 'IN_PROGRESS') {
       statusLabel = 'IN PROGRESS';
       timePillClass = 'bg-blue-50 text-blue-700 border-blue-200';
       statusPillClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
+      riskTier = 4;
     } else if (t.status === 'ASSIGNED') {
       statusLabel = 'ASSIGNED';
       timePillClass = 'bg-sky-50 text-sky-700 border-sky-200';
       statusPillClass = 'bg-blue-100 text-blue-800 border-blue-200';
-    } else if (t.status === 'OPEN') {
+      riskTier = 4;
+    } else {
       statusLabel = 'OPEN';
       timePillClass = 'bg-emerald-50 text-emerald-700 border-emerald-200';
       statusPillClass = 'bg-emerald-100 text-emerald-800 border-emerald-200';
+      riskTier = 4;
     }
 
     return {
@@ -1026,9 +1297,27 @@ const liveSlaWatchTickets = computed(() => {
       remainingTimeStr,
       statusLabel,
       timePillClass,
-      statusPillClass
+      statusPillClass,
+      riskTier,
+      diffSec,
+      deadlineMs: deadlineMs || 0
     };
   });
+
+  // Urutkan berdasarkan risiko tertinggi (Tier 1 teratas) dan batas waktu terdekat
+  mapped.sort((a, b) => {
+    if (a.riskTier !== b.riskTier) {
+      return a.riskTier - b.riskTier;
+    }
+    // Jika sama-sama breached (Tier 1), dahulukan deadline yang paling awal/lama terlewati
+    if (a.riskTier === 1) {
+      return a.deadlineMs - b.deadlineMs;
+    }
+    // Jika tiket aktif, dahulukan sisa waktu terkecil (deadline terdekat)
+    return a.diffSec - b.diffSec;
+  });
+
+  return mapped.slice(0, 5);
 });
 
 const openTicketDetail = (ticketItem) => {
@@ -1040,13 +1329,116 @@ const openTicketDetail = (ticketItem) => {
   }
 };
 
+const goToKpi = (type) => {
+  switch (type) {
+    case 'total':
+      router.push('/tickets');
+      break;
+    case 'open':
+      router.push({ path: '/tickets', query: { status: 'OPEN' } });
+      break;
+    case 'inProgress':
+      router.push({ path: '/tickets', query: { status: 'IN_PROGRESS' } });
+      break;
+    case 'waiting':
+      router.push({ path: '/tickets', query: { status: 'HOLD' } });
+      break;
+    case 'solved':
+      router.push({ path: '/tickets', query: { status: 'RESOLVED' } });
+      break;
+    case 'sla':
+      router.push('/reports');
+      break;
+  }
+};
+
+const goToSeverity = (sev) => {
+  router.push({ path: '/tickets', query: { severity: sev } });
+};
+
+// Interactive exploded slice hover states & outward shift calculations
+const hoveredSeverity = ref(null); // 'p1' | 'p2' | 'p3' | 'p4' | null
+const hoveredSla = ref(null); // 'within' | 'breached' | null
+
+const getSeveritySliceShift = (key) => {
+  if (hoveredSeverity.value !== key) {
+    return { transform: 'translate(0px, 0px)' };
+  }
+  const { p1, p2, p3, p4 } = severityCounts.value;
+  const total = p1 + p2 + p3 + p4;
+  if (total === 0) return { transform: 'translate(0px, 0px)' };
+
+  const c = 351.86;
+  const l1 = (p1 / total) * c;
+  const l2 = (p2 / total) * c;
+  const l3 = (p3 / total) * c;
+  const l4 = (p4 / total) * c;
+
+  let midDist = 0;
+  if (key === 'p1') {
+    if (p1 === 0) return { transform: 'translate(0px, 0px)' };
+    midDist = l1 / 2;
+  } else if (key === 'p2') {
+    if (p2 === 0) return { transform: 'translate(0px, 0px)' };
+    midDist = l1 + l2 / 2;
+  } else if (key === 'p3') {
+    if (p3 === 0) return { transform: 'translate(0px, 0px)' };
+    midDist = l1 + l2 + l3 / 2;
+  } else if (key === 'p4') {
+    if (p4 === 0) return { transform: 'translate(0px, 0px)' };
+    midDist = l1 + l2 + l3 + l4 / 2;
+  }
+
+  const angleRad = (midDist / c) * 2 * Math.PI;
+  const shiftDist = 8; // Geser potongan keluar 8px
+  const dx = (shiftDist * Math.cos(angleRad)).toFixed(2);
+  const dy = (shiftDist * Math.sin(angleRad)).toFixed(2);
+
+  return {
+    transform: `translate(${dx}px, ${dy}px)`
+  };
+};
+
+const getSlaSliceShift = (key) => {
+  if (hoveredSla.value !== key) {
+    return { transform: 'translate(0px, 0px)' };
+  }
+  const { within, breached } = slaPerformanceData.value;
+  const total = within + breached;
+  if (total === 0) return { transform: 'translate(0px, 0px)' };
+
+  const c = 351.86;
+  const lWithin = (within / total) * c;
+  const lBreached = (breached / total) * c;
+
+  let midDist = 0;
+  if (key === 'within') {
+    if (within === 0) return { transform: 'translate(0px, 0px)' };
+    midDist = lWithin / 2;
+  } else if (key === 'breached') {
+    if (breached === 0) return { transform: 'translate(0px, 0px)' };
+    midDist = lWithin + lBreached / 2;
+  }
+
+  const angleRad = (midDist / c) * 2 * Math.PI;
+  const shiftDist = 8; // Geser potongan keluar 8px
+  const dx = (shiftDist * Math.cos(angleRad)).toFixed(2);
+  const dy = (shiftDist * Math.sin(angleRad)).toFixed(2);
+
+  return {
+    transform: `translate(${dx}px, ${dy}px)`
+  };
+};
+
 // Engineer Workload Roster (Matches mockup Frame 09 + live store calculation)
 const engineerRoster = computed(() => {
-  const engineers = authStore.users.filter(u => u.roleCode === 'ENGINEER');
+  const engineers = (authStore.users || []).filter(u => u.roleCode === 'ENGINEER');
   const bgPalette = ['bg-blue-600', 'bg-indigo-600', 'bg-emerald-600', 'bg-purple-600', 'bg-pink-600'];
 
-  return engineers.map((user, idx) => {
-    const userTickets = ticketStore.tickets.filter(t => t.assignedToId === user.id && !['RESOLVED', 'CLOSED'].includes(t.status));
+  const allTickets = ticketStore.tickets || [];
+
+  const roster = engineers.map((user, idx) => {
+    const userTickets = allTickets.filter(t => t.assignedToId === user.id && !['RESOLVED', 'CLOSED'].includes(t.status));
     const assigned = userTickets.filter(t => ['ASSIGNED', 'OPEN'].includes(t.status)).length;
     const inProgress = userTickets.filter(t => t.status === 'IN_PROGRESS' && !t.isPaused).length;
     const hold = userTickets.filter(t => ['PENDING_VENDOR', 'PENDING_CUSTOMER', 'PENDING'].includes(t.status) || t.isPaused).length;
@@ -1070,31 +1462,70 @@ const engineerRoster = computed(() => {
       slaRisk,
       total: userTickets.length
     };
-  });
+  }).filter(e => e.total > 0);
+
+  return roster;
 });
 
-// Top 5 Incident Categories (Matches mockup Frame 09 + live store calculation)
+// Top 5 Incident Categories (Dynamic: automatically aggregates from existing categories & tickets)
 const topCategories = computed(() => {
   const allTickets = selectedPeriod.value === '30d' ? (ticketStore.tickets || []) : periodFilteredTickets.value;
-  const total = allTickets.length || 1;
+  const total = allTickets.length;
 
-  const countServer = allTickets.filter(t => t.categoryName === 'Server' || t.categoryName === 'VMware' || (t.categoryId === 1 && !['Storage', 'Backup'].includes(t.categoryName))).length;
-  const countNetwork = allTickets.filter(t => t.categoryName === 'Network' || t.categoryId === 2).length;
-  const countStorage = allTickets.filter(t => t.categoryName === 'Storage').length;
-  const countBackup = allTickets.filter(t => t.categoryName === 'Backup').length;
-  const countApp = allTickets.filter(t => ['Application', 'Database'].includes(t.categoryName) || t.categoryId === 3).length;
+  const getTicketCategoryName = (t) => {
+    if (t.categoryName && t.categoryName.trim()) return t.categoryName.trim();
+    if (t.category?.name && t.category.name.trim()) return t.category.name.trim();
+    if (t.categoryId && ticketStore.categories) {
+      const found = ticketStore.categories.find(c => c.id === Number(t.categoryId));
+      if (found && found.name) return found.name.trim();
+    }
+    return 'Lainnya';
+  };
 
-  const items = [
-    { name: 'Server / Infrastructure', count: countServer, barColor: 'bg-blue-600' },
-    { name: 'Jaringan / Network', count: countNetwork, barColor: 'bg-cyan-500' },
-    { name: 'Storage', count: countStorage, barColor: 'bg-amber-500' },
-    { name: 'Backup', count: countBackup, barColor: 'bg-rose-500' },
-    { name: 'Aplikasi / System', count: countApp, barColor: 'bg-purple-600' }
+  const countsMap = new Map();
+
+  // 1. Inisialisasi dari kategori yang terdaftar di sistem master
+  if (Array.isArray(ticketStore.categories)) {
+    ticketStore.categories.forEach(c => {
+      if (c && c.name) {
+        countsMap.set(c.name.trim(), 0);
+      }
+    });
+  }
+
+  // 2. Akumulasi insiden periode aktif
+  allTickets.forEach(t => {
+    const catName = getTicketCategoryName(t);
+    countsMap.set(catName, (countsMap.get(catName) || 0) + 1);
+  });
+
+  const palette = [
+    'bg-blue-600',
+    'bg-indigo-600',
+    'bg-cyan-500',
+    'bg-amber-500',
+    'bg-rose-500',
+    'bg-emerald-500',
+    'bg-purple-600'
   ];
 
-  return items.map(cat => ({
-    ...cat,
-    percent: allTickets.length > 0 ? Number(((cat.count / total) * 100).toFixed(1)) : 0
+  // 3. Urutkan berdasarkan frekuensi terbanyak (descending) dan ambil Top 5
+  const sorted = Array.from(countsMap.entries())
+    .map(([name, count]) => ({
+      name,
+      count
+    }))
+    .sort((a, b) => {
+      if (b.count !== a.count) return b.count - a.count;
+      return a.name.localeCompare(b.name);
+    })
+    .slice(0, 5);
+
+  return sorted.map((cat, idx) => ({
+    name: cat.name,
+    count: cat.count,
+    barColor: palette[idx % palette.length],
+    percent: total > 0 ? Number(((cat.count / total) * 100).toFixed(1)) : 0
   }));
 });
 </script>

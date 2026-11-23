@@ -27,6 +27,13 @@ export function filterCleanSlaPolicies(list) {
   return (list || []).filter(Boolean);
 }
 
+function getSafeActor(actorUser) {
+  return {
+    name: actorUser?.name || 'Support Engineer',
+    roleCode: actorUser?.roleCode || actorUser?.role || 'ENGINEER'
+  };
+}
+
 /**
  * Robust Stored Data Loader:
  * - Reads from localStorage safely
@@ -66,12 +73,97 @@ function saveStoredData(key, data) {
   }
 }
 
-/**
- * Ensures all 8 canonical mockup tickets (Point 6 specification) are present and properly enriched.
- * Any custom tickets created by the user during interactive testing are preserved.
- */
-function ensureCanonicalTickets(existingTickets) {
-  return Array.isArray(existingTickets) ? existingTickets : [];
+export const DEFAULT_SLA_POLICIES = [
+  {
+    id: 101,
+    tierCode: 'TITANIUM_24X7',
+    tierName: 'TITANIUM 24x7 CRITICAL',
+    operatingHours: '24 Jam x 7 Hari (Non-Stop)',
+    p1ResponseHours: 0.25,
+    p1ResolutionHours: 2.0,
+    p2ResponseHours: 0.5,
+    p2ResolutionHours: 4.0,
+    p3ResponseHours: 1.0,
+    p3ResolutionHours: 12.0,
+    p4ResponseHours: 2.0,
+    p4ResolutionHours: 24.0,
+    notes: 'Tier prioritas tertinggi untuk sistem perbankan & mission-critical tier-1 dengan respons darurat 15 menit dan jaminan resolusi maksimal 2 jam.',
+    isActive: true
+  },
+  {
+    id: 102,
+    tierCode: 'GOLD_24X7',
+    tierName: 'GOLD 24x7 PRODUCTION',
+    operatingHours: '24 Jam x 7 Hari (Non-Stop)',
+    p1ResponseHours: 0.5,
+    p1ResolutionHours: 4.0,
+    p2ResponseHours: 1.0,
+    p2ResolutionHours: 8.0,
+    p3ResponseHours: 2.0,
+    p3ResolutionHours: 24.0,
+    p4ResponseHours: 4.0,
+    p4ResolutionHours: 72.0,
+    notes: 'Paket enterprise standar untuk sistem operasional produksi 24 jam.',
+    isActive: true
+  },
+  {
+    id: 103,
+    tierCode: 'SILVER_8X5',
+    tierName: 'SILVER 8x5 BUSINESS',
+    operatingHours: 'Senin - Jumat (08:00 - 17:00 WIB)',
+    p1ResponseHours: 1.0,
+    p1ResolutionHours: 8.0,
+    p2ResponseHours: 2.0,
+    p2ResolutionHours: 32.0,
+    p3ResponseHours: 4.0,
+    p3ResolutionHours: 48.0,
+    p4ResponseHours: 8.0,
+    p4ResolutionHours: 72.0,
+    notes: 'Paket operasional jam kerja reguler Senin hingga Jumat.',
+    isActive: true
+  }
+];
+
+// Kategori default hanya digunakan sebagai fallback jika API belum tersedia
+export const DEFAULT_CATEGORIES = [
+  { id: 1, name: 'Server & Hardware', code: 'SRV', description: 'Gangguan fisik server, modul controller, motherboard, PSU, dan chassis' },
+  { id: 2, name: 'Jaringan & Switching', code: 'NET', description: 'Switch core, spine-leaf, VLAN trunking, interface port flapping, link optical' },
+  { id: 3, name: 'Storage & SAN Fabric', code: 'STR', description: 'SAN storage array, Brocade fiber channel switch, LUN datastore, hard drive failure' },
+  { id: 4, name: 'Virtualisasi & Cloud', code: 'VIRT', description: 'VMware ESXi, vCenter, kernel panic / PSOD, failover cluster HA/DRS' },
+  { id: 5, name: 'Keamanan & Firewall', code: 'SEC', description: 'Next-gen firewall, VPN IPSec tunnel, SSL inspection, security intrusion prevention' }
+];
+
+// Kategori default hanya digunakan sebagai fallback jika API belum tersedia (duplikat dihapus)
+
+function getInitialSlaPolicies() {
+  const loaded = loadStoredData(STORAGE_KEYS.SLA_POLICIES, DEFAULT_SLA_POLICIES, false);
+  let policies = Array.isArray(loaded) && loaded.length > 0 ? loaded : cloneDeep(DEFAULT_SLA_POLICIES);
+  
+  // Make sure the NEW SLA Policy (TITANIUM 24x7 CRITICAL) is always present!
+  const hasTitanium = policies.some(p => p.tierCode === 'TITANIUM_24X7' || (p.tierName && p.tierName.toUpperCase().includes('TITANIUM')));
+  if (!hasTitanium) {
+    policies.unshift(cloneDeep(DEFAULT_SLA_POLICIES[0]));
+    saveStoredData(STORAGE_KEYS.SLA_POLICIES, policies);
+  }
+  return filterCleanSlaPolicies(policies);
+}
+
+function getInitialCustomers() {
+  // Hanya gunakan data dari localStorage (yang sudah di-fetch dari API)
+  // Jika kosong, kembalikan array kosong — data akan diisi saat backend online
+  return loadStoredData(STORAGE_KEYS.CUSTOMERS, [], true);
+}
+
+function getInitialCategories() {
+  // Gunakan data dari localStorage; fallback ke DEFAULT_CATEGORIES hanya jika benar-benar kosong
+  const loaded = loadStoredData(STORAGE_KEYS.CATEGORIES, [], true);
+  return Array.isArray(loaded) && loaded.length > 0 ? loaded : cloneDeep(DEFAULT_CATEGORIES);
+}
+
+function getInitialTickets() {
+  // Hanya gunakan data dari localStorage (yang sudah di-fetch dari API)
+  // Jika kosong, kembalikan array kosong — tidak ada seed dummy
+  return loadStoredData(STORAGE_KEYS.TICKETS, [], true);
 }
 
 export const DATA_MODES = {
@@ -81,7 +173,7 @@ export const DATA_MODES = {
 
 const DATA_MODE_KEY = 'gtt_app_data_mode';
 const DATA_VERSION_KEY = 'gtt_data_version';
-const CURRENT_DATA_VERSION = 'v10.0-synced-db-session-clear';
+const CURRENT_DATA_VERSION = 'v11.0-clean-real-data';
 
 function getStoredDataMode() {
   if (typeof window === 'undefined' || !window.localStorage) return DATA_MODES.CLEAN_TESTING;
@@ -125,13 +217,16 @@ checkAndMigrateData();
 export const useTicketStore = defineStore('tickets', {
   state: () => {
     const activeMode = getStoredDataMode();
+    const initPolicies = getInitialSlaPolicies();
+    const initTickets = getInitialTickets();
+    const initCustomers = getInitialCustomers();
 
     return {
       appDataMode: activeMode,
-      tickets: loadStoredData(STORAGE_KEYS.TICKETS, [], true),
-      customers: loadStoredData(STORAGE_KEYS.CUSTOMERS, [], true),
-      categories: loadStoredData(STORAGE_KEYS.CATEGORIES, [], true),
-      slaPolicies: filterCleanSlaPolicies(loadStoredData(STORAGE_KEYS.SLA_POLICIES, [], true)),
+      tickets: initTickets,
+      customers: initCustomers,
+      categories: getInitialCategories(),
+      slaPolicies: initPolicies,
       quickPresets: [],
       auditLogs: loadStoredData(STORAGE_KEYS.AUDIT_LOGS, [], true),
       knowledgeBase: loadStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, [], true),
@@ -147,7 +242,7 @@ export const useTicketStore = defineStore('tickets', {
         'MikroTik'
       ]),
       holdReasons: [],
-      selectedTicketId: null,
+      selectedTicketId: initTickets[0]?.id || null,
       readNotificationIds: loadStoredData('gtt_read_notifications', []),
       dismissedNotifications: loadStoredData('gtt_dismissed_notifications_map', {}),
       lastNotificationCheck: new Date().toISOString(),
@@ -309,7 +404,7 @@ export const useTicketStore = defineStore('tickets', {
             title: `Sisa Kuota Kritis: ${c.name}`,
             entityName: c.name,
             entityCode: String(c.id),
-            message: `Tersisa ${qInfo.remaining} dari ${qInfo.quota} tiket (${qInfo.percentage}%). Segera konfirmasi penambahan kuota.`,
+            message: `Sisa kuota ${qInfo.remaining} tiket (${qInfo.percentage}%). Segera tambah kuota.`,
             shortDesc: `Sisa ${qInfo.remaining} tiket (${qInfo.percentage}%)`,
             timestamp: 'Penting',
             link: '/admin/customers',
@@ -326,7 +421,7 @@ export const useTicketStore = defineStore('tickets', {
             title: `Sisa Kuota Menipis: ${c.name}`,
             entityName: c.name,
             entityCode: String(c.id),
-            message: `Tersisa ${qInfo.remaining} dari ${qInfo.quota} tiket (${qInfo.percentage}%). Kuota mendekati ambang batas.`,
+            message: `Sisa kuota tersisa ${qInfo.remaining} tiket (${qInfo.percentage}%).`,
             shortDesc: `Sisa ${qInfo.remaining} tiket (${qInfo.percentage}%)`,
             timestamp: 'Perhatian',
             link: '/admin/customers',
@@ -350,7 +445,7 @@ export const useTicketStore = defineStore('tickets', {
               title: `Maintenance Expired: ${c.name}`,
               entityName: c.name,
               entityCode: String(c.id),
-              message: `Kontrak berakhir per ${c.maintenanceEnd}. Akun mitra otomatis dinonaktifkan.`,
+              message: `Kontrak berakhir per ${c.maintenanceEnd}. Akun dinonaktifkan.`,
               shortDesc: `Expired (${c.maintenanceEnd})`,
               timestamp: 'Kontrak Berakhir',
               link: '/admin/customers',
@@ -367,7 +462,7 @@ export const useTicketStore = defineStore('tickets', {
               title: `Maintenance Mendekati Akhir: ${c.name}`,
               entityName: c.name,
               entityCode: String(c.id),
-              message: `Kontrak berakhir dalam ${diffDays} hari (${c.maintenanceEnd}). Segera review PKS.`,
+              message: `Kontrak berakhir dalam ${diffDays} hari (${c.maintenanceEnd}).`,
               shortDesc: `Berakhir dlm ${diffDays} hari`,
               timestamp: 'Review Kontrak',
               link: '/admin/customers',
@@ -394,7 +489,7 @@ export const useTicketStore = defineStore('tickets', {
             severity: 'CRITICAL',
             title: `SLA Breached: ${t.ticketNumber}`,
             entityName: t.ticketNumber,
-            message: `Tiket "${t.title}" telah melampaui batas SLA. Memerlukan eskalasi segera.`,
+            message: `"${t.title}" telah melampaui batas waktu SLA.`,
             shortDesc: t.title,
             timestamp: 'Perlu Eskalasi',
             link: '/tickets',
@@ -419,7 +514,7 @@ export const useTicketStore = defineStore('tickets', {
             severity: 'WARNING',
             title: `Mendekati Batas SLA: ${t.ticketNumber}`,
             entityName: t.ticketNumber,
-            message: `Tiket "${t.title}" mendekati batas waktu SLA (< 30 menit). Harap diprioritaskan.`,
+            message: `"${t.title}" mendekati batas waktu penanganan.`,
             shortDesc: t.title,
             timestamp: 'Prioritas Tinggi',
             link: '/tickets',
@@ -430,31 +525,7 @@ export const useTicketStore = defineStore('tickets', {
         }
       });
 
-      // 5. Unassigned Active Tickets (Dispatched for Admin / Helpdesk Lead)
-      if (!isEngineer) {
-        const unassignedList = state.tickets.filter(t => 
-          !t.assignedToId && !t.assignedTo && ['OPEN', 'ASSIGNED'].includes(t.status)
-        );
-        unassignedList.slice(0, 2).forEach(t => {
-          notifs.push({
-            id: `unassigned-${t.id}`,
-            category: 'DISPATCH',
-            type: 'TICKET_UNASSIGNED',
-            severity: 'WARNING',
-            title: `Tiket Baru Tanpa PIC: ${t.ticketNumber}`,
-            entityName: t.ticketNumber,
-            message: `Tiket "${t.title}" (${t.customerName || 'Mitra'}) belum ditugaskan ke teknisi.`,
-            shortDesc: t.title,
-            timestamp: 'Belum Di-assign',
-            link: '/tickets',
-            targetTicketId: t.id,
-            badgeText: 'Belum Ada PIC',
-            badgeColor: 'amber'
-          });
-        });
-      }
-
-      // 6. Tickets Assigned to Current Logged-in Engineer
+      // 5. Tickets Assigned to Current Logged-in Engineer
       if (isEngineer && currentUser) {
         const myTickets = state.tickets.filter(t => 
           (t.assignedToId === currentUser.id || t.assignedTo?.id === currentUser.id || t.assignedTo === currentUser.name) &&
@@ -468,7 +539,7 @@ export const useTicketStore = defineStore('tickets', {
             severity: t.severity === 'CRITICAL' ? 'CRITICAL' : 'INFO',
             title: `Tiket Ditugaskan: ${t.ticketNumber}`,
             entityName: t.ticketNumber,
-            message: `Anda ditugaskan menangani tiket "${t.title}" (Prioritas: ${t.severity}).`,
+            message: `Anda ditugaskan menangani "${t.title}".`,
             shortDesc: t.title,
             timestamp: 'Ditugaskan ke Anda',
             link: '/tickets',
@@ -479,7 +550,7 @@ export const useTicketStore = defineStore('tickets', {
         });
       }
 
-      // 7. Critical Severity Incidents (P1 Incident Alert)
+      // 6. Critical Severity Incidents (P1 Incident Alert)
       state.tickets.forEach(t => {
         if (t.severity === 'CRITICAL' && !t.isSlaResolutionBreached && !['RESOLVED', 'CLOSED'].includes(t.status)) {
           const alreadyNotified = notifs.some(n => n.id === `assigned-to-me-${t.id}`);
@@ -491,7 +562,7 @@ export const useTicketStore = defineStore('tickets', {
               severity: 'CRITICAL',
               title: `🚨 Insiden Kritis: ${t.ticketNumber}`,
               entityName: t.ticketNumber,
-              message: `Insiden Severity Critical aktif: "${t.title}". Memerlukan respon cepat seluruh tim.`,
+              message: `Insiden darurat aktif: "${t.title}".`,
               shortDesc: t.title,
               timestamp: 'P1 Darurat',
               link: '/tickets',
@@ -502,26 +573,6 @@ export const useTicketStore = defineStore('tickets', {
           }
         }
       });
-
-      // 8. Pending Knowledge Base Review (For Admin)
-      if (!isEngineer && state.pendingKbApprovals && state.pendingKbApprovals.length > 0) {
-        state.pendingKbApprovals.slice(0, 2).forEach(kb => {
-          notifs.push({
-            id: `kb-pending-${kb.id}`,
-            category: 'KNOWLEDGE_BASE',
-            type: 'KB_APPROVAL_PENDING',
-            severity: 'INFO',
-            title: `Review KB: ${kb.sourceTicket || 'Runbook'}`,
-            entityName: kb.title,
-            message: `Draft runbook "${kb.title}" diajukan oleh ${kb.author || 'Teknisi'}. Menunggu review & publikasi.`,
-            shortDesc: kb.title,
-            timestamp: kb.submittedAt || 'Menunggu Review',
-            link: '/knowledge-base',
-            badgeText: 'Review KB',
-            badgeColor: 'blue'
-          });
-        });
-      }
 
       // Model B: 30-minute snooze reminder
       // If notification was cleared/dismissed, suppress it for 30 minutes. If condition still exists after 30 min, re-alert!
@@ -603,12 +654,11 @@ export const useTicketStore = defineStore('tickets', {
 
     async fetchInitialDataFromApi() {
       try {
-        const [ticketsRes, customersRes, kbRes, categoriesRes, principalsRes, presetsRes, holdReasonsRes, slaPoliciesRes] = await Promise.all([
+        const [ticketsRes, customersRes, kbRes, categoriesRes, presetsRes, holdReasonsRes, slaPoliciesRes] = await Promise.all([
           api.getTickets().catch(() => null),
           api.getCustomers().catch(() => null),
           api.getArticles().catch(() => null),
           api.getCategories().catch(() => null),
-          api.getPrincipals().catch(() => null),
           api.getQuickPresets().catch(() => null),
           api.getHoldReasons().catch(() => null),
           api.getSlaPolicies().catch(() => null)
@@ -654,13 +704,6 @@ export const useTicketStore = defineStore('tickets', {
         } else if (!this.categories) {
           this.categories = [];
           saveStoredData(STORAGE_KEYS.CATEGORIES, this.categories);
-        }
-
-        // Master Principals from Database
-        const principalsList = principalsRes?.data || (Array.isArray(principalsRes) ? principalsRes : null);
-        if (principalsList !== null && principalsList.length > 0) {
-          this.principals = principalsList.map(p => p.name || p);
-          saveStoredData('gtt_principals_data', this.principals);
         }
 
         // Master Quick Presets from Database
@@ -783,7 +826,7 @@ export const useTicketStore = defineStore('tickets', {
     async fetchAuditLogs(params = {}) {
       try {
         const res = await api.getAuditLogs(params);
-        const list = Array.isArray(res) ? res : (res?.data || null);
+        const list = Array.isArray(res) ? res : (res?.logs || res?.data || null);
         if (list !== null) {
           this.auditLogs = list;
           saveStoredData(STORAGE_KEYS.AUDIT_LOGS, this.auditLogs);
@@ -821,19 +864,37 @@ export const useTicketStore = defineStore('tickets', {
       saveStoredData(STORAGE_KEYS.SLA_POLICIES, this.slaPolicies);
     },
 
+    async seedRealisticTickets() {
+      try {
+        if (api && typeof api.resetDatabaseSeed === 'function') {
+          await api.resetDatabaseSeed();
+          await this.fetchInitialDataFromApi();
+        }
+      } catch (err) {
+        console.warn('[ticketStore] Backend seed call bypassed or failed:', err?.message);
+      }
+      return this.tickets;
+    },
+
     createTicket(ticketData, actorUser) {
       const nowUtc = new Date().toISOString();
       const count = this.tickets.length + 1;
-      const padNum = String(count).padStart(4, '0');
-      const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-      const ticketNumber = `TICK-${dateStr}-${padNum}`;
+      const year2 = String(new Date().getFullYear()).slice(-2);
+      const padNum = String(count).padStart(3, '0');
+      const ticketNumber = `TK-${year2}${padNum}`;
 
       // Calculate SLA response & resolution deadlines based on Customer's Contract Tier & Severity
-      const contract = (ticketData.contractSla || '').toUpperCase();
+      const contract = (ticketData.contractSla || ticketData.contractTier || '').toUpperCase();
       let respHours = 1;
       let resHours = 8;
 
-      const matchedPolicy = (this.slaPolicies || []).find(p => p.tierCode === ticketData.contractSla || contract.includes(p.tierCode));
+      const matchedPolicy = (this.slaPolicies || []).find(p => 
+        p.tierCode === ticketData.contractSla || 
+        p.tierName === ticketData.contractSla ||
+        p.tierName === ticketData.contractTier ||
+        (p.tierCode && contract.includes(p.tierCode.toUpperCase())) ||
+        (p.tierName && contract.includes(p.tierName.toUpperCase()))
+      );
       if (matchedPolicy) {
         if (ticketData.severity === 'HIGH') {
           respHours = matchedPolicy.p1ResponseHours;
@@ -869,90 +930,47 @@ export const useTicketStore = defineStore('tickets', {
         ticketNumber,
         customerId: Number(ticketData.customerId),
         customerPicId: ticketData.customerPicId ? Number(ticketData.customerPicId) : null,
-        categoryId: Number(ticketData.categoryId),
+        ticketType: ticketData.ticketType || 'Incident',
+        categoryId: ticketData.categoryId ? Number(ticketData.categoryId) : null,
+        serialNumber: ticketData.serialNumber || null,
         severity: ticketData.severity || 'MEDIUM',
-        channel: ticketData.channel || 'WHATSAPP',
         title: ticketData.title,
-        rawMessage: ticketData.rawMessage || null,
         description: ticketData.description,
-        status: ticketData.assignedToId ? 'ASSIGNED' : 'OPEN',
+        attachmentUrl: ticketData.attachmentUrl || null,
+        attachmentName: ticketData.attachmentName || null,
+        attachmentSize: ticketData.attachmentSize || null,
+        status: 'ASSIGNED',
         trackingToken: 'sec_' + Math.random().toString(36).substring(2, 10),
-        createdById: actorUser.id,
-        assignedToId: ticketData.assignedToId ? Number(ticketData.assignedToId) : null,
-        
-        // Enterprise ITSM fields (Figma Spec)
-        contractSla: ticketData.contractSla || '',
-        contractTier: ticketData.contractTier || '',
-        cluster: ticketData.cluster || 'PROD-CL01',
-        environment: ticketData.environment || 'PROD-DC-01',
-        impactScope: ticketData.impactScope || 'Standard Operational',
-        isEmailSync: ticketData.isEmailSync !== undefined ? !!ticketData.isEmailSync : (ticketData.isWhatsAppSync !== undefined ? !!ticketData.isWhatsAppSync : true),
-        isWhatsAppSync: false,
-        isProposeKb: false,
-        principalVendor: ticketData.principalVendor || ticketData.principalName || null,
-        principalCaseId: ticketData.principalCaseId || null,
-        principalSpecialist: ticketData.principalSpecialist || null,
-        principalBridgeStatus: ticketData.principalCaseId ? 'Connected via OEM API Bridge' : null,
-        principalLatestUpdate: ticketData.principalCaseId ? 'Case successfully registered with Principal Support Desk' : null,
-        principalUpdateTimestamp: ticketData.principalCaseId ? 'Just now' : null,
-
+        createdById: actorUser?.id || 1,
+        assignedToId: Number(ticketData.assignedToId),
+        contractTier: ticketData.contractTier || '8x5 GOLD ENTERPRISE',
+        sendEmailNotification: Boolean(ticketData.sendEmailNotification),
         createdAt: nowUtc,
         updatedAt: nowUtc,
         responseDeadline,
         resolutionDeadline,
-        respondedAt: ticketData.assignedToId ? nowUtc : null,
+        respondedAt: nowUtc,
         resolvedAt: null,
         closedAt: null,
-
         isPaused: false,
-        pausedAt: null,
         totalPausedDurationSec: 0,
         isSlaResponseBreached: false,
         isSlaResolutionBreached: false,
-
-        rootCause: ticketData.rootCause || '',
-        resolutionStrategy: ticketData.resolutionStrategy || '',
-        actionTaken: '',
-        resolutionNotes: '',
-        recommendation: '',
-
-        attachments: ticketData.attachments || (ticketData.uploadedProof ? [{
-          id: 'att-' + Date.now(),
-          name: ticketData.uploadedProof,
-          originalName: ticketData.uploadedProof,
-          fileType: 'image/svg+xml',
-          size: '180 KB',
-          uploadedBy: actorUser.name,
-          uploadedAt: nowUtc,
-          source: 'Laporan Awal Customer'
-        }] : []),
-
+        rootCause: null,
+        resolutionStrategy: null,
+        recommendation: null,
         milestones: [
           {
             id: Date.now(),
-            stepName: 'Laporan Diterima (Ticket Created)',
-            status: 'OPEN',
-            actorName: actorUser.name,
-            actorRole: actorUser.roleCode,
-            notes: `Tiket diterbitkan oleh ${actorUser.name}. Target respon: ${respHours * 60} menit.`,
-            timestampUtc: nowUtc,
-            proofFile: ticketData.uploadedProof || null
+            stepName: 'Laporan Diterima & Teknisi Dialokasikan',
+            status: 'ASSIGNED',
+            actorName: actorUser?.name || 'CPIG Operator',
+            actorRole: actorUser?.role || 'CPIG_OPERATOR',
+            notes: `Tiket diterbitkan dengan nomor ${ticketNumber} dan langsung dialokasikan ke teknisi.`,
+            timestampUtc: nowUtc
           }
         ]
       };
-
-      if (ticketData.assignedToId) {
-        newTicket.milestones.push({
-          id: Date.now() + 1,
-          stepName: 'Penugasan Teknisi Langsung',
-          status: 'ASSIGNED',
-          actorName: actorUser.name,
-          actorRole: actorUser.roleCode,
-          notes: `Tiket langsung ditugaskan saat pembuatan.`,
-          timestampUtc: nowUtc,
-          proofFile: null
-        });
-      }
 
       this.tickets.unshift(newTicket);
       this.selectedTicketId = newTicket.id;
@@ -971,9 +989,10 @@ export const useTicketStore = defineStore('tickets', {
     },
 
     assignEngineer(ticketId, engineerId, actorUser) {
-      const ticket = this.tickets.find(t => t.id === ticketId);
+      const ticket = this.tickets.find(t => t.id == ticketId || String(t.id) === String(ticketId));
       if (!ticket) return;
 
+      const user = getSafeActor(actorUser);
       const nowUtc = new Date().toISOString();
       ticket.assignedToId = Number(engineerId);
       ticket.status = 'ASSIGNED';
@@ -982,20 +1001,21 @@ export const useTicketStore = defineStore('tickets', {
         ticket.respondedAt = nowUtc;
       }
 
+      if (!ticket.milestones) ticket.milestones = [];
       ticket.milestones.push({
         id: Date.now(),
         stepName: 'Penugasan ke Teknisi Lapangan',
         status: 'ASSIGNED',
-        actorName: actorUser.name,
-        actorRole: actorUser.roleCode,
+        actorName: user.name,
+        actorRole: user.roleCode,
         notes: `Tiket dialokasikan untuk penanganan lanjutan. Response SLA terpenuhi.`,
         timestampUtc: nowUtc,
         proofFile: null
       });
 
       this.addAuditLog({
-        userName: actorUser.name,
-        role: actorUser.roleCode,
+        userName: user.name,
+        role: user.roleCode,
         action: 'ASSIGN_ENGINEER',
         entityType: 'TICKET',
         entityId: ticket.ticketNumber,
@@ -1004,25 +1024,47 @@ export const useTicketStore = defineStore('tickets', {
     },
 
     addProgressMilestone(ticketId, { stepName, notes, proofFile, nextStatus, proofFileSize, progressPercent, additionalNotes, syncToKb }, actorUser) {
-      const ticket = this.tickets.find(t => t.id === ticketId);
+      const ticket = this.tickets.find(t => t.id == ticketId || String(t.id) === String(ticketId));
       if (!ticket) return;
 
+      const user = getSafeActor(actorUser);
       const nowUtc = new Date().toISOString();
       if (nextStatus) {
         ticket.status = nextStatus;
+        if (nextStatus === 'RESOLVED' && !ticket.resolvedAt) {
+          ticket.resolvedAt = nowUtc;
+        }
+        if (nextStatus === 'CLOSED' && !ticket.closedAt) {
+          ticket.closedAt = nowUtc;
+          if (!ticket.resolvedAt) ticket.resolvedAt = nowUtc;
+        }
       }
       if (progressPercent !== undefined && progressPercent !== null) {
         ticket.progressPercent = Math.min(100, Math.max(0, Number(progressPercent)));
       }
       ticket.updatedAt = nowUtc;
 
-      if (!ticket.milestones) ticket.milestones = [];
+      if (!ticket.milestones || ticket.milestones.length === 0) {
+        ticket.milestones = [
+          {
+            id: 'init-' + (ticket.id || 1),
+            stepName: 'Laporan Diterima (Ticket Created)',
+            status: 'OPEN',
+            actorName: ticket.creatorName || 'Admin',
+            actorRole: 'Admin',
+            notes: `Tiket #${ticket.ticketNumber || ''} berhasil diterbitkan dan masuk ke sistem Helpdesk. Target respon SLA berjalan.`,
+            progressPercent: 0,
+            timestampUtc: ticket.createdAt || nowUtc,
+            proofFile: ticket.attachmentName || null
+          }
+        ];
+      }
       const newStep = {
         id: Date.now(),
         stepName,
-        status: ticket.status,
-        actorName: actorUser.name,
-        actorRole: actorUser.roleCode,
+        status: nextStatus || ticket.status,
+        actorName: user.name,
+        actorRole: user.roleCode,
         notes,
         additionalNotes: additionalNotes || '',
         progressPercent: progressPercent !== undefined ? Number(progressPercent) : (ticket.progressPercent || 0),
@@ -1041,7 +1083,7 @@ export const useTicketStore = defineStore('tickets', {
             originalName: proofFile,
             fileType: proofFile.endsWith('.txt') || proofFile.endsWith('.log') ? 'text/plain' : (proofFile.endsWith('.pdf') ? 'application/pdf' : 'image/svg+xml'),
             size: proofFileSize || '142 KB',
-            uploadedBy: actorUser.name,
+            uploadedBy: user.name,
             uploadedAt: nowUtc,
             source: `Step: ${stepName}`
           });
@@ -1067,8 +1109,8 @@ export const useTicketStore = defineStore('tickets', {
           productPlatform: ticket.affectedSystem || 'Server & Network',
           firmwareVersion: 'Production Release',
           caseType: 'Troubleshooting Runbook',
-          author: `${actorUser.name} (${actorUser.roleCode})`,
-          approver: actorUser.roleCode === 'ADMIN' ? actorUser.name : 'Menunggu Review Admin / Lead',
+          author: `${user.name} (${user.roleCode})`,
+          approver: user.roleCode === 'ADMIN' ? user.name : 'Menunggu Review Admin / Lead',
           status: 'DRAFT',
           updatedAt: 'Baru saja',
           ticketsReferencedCount: 1,
@@ -1088,8 +1130,8 @@ export const useTicketStore = defineStore('tickets', {
       saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
 
       this.addAuditLog({
-        userName: actorUser.name,
-        role: actorUser.roleCode,
+        userName: user.name,
+        role: user.roleCode,
         action: 'PROGRESS_UPDATE',
         entityType: 'TICKET',
         entityId: ticket.ticketNumber,
@@ -1192,45 +1234,57 @@ export const useTicketStore = defineStore('tickets', {
       });
     },
 
-    pauseSla(ticketId, { pendingType, reason, principalCaseId }, actorUser) {
-      const ticket = this.tickets.find(t => t.id === ticketId);
+    pauseSla(ticketId, { pendingType, reason, principalCaseId, principalVendor }, actorUser) {
+      const ticket = this.tickets.find(t => t.id == ticketId || String(t.id) === String(ticketId));
       if (!ticket) return;
 
+      const user = getSafeActor(actorUser);
       const nowUtc = new Date().toISOString();
       ticket.isPaused = true;
       ticket.pausedAt = nowUtc;
-      ticket.status = pendingType === 'CUSTOMER' ? 'PENDING_CUSTOMER' : 'PENDING_VENDOR';
+      ticket.pauseReason = pendingType;
+      ticket.pauseDetails = reason;
+      ticket.status = (pendingType === 'CUSTOMER' || pendingType === 'PARTNER_CUSTOMER') ? 'PENDING_CUSTOMER' : 'PENDING_VENDOR';
       ticket.updatedAt = nowUtc;
       if (principalCaseId) {
         ticket.principalCaseId = principalCaseId;
       }
+      if (principalVendor) {
+        ticket.principalVendor = principalVendor;
+      }
 
       const presetLabels = {
+        PART_HARDWARE: 'Part / Hardware (Menunggu Suku Cadang)',
         PART_INDENT: 'Part Indent (Menunggu Suku Cadang/Hardware)',
+        PARTNER_CUSTOMER: 'Partner / Customer (Menunggu Konfirmasi)',
         CUSTOMER: 'Menunggu Konfirmasi / Akses Customer',
         VENDOR: 'Dependensi Vendor / Partner / PM'
       };
       const label = presetLabels[pendingType] || pendingType;
 
+      if (!ticket.milestones) ticket.milestones = [];
+      const currentProgress = ticket.milestones.reduce((max, m) => Math.max(max, Number(m.progressPercent || 0)), Number(ticket.progressPercent || 0));
       ticket.milestones.push({
         id: Date.now(),
         stepName: `SLA Ditahan (${label})`,
         status: ticket.status,
-        actorName: actorUser.name,
-        actorRole: actorUser.roleCode,
+        actorName: user.name,
+        actorRole: user.roleCode,
         notes: `[Preset: ${label}] ${reason}${principalCaseId ? ` (Case Principal: ${principalCaseId})` : ''}. Timer Resolution SLA dibekukan sementara.`,
         timestampUtc: nowUtc,
-        proofFile: null
+        proofFile: null,
+        progressPercent: currentProgress
       });
 
       this.addAuditLog({
-        userName: actorUser.name,
-        role: actorUser.roleCode,
+        userName: user.name,
+        role: user.roleCode,
         action: 'SLA_PAUSED',
         entityType: 'TICKET',
         entityId: ticket.ticketNumber,
         description: `SLA di-pause (${label}): ${reason}`
       });
+      saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
     },
 
     addPrincipal(name) {
@@ -1240,17 +1294,14 @@ export const useTicketStore = defineStore('tickets', {
       if (!this.principals.includes(trimmed)) {
         this.principals.push(trimmed);
         saveStoredData('gtt_principals_data', this.principals);
-        // Simpan langsung ke database MySQL Glotra
-        api.createPrincipal({ name: trimmed }).catch(err => {
-          console.warn('[TicketStore] Gagal simpan principal ke database:', err.message);
-        });
       }
     },
 
     escalateTicket(ticketId, { target, vendorName, vendorCaseId, vendorSpecialist, note }, actorUser) {
-      const ticket = this.tickets.find(t => t.id === ticketId);
+      const ticket = this.tickets.find(t => t.id == ticketId || String(t.id) === String(ticketId));
       if (!ticket) return;
 
+      const user = getSafeActor(actorUser);
       const nowUtc = new Date().toISOString();
       if (target === 'VENDOR') {
         ticket.status = 'PENDING_VENDOR';
@@ -1281,31 +1332,34 @@ export const useTicketStore = defineStore('tickets', {
       };
       const targetLabel = targetLabels[target] || target;
 
+      if (!ticket.milestones) ticket.milestones = [];
       ticket.milestones.push({
         id: Date.now(),
         stepName: `Eskalasi ke ${targetLabel}`,
         status: ticket.status,
-        actorName: actorUser.name,
-        actorRole: actorUser.roleCode,
+        actorName: user.name,
+        actorRole: user.roleCode,
         notes: `Tiket dialihkan/eskalasi ke ${targetLabel}.${vendorCaseId ? ` No Kasus Vendor: ${vendorCaseId}.` : ''} Catatan Teknis: ${note}`,
         timestampUtc: nowUtc,
         proofFile: null
       });
 
       this.addAuditLog({
-        userName: actorUser.name,
-        role: actorUser.roleCode,
+        userName: user.name,
+        role: user.roleCode,
         action: 'TICKET_ESCALATED',
         entityType: 'TICKET',
         entityId: ticket.ticketNumber,
         description: `Eskalasi ke ${targetLabel}: ${note.slice(0, 50)}...`
       });
+      saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
     },
 
     resumeSla(ticketId, actorUser) {
-      const ticket = this.tickets.find(t => t.id === ticketId);
+      const ticket = this.tickets.find(t => t.id == ticketId || String(t.id) === String(ticketId));
       if (!ticket || !ticket.isPaused) return;
 
+      const user = getSafeActor(actorUser);
       const now = new Date();
       const pausedStart = new Date(ticket.pausedAt);
       const pausedSeconds = Math.max(0, Math.floor((now - pausedStart) / 1000));
@@ -1320,31 +1374,36 @@ export const useTicketStore = defineStore('tickets', {
       ticket.resolutionDeadline = new Date(oldDeadline.getTime() + pausedSeconds * 1000).toISOString();
       ticket.updatedAt = now.toISOString();
 
+      if (!ticket.milestones) ticket.milestones = [];
+      const currentProgress = ticket.milestones.reduce((max, m) => Math.max(max, Number(m.progressPercent || 0)), Number(ticket.progressPercent || 0));
       ticket.milestones.push({
         id: Date.now(),
         stepName: 'SLA Dilanjutkan (Pekerjaan Aktif Kembali)',
         status: 'IN_PROGRESS',
-        actorName: actorUser.name,
-        actorRole: actorUser.roleCode,
+        actorName: user.name,
+        actorRole: user.roleCode,
         notes: `Respon dari pihak terkait telah diterima. Timer SLA aktif kembali, deadline diperpanjang ${Math.round(pausedSeconds / 60)} menit.`,
         timestampUtc: now.toISOString(),
-        proofFile: null
+        proofFile: null,
+        progressPercent: currentProgress
       });
 
       this.addAuditLog({
-        userName: actorUser.name,
-        role: actorUser.roleCode,
+        userName: user.name,
+        role: user.roleCode,
         action: 'SLA_RESUMED',
         entityType: 'TICKET',
         entityId: ticket.ticketNumber,
         description: `SLA dilanjutkan setelah tertahan ${Math.round(pausedSeconds / 60)} menit`
       });
+      saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
     },
 
     resolveTicket(ticketId, { rootCause, resolutionStrategy, actionTaken, resolutionNotes, recommendation }, actorUser) {
-      const ticket = this.tickets.find(t => t.id === ticketId);
+      const ticket = this.tickets.find(t => t.id == ticketId || String(t.id) === String(ticketId));
       if (!ticket) return;
 
+      const user = getSafeActor(actorUser);
       const nowUtc = new Date().toISOString();
       ticket.status = 'RESOLVED';
       ticket.resolvedAt = nowUtc; // SLA Resolution Timer STOPS here!
@@ -1355,24 +1414,25 @@ export const useTicketStore = defineStore('tickets', {
       ticket.recommendation = recommendation || '';
       ticket.updatedAt = nowUtc;
 
+      if (!ticket.milestones) ticket.milestones = [];
       ticket.milestones.push({
         id: Date.now(),
         stepName: 'Solusi Diterapkan & Layanan Pulih (RESOLVED)',
         status: 'RESOLVED',
-        actorName: actorUser.name,
-        actorRole: actorUser.roleCode,
+        actorName: user.name,
+        actorRole: user.roleCode,
         notes: `Pekerjaan teknis selesai. Resolution SLA BERHENTI. Tiket memasuki masa validasi 72 jam (auto-close).`,
         timestampUtc: nowUtc,
         proofFile: null
       });
 
       this.addAuditLog({
-        userName: actorUser.name,
-        role: actorUser.roleCode,
+        userName: user.name,
+        role: user.roleCode,
         action: 'TICKET_RESOLVED',
         entityType: 'TICKET',
         entityId: ticket.ticketNumber,
-        description: `Tiket berstatus RESOLVED oleh ${actorUser.name}. Resolution SLA tuntas.`
+        description: `Tiket berstatus RESOLVED oleh ${user.name}. Resolution SLA tuntas.`
       });
       saveStoredData(STORAGE_KEYS.TICKETS, this.tickets);
     },
@@ -1504,62 +1564,6 @@ export const useTicketStore = defineStore('tickets', {
       return newKb;
     },
 
-    publishKbArticle(articleId, actorUser) {
-      const article = this.knowledgeBase.find(a => a.id === articleId);
-      if (!article) return;
-
-      article.status = 'PUBLISHED';
-      saveStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, this.knowledgeBase);
-      this.addAuditLog({
-        userName: actorUser.name,
-        role: actorUser.roleCode,
-        action: 'KB_PUBLISHED',
-        entityType: 'KNOWLEDGE_BASE',
-        entityId: String(article.id),
-        description: `Mempublikasikan artikel Knowledge Base: ${article.title}`
-      });
-    },
-
-    approvePendingApproval(pendingId, actorUser) {
-      const idx = this.pendingKbApprovals.findIndex(p => p.id === pendingId);
-      if (idx === -1) return;
-      const item = this.pendingKbApprovals[idx];
-      const codeNum = Math.floor(1000 + Math.random() * 9000);
-      const newKb = {
-        id: codeNum,
-        kbCode: `KB-${codeNum}`,
-        title: item.title,
-        category: item.category.split('&')[0].trim(),
-        categoryGroup: item.category,
-        technologyPrincipal: item.category,
-        author: item.author,
-        approver: `${actorUser.name} (${actorUser.roleCode === 'ADMIN' ? 'Supervisor' : 'Lead'})`,
-        status: 'PUBLISHED',
-        updatedAt: 'Just now',
-        ticketsReferencedCount: 1,
-        source: `Dari Tiket ${item.sourceTicket} (${item.customer})`,
-        symptom: item.summary,
-        rootCause: 'Investigasi formal pasca insiden tervalidasi.',
-        prerequisites: 'Akses root / admin pada subsystem.',
-        cliSnippet: `# Prosedur diverifikasi dari ${item.sourceTicket}\n# Eksekusi diagnostik baseline\nshow system status`,
-        verificationSteps: 'Verifikasi stabilitas koneksi & log bebas dari trigger error alert.',
-        rollbackProcedure: 'Rollback perubahan konfigurasi jika service degraded.',
-        recommendation: 'Jadwalkan review pencegahan preventif berkala.',
-        createdAt: new Date().toISOString()
-      };
-      this.knowledgeBase.unshift(newKb);
-      this.pendingKbApprovals.splice(idx, 1);
-      saveStoredData(STORAGE_KEYS.KNOWLEDGE_BASE, this.knowledgeBase);
-      this.addAuditLog({
-        userName: actorUser.name,
-        role: actorUser.roleCode,
-        action: 'KB_APPROVED',
-        entityType: 'KNOWLEDGE_BASE',
-        entityId: newKb.kbCode,
-        description: `Menyetujui dan mempublikasikan runbook Knowledge Base: ${newKb.title}`
-      });
-    },
-
     proposeNewArticle(data, actorUser) {
       const codeNum = Math.floor(1000 + Math.random() * 9000);
       const newKb = {
@@ -1568,14 +1572,8 @@ export const useTicketStore = defineStore('tickets', {
         title: data.title,
         caseType: data.caseType || 'Incident',
         category: data.category || data.categoryGroup || 'General',
-        categoryGroup: data.category || data.categoryGroup || 'General',
         product: data.product || data.productPlatform || '',
-        technologyPrincipal: data.product || data.technologyPrincipal || data.category || 'Multi-Vendor',
         author: actorUser?.name || 'Support Engineer',
-        approver: data.saveAsDraft ? null : (actorUser?.roleCode === 'ADMIN' ? `${actorUser.name} (Verified)` : null),
-        status: data.saveAsDraft
-          ? 'DRAFT'
-          : (actorUser?.roleCode === 'ADMIN' ? 'PUBLISHED' : 'PENDING_APPROVAL'),
         documentName: data.documentName || data.uploadedDocName || null,
         documentSize: data.documentSize || data.uploadedDocSize || null,
         pdfAttachmentUrl: data.pdfAttachmentUrl || null,
@@ -1597,7 +1595,7 @@ export const useTicketStore = defineStore('tickets', {
       return newKb;
     },
 
-    addCustomer(customerData, actorUser) {
+    async addCustomer(customerData, actorUser) {
       const newId = this.customers.length > 0 ? Math.max(...this.customers.map(c => c.id)) + 1 : 1;
       const matchedPolicy = (this.slaPolicies || []).find(p => p.tierCode === customerData.contractSla || p.tierName === customerData.slaTier);
       const tierName = customerData.slaTier || (matchedPolicy ? matchedPolicy.tierName : (customerData.contractSla || '8x5 GOLD ENTERPRISE'));
@@ -1623,6 +1621,7 @@ export const useTicketStore = defineStore('tickets', {
         name: customerData.name,
         industry: customerData.industry || 'Klien Korporat',
         slaTier: tierName,
+        contractSla: tierName,
         slaCoverage,
         address: customerData.address || '',
         maintenanceStart: customerData.maintenanceStart || new Date().toISOString().slice(0, 10),
@@ -1642,34 +1641,36 @@ export const useTicketStore = defineStore('tickets', {
       saveStoredData(STORAGE_KEYS.CUSTOMERS, this.customers);
       this.checkAndSyncCustomerMaintenanceStatus();
 
-      // Simpan langsung ke database MySQL Glotra
-      api.createCustomer({
-        name: created.name,
-        industry: created.industry,
-        slaTier: created.slaTier,
-        address: created.address,
-        maintenanceStart: created.maintenanceStart,
-        maintenanceEnd: created.maintenanceEnd,
-        ticketQuota: created.ticketQuota,
-        picName: customerData.picName,
-        picPhone: customerData.picPhone,
-        picEmail: customerData.picEmail
-      }).then(res => {
-        if (res && res.id) {
-          created.id = res.id;
-          if (res.pics && res.pics.length > 0) {
-            created.pics = res.pics;
+      // Simpan langsung ke database MySQL Glotra (di-await)
+      try {
+        const res = await api.createCustomer({
+          name: created.name,
+          industry: created.industry,
+          slaTier: created.slaTier,
+          address: created.address,
+          maintenanceStart: created.maintenanceStart,
+          maintenanceEnd: created.maintenanceEnd,
+          ticketQuota: created.ticketQuota,
+          picName: customerData.picName,
+          picPhone: customerData.picPhone,
+          picEmail: customerData.picEmail
+        });
+        const createdServer = res?.data || res;
+        if (createdServer && createdServer.id) {
+          created.id = createdServer.id;
+          if (createdServer.pics && createdServer.pics.length > 0) {
+            created.pics = createdServer.pics;
           }
           saveStoredData(STORAGE_KEYS.CUSTOMERS, this.customers);
         }
-      }).catch(err => {
+      } catch (err) {
         console.warn('[TicketStore] Gagal simpan customer ke MySQL:', err.message);
-      });
+      }
 
       if (actorUser) {
         this.addAuditLog({
-          userName: actorUser.name,
-          role: actorUser.roleCode,
+          userName: actorUser.name || 'Admin',
+          role: actorUser.roleCode || actorUser.role || 'ADMIN',
           action: 'CUSTOMER_CREATED',
           entityType: 'CUSTOMER',
           entityId: String(created.id),
@@ -1680,7 +1681,7 @@ export const useTicketStore = defineStore('tickets', {
       return created;
     },
 
-    updateCustomer(customerId, updatedData, actorUser) {
+    async updateCustomer(customerId, updatedData, actorUser) {
       const cust = this.customers.find(c => c.id === customerId);
       if (!cust) return null;
 
@@ -1692,6 +1693,7 @@ export const useTicketStore = defineStore('tickets', {
         const rawTier = updatedData.slaTier || updatedData.contractSla;
         const matched = (this.slaPolicies || []).find(p => p.tierCode === rawTier || p.tierName === rawTier);
         cust.slaTier = matched ? matched.tierName : rawTier;
+        cust.contractSla = cust.slaTier;
         if (matched) {
           cust.slaCoverage = `First Touch ≤ ${matched.p1ResponseHours}h • Res ≤ ${matched.p1ResolutionHours}h`;
         }
@@ -1704,28 +1706,38 @@ export const useTicketStore = defineStore('tickets', {
       }
       saveStoredData(STORAGE_KEYS.CUSTOMERS, this.customers);
 
-      // Sinkronisasi ke MySQL database
-      api.updateCustomer(customerId, {
-        name: cust.name,
-        industry: cust.industry,
-        slaTier: cust.slaTier || '8x5 GOLD ENTERPRISE',
-        address: cust.address,
-        maintenanceStart: cust.maintenanceStart,
-        maintenanceEnd: cust.maintenanceEnd,
-        ticketQuota: cust.ticketQuota,
-        isActive: cust.isActive
-      }).catch(err => {
+      // Sinkronisasi ke MySQL database (di-await agar data tersimpan tuntas sebelum re-fetch)
+      try {
+        const res = await api.updateCustomer(customerId, {
+          name: cust.name,
+          industry: cust.industry,
+          slaTier: cust.slaTier || '8x5 GOLD ENTERPRISE',
+          address: cust.address,
+          maintenanceStart: cust.maintenanceStart,
+          maintenanceEnd: cust.maintenanceEnd,
+          ticketQuota: cust.ticketQuota,
+          isActive: cust.isActive
+        });
+        const updated = res?.data || res;
+        if (updated && updated.id) {
+          cust.slaTier = updated.slaTier || cust.slaTier;
+          cust.contractSla = cust.slaTier;
+          saveStoredData(STORAGE_KEYS.CUSTOMERS, this.customers);
+        }
+      } catch (err) {
         console.warn('[TicketStore] Gagal update customer di MySQL:', err.message);
-      });
+      }
 
-      this.addAuditLog({
-        userName: actorUser.name,
-        role: actorUser.roleCode,
-        action: 'CUSTOMER_UPDATED',
-        entityType: 'CUSTOMER',
-        entityId: String(cust.id),
-        description: `Memperbarui data profil mitra pelanggan: ${cust.name} (sebelumnya: ${oldName})`
-      });
+      if (actorUser) {
+        this.addAuditLog({
+          userName: actorUser.name || 'Admin',
+          role: actorUser.roleCode || actorUser.role || 'ADMIN',
+          action: 'CUSTOMER_UPDATED',
+          entityType: 'CUSTOMER',
+          entityId: String(cust.id),
+          description: `Memperbarui data profil mitra pelanggan: ${cust.name} (sebelumnya: ${oldName})`
+        });
+      }
 
       this.checkAndSyncCustomerMaintenanceStatus();
       return cust;
@@ -1999,7 +2011,7 @@ export const useTicketStore = defineStore('tickets', {
     },
 
     addAuditLog(entry) {
-      this.auditLogs.unshift({
+      const newLog = {
         id: this.auditLogs.length + 1,
         userName: entry.userName,
         role: entry.role,
@@ -2009,6 +2021,20 @@ export const useTicketStore = defineStore('tickets', {
         description: entry.description,
         ipAddress: '192.168.10.' + (Math.floor(Math.random() * 80) + 10),
         timestampUtc: new Date().toISOString()
+      };
+      this.auditLogs.unshift(newLog);
+      saveStoredData(STORAGE_KEYS.AUDIT_LOGS, this.auditLogs);
+
+      // Sinkronisasi perubahan ke MySQL audit_logs
+      api.createAuditLog({
+        action: entry.action,
+        entityType: entry.entityType,
+        entityId: entry.entityId,
+        description: entry.description,
+        userName: entry.userName,
+        role: entry.role
+      }).catch(err => {
+        console.warn('[TicketStore] Gagal mencatat audit log ke DB:', err.message);
       });
     },
 

@@ -51,3 +51,11 @@ ALTER TABLE `sla_policies`
 -- 6. Drop redundant SLA Hold tables (Reasons & Hold Logs now unified in Ticket Milestones)
 DROP TABLE IF EXISTS `sla_hold_logs`;
 DROP TABLE IF EXISTS `sla_hold_reasons`;
+
+-- 7. Drop obsolete principals table (Vendor/Distributor information now stored in Ticket Milestones)
+DROP TABLE IF EXISTS `principals`;
+
+-- 8. Normalize ticket_milestones (Drop redundant denormalized actorName and actorRole columns)
+ALTER TABLE `ticket_milestones`
+  DROP COLUMN `actorName`,
+  DROP COLUMN `actorRole`;

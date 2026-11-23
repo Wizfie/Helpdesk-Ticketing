@@ -252,6 +252,38 @@
             <span>Konfigurasi SLA</span>
           </router-link>
 
+          <!-- 6. Gateway Email -->
+          <router-link
+            to="/admin/email-gateway"
+            @click="uiStore.closeSidebar()"
+            class="flex items-center px-3 py-2 rounded-lg font-medium transition-colors space-x-2.5"
+            :class="
+              $route.path === '/admin/email-gateway'
+                ? 'bg-blue-50 text-blue-700 font-semibold border-l-2 border-blue-600'
+                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+            "
+          >
+            <svg
+              class="w-4 h-4 text-slate-400"
+              :class="
+                $route.path === '/admin/email-gateway'
+                  ? 'text-blue-600'
+                  : ''
+              "
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              ></path>
+            </svg>
+            <span>Gateway Email</span>
+          </router-link>
+
           <!-- 6. Laporan Eksekutif -->
           <router-link
             to="/reports"

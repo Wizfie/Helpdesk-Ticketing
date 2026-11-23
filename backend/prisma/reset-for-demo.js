@@ -41,10 +41,6 @@ async function resetForDemo() {
   const kbOptionCount = await prisma.kbOption.deleteMany({});
   console.log(`✅ KbOption      : ${kbOptionCount.count} baris dihapus`);
 
-  // 11. Principals
-  const princCount = await prisma.principal.deleteMany({});
-  console.log(`✅ Principal     : ${princCount.count} baris dihapus`);
-
   // 12. SLA Policies
   const slaCount = await prisma.slaPolicy.deleteMany({});
   console.log(`✅ SlaPolicy     : ${slaCount.count} baris dihapus`);

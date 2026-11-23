@@ -3,6 +3,33 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
+/**
+ * Resolves static uploaded file URLs safely in both local and production environments.
+ * - In local / single-origin / reverse proxy (VPS): returns '/uploads/<filename>'
+ * - In separated domains (e.g. frontend on Vercel, backend on Railway): prefixes with backend origin
+ */
+export function getUploadUrl(pathOrFilename) {
+  if (!pathOrFilename) return '';
+  if (pathOrFilename.startsWith('http://') || pathOrFilename.startsWith('https://') || pathOrFilename.startsWith('blob:')) {
+    return pathOrFilename;
+  }
+  
+  const cleanPath = pathOrFilename.startsWith('/uploads/') 
+    ? pathOrFilename 
+    : `/uploads/${encodeURIComponent(pathOrFilename)}`;
+
+  if (API_BASE_URL.startsWith('http://') || API_BASE_URL.startsWith('https://')) {
+    try {
+      const parsed = new URL(API_BASE_URL);
+      return `${parsed.origin}${cleanPath}`;
+    } catch {
+      return cleanPath;
+    }
+  }
+
+  return cleanPath;
+}
+
 async function request(endpoint, options = {}) {
   const url = `${API_BASE_URL}${endpoint}`;
   
@@ -62,7 +89,11 @@ export const api = {
   },
   getTicketById: (id) => request(`/tickets/${id}`),
   getPublicTicket: (ticketNumber, token) => request(`/tickets/track/${ticketNumber}?token=${token}`),
-  createTicket: (data) => request('/tickets', { method: 'POST', body: JSON.stringify(data) }),
+  createTicket: (data) => request('/tickets', {
+    method: 'POST',
+    body: data instanceof FormData ? data : JSON.stringify(data),
+    isFormData: data instanceof FormData
+  }),
   assignEngineer: (id, engineerId) => request(`/tickets/${id}/assign`, { method: 'PATCH', body: JSON.stringify({ engineerId }) }),
   escalateTicket: (id, data) => request(`/tickets/${id}/escalate`, { method: 'PATCH', body: JSON.stringify(data) }),
   pauseSla: (id, data) => request(`/tickets/${id}/pause-sla`, { method: 'POST', body: JSON.stringify(data) }),
@@ -117,19 +148,26 @@ export const api = {
     const query = new URLSearchParams(params).toString();
     return request(`/audit-logs${query ? `?${query}` : ''}`);
   },
+  createAuditLog: (data) => request('/audit-logs', { method: 'POST', body: JSON.stringify(data) }),
 
   // Master Data (Database-driven, non-local)
   getCategories: () => request('/categories'),
   createCategory: (data) => request('/categories', { method: 'POST', body: JSON.stringify(data) }),
-  getPrincipals: () => request('/principals'),
-  createPrincipal: (data) => request('/principals', { method: 'POST', body: JSON.stringify(data) }),
   getQuickPresets: () => request('/presets'),
   getHoldReasons: () => request('/hold-reasons'),
 
   // System & Database Reset / Seed (Real Database UI Controls)
   resetDatabaseClean: () => request('/system/reset-clean', { method: 'POST' }),
   resetDatabaseSeed: () => request('/system/reset-seed', { method: 'POST' }),
-  getSystemStatus: () => request('/system/status')
+  getSystemStatus: () => request('/system/status'),
+
+  // Email Gateway & Notification Engine (Dynamic Multi-Driver & Custom SMTP)
+  getEmailConfig: () => request('/email/config'),
+  updateEmailConfig: (data) => request('/email/config', { method: 'PUT', body: JSON.stringify(data) }),
+  sendTestEmail: (data) => request('/email/test', { method: 'POST', body: JSON.stringify(data) }),
+  sendEngineerDispatchEmail: (ticketId) => request(`/email/tickets/${ticketId}/dispatch`, { method: 'POST' }),
+  sendCustomerTrackingEmail: (ticketId) => request(`/email/tickets/${ticketId}/customer-tracking`, { method: 'POST' }),
+  sendResolutionEmail: (ticketId) => request(`/email/tickets/${ticketId}/resolved-bap`, { method: 'POST' })
 };
 
 export default api;

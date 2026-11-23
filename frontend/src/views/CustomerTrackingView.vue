@@ -12,14 +12,6 @@
         </div>
 
         <div class="flex items-center space-x-3 text-xs">
-          <a
-            href="https://wa.me/6281200000000"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="inline-flex items-center space-x-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold px-3 py-1.5 rounded-lg shadow-sm transition-all"
-          >
-            <span>WhatsApp Helpdesk 24x7</span>
-          </a>
           <span class="text-slate-400 text-[11px] flex items-center space-x-1">
             <svg class="w-3.5 h-3.5 text-emerald-400 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
@@ -47,7 +39,7 @@
           </p>
         </div>
         <div class="pt-2 text-xs text-slate-500">
-          Periksa kembali format nomor tiket atau hubungi Hotline Support 24x7 di <strong class="text-blue-600">+62 21-555-GLOTRA</strong>.
+          Periksa kembali format nomor tiket atau hubungi Telepon Kantor di <strong class="text-blue-600">(021) 2960-7307</strong> atau email <strong class="text-blue-600">sales@gtteknologi.com</strong>.
         </div>
       </div>
 
@@ -80,7 +72,7 @@
         </div>
 
         <div class="pt-2 text-xs text-slate-500">
-          Butuh bantuan eskalasi? Hubungi Hotline Call Center 24x7 kami di <strong class="text-blue-600">+62 21-555-GLOTRA (4568)</strong>.
+          Butuh bantuan eskalasi? Hubungi Telepon Kantor kami di <strong class="text-blue-600">(021) 2960-7307</strong> atau email <strong class="text-blue-600">sales@gtteknologi.com</strong>.
         </div>
       </div>
 
@@ -140,18 +132,32 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <!-- Left: Milestone Step Tracker (Resi Tracking Pelanggan) -->
           <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-5">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div>
-                <h2 class="font-bold text-slate-900 text-sm">Alur Progres Penanganan (Live Tracking)</h2>
-                <p class="text-xs text-slate-500">Tahapan penanganan langsung dari tim teknisi GTT</p>
+            <!-- Header with Live Percentage Bar -->
+            <div class="border-b border-slate-100 pb-4 space-y-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h2 class="font-bold text-slate-900 text-sm">Alur Progres Penanganan (Live Tracking)</h2>
+                  <p class="text-xs text-slate-500">Tahapan penanganan resmi dari tim operasional teknis GTT</p>
+                </div>
+                <div class="text-right flex items-center space-x-2">
+                  <span class="text-xs font-mono font-black text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+                    Progres: {{ progressPercentage }}%
+                  </span>
+                </div>
               </div>
-              <span class="text-[11px] font-mono text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
-                Live Update
-              </span>
+
+              <!-- Animated Progress Bar -->
+              <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
+                <div 
+                  class="h-2.5 rounded-full transition-all duration-500"
+                  :class="progressPercentage === 100 ? 'bg-emerald-500' : 'bg-blue-600'"
+                  :style="{ width: `${progressPercentage}%` }"
+                ></div>
+              </div>
             </div>
 
-            <!-- Stepper Timeline -->
-            <div class="space-y-6 relative before:absolute before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
+            <!-- Stepper Timeline (Clean & Safe: Nama Tahap & Waktu tanpa ekspos catatan internal sensitif) -->
+            <div class="space-y-5 relative before:absolute before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
               <div 
                 v-for="(step, index) in ticket.milestones" 
                 :key="step.id"
@@ -166,17 +172,17 @@
                   <span v-else>{{ index + 1 }}</span>
                 </div>
 
-                <!-- Step Info Box -->
-                <div class="flex-1 bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 space-y-1.5 shadow-sm">
+                <!-- Step Info Box (Nama Tahap Saja demi Keamanan Data Perusahaan) -->
+                <div class="flex-1 bg-slate-50 border border-slate-200/80 rounded-xl p-3.5 space-y-1 shadow-xs">
                   <div class="flex flex-wrap items-center justify-between gap-1">
                     <h3 class="font-bold text-xs text-slate-900">{{ step.stepName }}</h3>
                     <span class="text-[10px] font-mono text-slate-500">{{ formatTime(step.timestampUtc).local }}</span>
                   </div>
-                  <p class="text-xs text-slate-600 leading-relaxed font-sans">
-                    {{ step.notes }}
-                  </p>
-                  <div v-if="step.actorName" class="text-[10px] text-slate-400 pt-1 border-t border-slate-200/60">
-                    Petugas: <span class="font-medium text-slate-600">{{ step.actorName }}</span>
+                  <div class="flex items-center space-x-1.5 text-[11px] text-slate-500 pt-0.5">
+                    <span class="inline-block w-1.5 h-1.5 rounded-full" :class="index === ticket.milestones.length - 1 ? 'bg-blue-600 animate-pulse' : 'bg-emerald-600'"></span>
+                    <span class="font-medium text-slate-600">
+                      {{ index === ticket.milestones.length - 1 ? (['RESOLVED', 'CLOSED'].includes(ticket.status) ? 'Tahap Verifikasi Akhir Selesai' : 'Tahap Aktif Sedang Berjalan') : 'Tahap Telah Terpenuhi' }}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -190,26 +196,18 @@
               <p class="leading-relaxed text-emerald-800">
                 Layanan Anda telah dinyatakan pulih normal oleh tim teknisi GTT. Tiket saat ini memasuki masa pemantauan stabilitas selama <strong>72 Jam (3x24 Jam)</strong>.
               </p>
-              <div class="pt-2 flex flex-wrap gap-2">
+              <div class="pt-2">
                 <button 
                   @click="confirmCustomerSatisfaction"
-                  class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm transition-all"
+                  class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-sm transition-all text-xs cursor-pointer"
                 >
                   Konfirmasi Layanan Normal & Selesai
                 </button>
-                <a 
-                  href="https://wa.me/6281200000000?text=Halo%20Helpdesk%20GTT,%20kendala%20pada%20tiket%20masih%20berlanjut"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="px-3.5 py-1.5 bg-white hover:bg-rose-50 text-rose-700 font-bold rounded-lg border border-rose-200 shadow-sm transition-all"
-                >
-                  Laporkan Kendala Masih Ada
-                </a>
               </div>
             </div>
           </div>
 
-          <!-- Right Column: Summary & Contact Helpdesk -->
+          <!-- Right Column: Summary -->
           <div class="space-y-6">
             <!-- Information Card -->
             <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-3.5 text-xs">
@@ -232,29 +230,11 @@
                   <span class="text-slate-400 block text-[11px]">Saluran Pelaporan:</span>
                   <span class="font-medium text-slate-800">{{ ticket.channel }} Hotline</span>
                 </div>
-                <div v-if="ticket.rootCause" class="pt-2 border-t border-slate-100">
-                  <span class="text-emerald-700 font-bold block text-[11px]">Akar Masalah (Root Cause):</span>
-                  <p class="text-slate-700 bg-emerald-50/50 p-2 rounded border border-emerald-100 mt-1">
-                    {{ ticket.rootCause }}
+                <div v-if="['RESOLVED', 'CLOSED'].includes(ticket.status)" class="pt-2 border-t border-slate-100">
+                  <span class="text-emerald-700 font-bold block text-[11px]">Status Pemulihan:</span>
+                  <p class="text-slate-700 bg-emerald-50/70 p-2.5 rounded-lg border border-emerald-100 mt-1 leading-relaxed text-xs">
+                    ✓ Perbaikan teknis telah selesai dilaksanakan dan layanan dipastikan pulih normal.
                   </p>
-                </div>
-              </div>
-            </div>
-
-            <!-- Customer Service Contact Card -->
-            <div class="bg-blue-900 text-white rounded-2xl p-5 shadow-md space-y-3 text-xs">
-              <h3 class="font-bold text-sm text-blue-200">Bantuan & Eskalasi 24x7</h3>
-              <p class="text-blue-100 text-[11px] leading-relaxed">
-                Jika membutuhkan bantuan cepat atau memiliki pertanyaan mengenai tiket ini, hubungi kontak resmi helpdesk GTT:
-              </p>
-              <div class="space-y-2 pt-1 font-mono text-[11px]">
-                <div class="bg-blue-950/60 p-2.5 rounded-lg border border-blue-800">
-                  <span class="text-blue-300 block text-[10px]">Call Center / Hotline:</span>
-                  <span class="font-bold text-white text-xs">+62 21-555-GLOTRA (4568)</span>
-                </div>
-                <div class="bg-blue-950/60 p-2.5 rounded-lg border border-blue-800">
-                  <span class="text-blue-300 block text-[10px]">Email Dispatch:</span>
-                  <span class="font-bold text-white text-xs">support@glotra.co.id</span>
                 </div>
               </div>
             </div>
@@ -311,6 +291,20 @@ const getCategoryName = (id) => {
   const cat = ticketStore.categories.find(c => c.id === id);
   return cat ? cat.name : 'Network & Infrastructure';
 };
+
+const progressPercentage = computed(() => {
+  if (!ticket.value) return 0;
+  switch (ticket.value.status) {
+    case 'OPEN': return 25;
+    case 'ASSIGNED': return 40;
+    case 'IN_PROGRESS': return 65;
+    case 'PENDING_VENDOR':
+    case 'PENDING_CUSTOMER': return 75;
+    case 'RESOLVED': return 90;
+    case 'CLOSED': return 100;
+    default: return 50;
+  }
+});
 
 const humanReadableStatus = computed(() => {
   if (!ticket.value) return '';
