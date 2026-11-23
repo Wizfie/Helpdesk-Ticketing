@@ -236,6 +236,27 @@ export async function createTicket(req, res) {
       return res.status(400).json({ message: 'Customer, judul, deskripsi, dan alokasi teknisi penanganan wajib diisi.' });
     }
 
+    const customer = await prisma.customer.findUnique({
+      where: { id: Number(customerId) }
+    });
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer tidak ditemukan.' });
+    }
+    if (customer.isActive === false) {
+      return res.status(400).json({ message: `Customer "${customer.name}" berstatus non-aktif. Tidak dapat menerbitkan tiket baru.` });
+    }
+
+    // Validasi kuota tiket pelanggan (Quota Lock / Guard - Direct Balance Model)
+    const quotaStr = String(customer.ticketQuota || '').trim().toLowerCase();
+    if (quotaStr && quotaStr !== 'unlimited' && !isNaN(Number(quotaStr))) {
+      const remainingQuota = Number(quotaStr);
+      if (remainingQuota <= 0) {
+        return res.status(400).json({
+          message: `Gagal membuat tiket: Kuota tiket untuk mitra "${customer.name}" telah habis (sisa 0 tiket). Silakan hubungi admin untuk penambahan kuota tiket terlebih dahulu.`
+        });
+      }
+    }
+
     const now = new Date();
     const count = await prisma.ticket.count();
     const year2 = String(now.getFullYear()).slice(-2);
@@ -310,6 +331,21 @@ export async function createTicket(req, res) {
         milestones: true
       }
     });
+
+    // Kurangi saldo kuota tiket mitra secara otomatis (Direct Balance Model)
+    if (quotaStr && quotaStr !== 'unlimited' && !isNaN(Number(quotaStr))) {
+      const remainingQuota = Number(quotaStr);
+      try {
+        await prisma.customer.update({
+          where: { id: Number(customerId) },
+          data: {
+            ticketQuota: String(Math.max(0, remainingQuota - 1))
+          }
+        });
+      } catch (errQuota) {
+        console.warn('Gagal memotong kuota customer di database:', errQuota.message);
+      }
+    }
 
     // Audit Log
     await logAuditEvent({
@@ -446,6 +482,8 @@ export async function pauseSla(req, res) {
         pausedAt: now,
         pauseReason: isPartnerCust ? 'PARTNER_CUSTOMER' : 'PART_HARDWARE',
         status: nextStatus,
+        principalVendor: isPartnerCust ? null : (principalVendor || ticket.principalVendor),
+        principalCaseId: isPartnerCust ? null : (principalCaseId || ticket.principalCaseId),
         updatedAt: now
       }
     });
@@ -458,8 +496,8 @@ export async function pauseSla(req, res) {
     const currentProgress = existingMilestones.reduce((max, m) => Math.max(max, Number(m.progressPercent || 0)), 0);
 
     // Milestone
-    const vendorNote = principalVendor ? ` [Vendor/Distributor: ${principalVendor}]` : '';
-    const caseNote = principalCaseId ? ` [RMA/Case: ${principalCaseId}]` : '';
+    const vendorNote = (!isPartnerCust && principalVendor) ? ` [Vendor/Distributor: ${principalVendor}]` : '';
+    const caseNote = (!isPartnerCust && principalCaseId) ? ` [RMA/Case: ${principalCaseId}]` : '';
     await prisma.ticketMilestone.create({
       data: {
         ticketId: ticket.id,

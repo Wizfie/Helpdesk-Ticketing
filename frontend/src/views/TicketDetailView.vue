@@ -438,8 +438,8 @@
             </button>
           </div>
 
-          <!-- Chronological Step Items List -->
-          <div :key="timelineKey" class="relative pl-8 space-y-6 before:absolute before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200">
+          <!-- Chronological Step Items List (Scrollable Stream with Fixed Boundary) -->
+          <div :key="timelineKey" class="relative pl-8 pr-2 space-y-6 before:absolute before:left-3.5 before:top-3 before:bottom-3 before:w-0.5 before:bg-slate-200 max-h-[580px] overflow-y-auto">
             <div 
               v-for="(step, index) in timelineSteps" 
               :key="step.id || index"
@@ -465,7 +465,7 @@
                       class="text-[10px] font-bold px-2 py-0.5 rounded uppercase"
                       :class="getStatusBadgeClass(step.status)"
                     >
-                      {{ step.status }}
+                      {{ formatStepStatus(step.status) }}
                     </span>
                     <span 
                       class="text-[10px] font-bold px-1.5 py-0.5 rounded font-mono"
@@ -668,89 +668,111 @@
             Belum ada referensi Knowledge Base runbook yang terkait dengan tiket ini.
           </div>
 
-          <!-- KB Cards List -->
-          <div v-else class="space-y-3">
+          <!-- KB Cards Accordion List (Scrollable Boundary max-h-[460px]) -->
+          <div v-else class="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
             <div 
               v-for="kb in relatedKbArticles" 
               :key="kb.id"
-              class="p-3.5 border rounded-xl space-y-2.5 transition-all shadow-2xs"
+              class="border rounded-xl transition-all shadow-2xs overflow-hidden"
               :class="kb.isDirectLinked ? 'bg-blue-50/40 border-blue-200 ring-1 ring-blue-500/10' : 'bg-slate-50/70 border-slate-200/80 hover:border-slate-300'"
             >
-              <div class="flex items-start justify-between gap-1.5">
-                <div class="font-bold text-slate-900 text-xs font-mono min-w-0">
-                  <span class="text-blue-700">{{ kb.kbCode }}</span>: {{ kb.title }}
-                </div>
-                <span 
-                  v-if="kb.isDirectLinked"
-                  class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-600 text-white shrink-0 font-mono tracking-wide shadow-2xs"
-                >
-                  TERKAIT LANGSUNG
-                </span>
-                <span 
-                  v-else
-                  class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded shrink-0 border border-emerald-200/60 font-mono"
-                >
-                  Match: {{ kb.similarity }}%
-                </span>
-              </div>
-
-              <!-- Attached Document Bar (if runbook document is attached) -->
+              <!-- Accordion Header: Clickable -->
               <div 
-                v-if="kb.documentName || kb.pdfAttachmentUrl" 
-                class="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between gap-2 text-xs"
+                @click="toggleKbAccordion(kb.id)"
+                class="p-3 flex items-center justify-between gap-2 cursor-pointer select-none hover:bg-black/[0.02] transition-colors"
               >
-                <div class="flex items-center space-x-2 min-w-0">
-                  <span 
-                    class="px-1.5 py-0.5 rounded text-[9px] font-black shrink-0 border"
-                    :class="isDocx(kb) ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-rose-50 text-rose-700 border-rose-200'"
-                  >
-                    {{ isDocx(kb) ? 'DOCX' : 'PDF' }}
-                  </span>
-                  <div class="min-w-0">
-                    <span class="font-semibold text-slate-800 text-[11px] truncate block" :title="kb.documentName">
-                      {{ kb.documentName || 'Dokumen Runbook Resmi' }}
-                    </span>
-                    <span v-if="kb.documentSize" class="text-[10px] text-slate-400 block">
-                      {{ kb.documentSize }}
-                    </span>
+                <div class="flex items-center gap-2 min-w-0 flex-1">
+                  <div class="font-bold text-slate-900 text-xs font-mono truncate">
+                    <span class="text-blue-700">{{ kb.kbCode }}</span>: {{ kb.title }}
                   </div>
                 </div>
-
-                <button
-                  type="button"
-                  @click.stop="downloadKbDoc(kb)"
-                  class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] rounded transition-colors inline-flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs"
-                  title="Unduh Berkas Dokumen"
-                >
-                  <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span 
+                    v-if="kb.isDirectLinked"
+                    class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-600 text-white font-mono tracking-wide shadow-2xs"
+                  >
+                    TERKAIT
+                  </span>
+                  <span 
+                    v-else
+                    class="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200/60 font-mono"
+                  >
+                    Match: {{ kb.similarity }}%
+                  </span>
+                  <!-- Chevron Indicator -->
+                  <svg 
+                    class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                    :class="expandedKbIds.has(kb.id) ? 'rotate-180 text-blue-600' : ''"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                   </svg>
-                  <span>Unduh</span>
-                </button>
+                </div>
               </div>
 
-              <p v-else-if="kb.symptom || kb.description" class="text-[11px] text-slate-600 leading-relaxed font-sans line-clamp-2">
-                {{ kb.symptom || kb.description }}
-              </p>
+              <!-- Accordion Body: Collapsible -->
+              <div 
+                v-show="expandedKbIds.has(kb.id)" 
+                class="px-3.5 pb-3.5 pt-1 space-y-2.5 border-t border-slate-100"
+              >
+                <!-- Attached Document Bar (if runbook document is attached) -->
+                <div 
+                  v-if="kb.documentName || kb.pdfAttachmentUrl" 
+                  class="p-2 bg-white rounded-lg border border-slate-200 flex items-center justify-between gap-2 text-xs"
+                >
+                  <div class="flex items-center space-x-2 min-w-0">
+                    <span 
+                      class="px-1.5 py-0.5 rounded text-[9px] font-black shrink-0 border"
+                      :class="isDocx(kb) ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-rose-50 text-rose-700 border-rose-200'"
+                    >
+                      {{ isDocx(kb) ? 'DOCX' : 'PDF' }}
+                    </span>
+                    <div class="min-w-0">
+                      <span class="font-semibold text-slate-800 text-[11px] truncate block" :title="kb.documentName">
+                        {{ kb.documentName || 'Dokumen Runbook Resmi' }}
+                      </span>
+                      <span v-if="kb.documentSize" class="text-[10px] text-slate-400 block">
+                        {{ kb.documentSize }}
+                      </span>
+                    </div>
+                  </div>
 
-              <!-- Tags and Detail Button -->
-              <div class="flex items-center justify-between pt-1">
-                <div class="flex flex-wrap gap-1">
-                  <span 
-                    v-for="tag in kb.tags" 
-                    :key="tag"
-                    class="bg-white text-slate-600 text-[10px] px-1.5 py-0.5 rounded border border-slate-200 font-mono"
+                  <button
+                    type="button"
+                    @click.stop="downloadKbDoc(kb)"
+                    class="px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-[10px] rounded transition-colors inline-flex items-center gap-1 shrink-0 cursor-pointer shadow-2xs"
+                    title="Unduh Berkas Dokumen"
                   >
-                    {{ tag }}
-                  </span>
+                    <svg class="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                    </svg>
+                    <span>Unduh</span>
+                  </button>
                 </div>
 
-                <button
-                  @click="openKbDetail(kb)"
-                  class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded shadow-2xs transition-all cursor-pointer shrink-0 ml-2"
-                >
-                  Lihat Detail
-                </button>
+                <p v-else-if="kb.symptom || kb.description" class="text-[11px] text-slate-600 leading-relaxed font-sans line-clamp-2">
+                  {{ kb.symptom || kb.description }}
+                </p>
+
+                <!-- Tags and Detail Button -->
+                <div class="flex items-center justify-between pt-1">
+                  <div class="flex flex-wrap gap-1">
+                    <span 
+                      v-for="tag in kb.tags" 
+                      :key="tag"
+                      class="bg-white text-slate-600 text-[10px] px-1.5 py-0.5 rounded border border-slate-200 font-mono"
+                    >
+                      {{ tag }}
+                    </span>
+                  </div>
+
+                  <button
+                    @click="openKbDetail(kb)"
+                    class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] rounded shadow-2xs transition-all cursor-pointer shrink-0 ml-2"
+                  >
+                    Lihat Detail
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1302,44 +1324,51 @@
             />
           </div>
 
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Input Vendor / Principal: Hanya ditampilkan jika memilih PART_HARDWARE / Vendor -->
+          <div v-if="pauseData.pendingType !== 'PARTNER_CUSTOMER'" class="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in duration-150">
             <div>
               <label class="block font-bold text-slate-800 mb-1">
-                {{ pauseData.pendingType === 'PART_HARDWARE' ? 'Distributor / Vendor Principal Suku Cadang' : 'Mitra / Pihak Terkait (Opsional)' }}
+                Distributor / Vendor Principal Suku Cadang
               </label>
               <input 
                 v-model="pauseData.principalVendor" 
                 type="text" 
-                :placeholder="pauseData.pendingType === 'PART_HARDWARE' ? 'Contoh: HPE Indonesia / Synnex Metrodata / Cisco TAC' : 'Contoh: Tim IT Klien PT Astra'" 
+                placeholder="Contoh: HPE Indonesia / Synnex Metrodata / Cisco TAC" 
                 class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-amber-500" 
               />
             </div>
 
             <div>
               <label class="block font-bold text-slate-800 mb-1">
-                {{ pauseData.pendingType === 'PART_HARDWARE' ? 'Nomor RMA / Tiket Kasus Part' : 'Nomor Tiket / Referensi Klien' }}
+                Nomor RMA / Tiket Kasus Part (Case ID)
               </label>
               <input 
                 v-model="pauseData.principalCaseId" 
                 type="text" 
-                placeholder="Contoh: RMA-77412 atau PO-2026-081" 
+                placeholder="Contoh: RMA-77412 atau TAC-2026-9921" 
                 class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs font-mono font-medium focus:ring-2 focus:ring-amber-500" 
               />
             </div>
           </div>
 
-          <div>
-            <div class="flex items-center justify-between mb-1">
-              <label class="font-bold text-slate-800">
-                Rincian Keterangan &amp; Justifikasi Penahanan <span class="text-rose-500">*</span>
-              </label>
-              <span class="text-[11px] text-slate-400">Wajib diisi untuk audit MoM</span>
+          <!-- Keterangan Otomatis jika memilih Partner / Customer (Mitra & No Tiket sudah terasosiasi otomatis) -->
+          <div v-else class="p-3 bg-blue-50/70 border border-blue-200/80 rounded-xl flex items-center justify-between text-xs text-blue-900 animate-in fade-in duration-150">
+            <div class="flex items-center space-x-2">
+              <span class="w-2 h-2 rounded-full bg-blue-600 shrink-0"></span>
+              <span>Penahanan SLA untuk pelanggan: <strong>{{ getCustomer(ticket?.customerId)?.name || ticket?.customerName || 'Pelanggan Terkait' }}</strong></span>
             </div>
+            <span class="font-mono text-[11px] text-blue-700 font-bold bg-white px-2 py-0.5 rounded border border-blue-200 shadow-2xs">{{ ticket?.ticketNumber }}</span>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-800 mb-1">
+              Rincian Keterangan &amp; Justifikasi Penahanan <span class="text-rose-500">*</span>
+            </label>
             <textarea 
               v-model="pauseData.reason" 
               required 
               rows="3" 
-              placeholder="Jelaskan secara spesifik alasan hold, part hardware yang dibutuhkan, status estimasi ketersediaan barang, atau konfirmasi customer yang sedang ditunggu..." 
+              :placeholder="pauseData.pendingType === 'PARTNER_CUSTOMER' ? 'Jelaskan alasan penahanan pelanggan (misal: menunggu konfirmasi PIC, persetujuan maintenance window, atau akses lokasi)...' : 'Jelaskan secara spesifik alasan hold, part hardware yang dibutuhkan, status estimasi ketersediaan barang, atau nomor RMA principal...'" 
               class="w-full p-3 border border-slate-200 rounded-xl text-xs font-sans focus:ring-2 focus:ring-amber-500 leading-relaxed"
             ></textarea>
           </div>
@@ -2131,8 +2160,8 @@ const allAttachments = computed(() => {
 
 // Dropdown options
 const milestoneStatusOptions = [
-  { value: 'IN_PROGRESS', label: 'In Progress' },
-  { value: 'PENDING', label: 'Pending (Part / Vendor / Client)' },
+  { value: 'IN_PROGRESS', label: 'In Progress (Sedang Dikerjakan)' },
+  { value: 'WAITING', label: 'Waiting (Part Indent / Kebutuhan Suku Cadang)' },
   { value: 'ESCALATED', label: 'Escalated (Principal TAC)' },
   { value: 'RESOLVED', label: 'Resolved (Terselesaikan)' }
 ];
@@ -2249,6 +2278,31 @@ const relatedKbArticles = computed(() => {
     .slice(0, 4);
 });
 
+// Knowledge Base Accordion interactive state (Opsi A)
+const expandedKbIds = ref(new Set());
+
+watch(
+  relatedKbArticles,
+  (articles) => {
+    if (articles && articles.length > 0 && expandedKbIds.value.size === 0) {
+      const next = new Set();
+      next.add(articles[0].id);
+      expandedKbIds.value = next;
+    }
+  },
+  { immediate: true }
+);
+
+const toggleKbAccordion = (id) => {
+  const next = new Set(expandedKbIds.value);
+  if (next.has(id)) {
+    next.delete(id);
+  } else {
+    next.add(id);
+  }
+  expandedKbIds.value = next;
+};
+
 const isDocx = (item) => {
   const name = item?.documentName || item?.pdfAttachmentUrl || '';
   return name.toLowerCase().endsWith('.docx') || name.toLowerCase().endsWith('.doc');
@@ -2289,6 +2343,12 @@ const getSeverityDotClass = (s) => {
   }
 };
 
+const formatStepStatus = (st) => {
+  const norm = (st || '').toUpperCase().trim();
+  if (norm === 'PENDING') return 'WAITING';
+  return norm;
+};
+
 const getStatusBadgeClass = (st) => {
   const norm = (st || '').toUpperCase().trim();
   switch (norm) {
@@ -2299,6 +2359,7 @@ const getStatusBadgeClass = (st) => {
     case 'IN PROGRESS':
     case 'IN_PROGRESS':
       return 'bg-blue-50 text-blue-700 border border-blue-300';
+    case 'WAITING':
     case 'PENDING':
       return 'bg-amber-50 text-amber-800 border border-amber-300';
     case 'PENDING_VENDOR':
@@ -2323,6 +2384,7 @@ const getStatusDotClass = (st) => {
     case 'ASSIGNED': return 'bg-indigo-600';
     case 'IN PROGRESS':
     case 'IN_PROGRESS': return 'bg-blue-600';
+    case 'WAITING':
     case 'PENDING': return 'bg-amber-500';
     case 'PENDING_VENDOR': return 'bg-orange-500';
     case 'PENDING_CUSTOMER': return 'bg-yellow-500';
@@ -2346,6 +2408,7 @@ const getTimelineNodeColor = (status, isLatest) => {
       return 'bg-orange-500 text-white';
     case 'PENDING_CUSTOMER':
       return 'bg-yellow-600 text-white';
+    case 'WAITING':
     case 'PENDING':
       return 'bg-amber-500 text-white';
     case 'IN PROGRESS':
@@ -2683,6 +2746,10 @@ const openPauseModal = () => {
 
 const submitPauseSla = async () => {
   if (!ticket.value) return;
+  if (pauseData.value.pendingType === 'PARTNER_CUSTOMER') {
+    pauseData.value.principalVendor = '';
+    pauseData.value.principalCaseId = '';
+  }
   try {
     await api.pauseSla(ticket.value.id, pauseData.value);
   } catch (err) {
@@ -2693,11 +2760,16 @@ const submitPauseSla = async () => {
   ticket.value.pausedAt = new Date().toISOString();
   ticket.value.pauseReason = pauseData.value.pendingType;
   ticket.value.pauseDetails = pauseData.value.reason;
-  if (pauseData.value.principalCaseId) {
-    ticket.value.principalCaseId = pauseData.value.principalCaseId;
-  }
-  if (pauseData.value.principalVendor) {
-    ticket.value.principalVendor = pauseData.value.principalVendor;
+  if (pauseData.value.pendingType === 'PARTNER_CUSTOMER') {
+    ticket.value.principalCaseId = null;
+    ticket.value.principalVendor = null;
+  } else {
+    if (pauseData.value.principalCaseId) {
+      ticket.value.principalCaseId = pauseData.value.principalCaseId;
+    }
+    if (pauseData.value.principalVendor) {
+      ticket.value.principalVendor = pauseData.value.principalVendor;
+    }
   }
   ticket.value.status = (pauseData.value.pendingType === 'PARTNER_CUSTOMER') ? 'PENDING_CUSTOMER' : 'PENDING_VENDOR';
   showPauseModal.value = false;

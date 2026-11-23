@@ -241,16 +241,13 @@
               <th class="px-3 py-3 whitespace-nowrap">PERIODE MAINTENANCE</th>
               <th class="px-3 py-3 text-center whitespace-nowrap">
                 <div class="flex items-center justify-center space-x-1">
-                  <span>KUOTA TIKET</span>
+                  <span>SISA KUOTA TIKET</span>
                   <span
                     class="text-slate-400 font-normal cursor-help"
-                    title="Alokasi kuota tiket insiden berbayar per siklus tahunan"
+                    title="Saldo kuota tiket insiden yang saat ini tersedia untuk digunakan"
                     >(i)</span
                   >
                 </div>
-              </th>
-              <th class="px-3 py-3 text-center whitespace-nowrap">
-                SISA TIKET
               </th>
               <th class="px-3 py-3 whitespace-nowrap">PAKET KONTRAK SLA</th>
               <th class="px-3 py-3 text-center whitespace-nowrap">STATUS</th>
@@ -309,19 +306,19 @@
                 </div>
               </td>
 
-              <!-- KUOTA TIKET -->
-              <td
-                class="px-3 py-3 align-middle font-mono text-xs font-bold text-slate-800 text-center whitespace-nowrap"
-              >
-                {{ c.ticketQuota || "Unlimited" }}
-              </td>
-
-              <!-- SISA TIKET -->
+              <!-- SISA KUOTA TIKET (Direct Balance Model) -->
               <td class="px-3 py-3 align-middle text-center whitespace-nowrap">
-                <template v-if="c.ticketQuota && c.ticketQuota !== 'Unlimited'">
-                  <div class="flex items-center justify-center space-x-1.5">
-                    <span class="font-mono text-xs font-black text-slate-900">
-                      {{ getCustomerQuotaInfo(c).remaining }}
+                <template v-if="c.ticketQuota && String(c.ticketQuota).toLowerCase() !== 'unlimited'">
+                  <div class="flex items-center justify-center">
+                    <span
+                      class="font-mono text-xs font-black"
+                      :class="[
+                        getCustomerQuotaInfo(c).isCritical ? 'text-rose-600' :
+                        getCustomerQuotaInfo(c).isNearLimit ? 'text-amber-600' :
+                        'text-emerald-700'
+                      ]"
+                    >
+                      {{ c.ticketQuota }} Tiket
                     </span>
                   </div>
                 </template>
@@ -550,6 +547,30 @@
             <span>Kontak PIC</span>
           </button>
 
+          <!-- Tambah Kuota Tiket Action -->
+          <button
+            @click="
+              openAddQuotaModal(activeMenuCustomer);
+              openActionMenuId = null;
+            "
+            class="w-full px-3 py-1.5 text-xs text-blue-700 hover:bg-blue-50 flex items-center space-x-2 cursor-pointer font-medium"
+          >
+            <svg
+              class="w-3.5 h-3.5 text-blue-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            <span>Tambah Kuota</span>
+          </button>
+
           <!-- Toggle Status Manual Action -->
           <button
             @click="
@@ -688,19 +709,34 @@
         }}</strong>
         tersisa
         <span class="font-mono font-bold text-rose-600">{{
-          getCustomerQuotaInfo(criticalCustomer).remaining
-        }}</span>
-        dari {{ getCustomerQuotaInfo(criticalCustomer).quota }} tiket (<span
-          class="font-bold text-rose-600"
-          >{{ getCustomerQuotaInfo(criticalCustomer).percentage }}%</span
-        >). Silakan hubungi customer untuk konfirmasi perpanjangan kontrak atau
-        penambahan kuota tiket.
+          criticalCustomer.ticketQuota || '0'
+        }} tiket</span>
+        ({{ getCustomerQuotaInfo(criticalCustomer).used }} riwayat insiden tercatat). Silakan hubungi customer untuk konfirmasi penambahan kuota tiket.
       </p>
 
-      <div class="flex items-center justify-end pt-1">
+      <div class="flex items-center justify-end pt-1 gap-2">
+        <button
+          @click="openAddQuotaModal(criticalCustomer)"
+          class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-xs hover:shadow transition-all cursor-pointer flex items-center space-x-1.5"
+        >
+          <svg
+            class="w-3.5 h-3.5"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            ></path>
+          </svg>
+          <span>Tambah Kuota</span>
+        </button>
         <button
           @click="focusAndEditCustomer(criticalCustomer)"
-          class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs shadow-xs hover:shadow transition-all cursor-pointer flex items-center space-x-1.5"
+          class="px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs shadow-xs hover:shadow transition-all cursor-pointer flex items-center space-x-1.5"
         >
           <span>Lihat Detail Mitra</span>
           <svg
@@ -1339,13 +1375,23 @@
                   <label class="block font-semibold text-slate-700"
                     >Jumlah Kuota Tiket *</label
                   >
-                  <button
-                    type="button"
-                    @click="editCustomerForm.ticketQuota = 'Unlimited'"
-                    class="text-[10px] text-blue-600 hover:text-blue-700 font-semibold cursor-pointer underline"
-                  >
-                    Set Unlimited
-                  </button>
+                  <div class="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      @click="openAddQuotaModal(ticketStore.customers.find(c => c.id === editCustomerForm.id)); showEditCustomerModal = false;"
+                      class="text-[10px] text-blue-600 hover:text-blue-800 font-bold cursor-pointer hover:underline"
+                    >
+                      + Tambah Kuota
+                    </button>
+                    <span class="text-slate-300">|</span>
+                    <button
+                      type="button"
+                      @click="editCustomerForm.ticketQuota = 'Unlimited'"
+                      class="text-[10px] text-slate-500 hover:text-slate-700 font-semibold cursor-pointer underline"
+                    >
+                      Set Unlimited
+                    </button>
+                  </div>
                 </div>
                 <input
                   v-model="editCustomerForm.ticketQuota"
@@ -1354,6 +1400,9 @@
                   placeholder="Contoh: 50, 150, atau Unlimited"
                   class="w-full p-2.5 border border-slate-200 rounded-lg text-xs bg-white font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none"
                 />
+                <span class="text-[10px] text-slate-400 mt-1 block">
+                  Pagu kuota kontrak total. Sisa tiket = Total kuota - tiket terpakai. Gunakan <strong>+ Tambah Kuota</strong> untuk menambah secara akumulatif.
+                </span>
               </div>
 
               <!-- Info Box -->
@@ -1586,6 +1635,140 @@
         </form>
       </div>
     </div>
+
+    <!-- Modal 5: Tambah Kuota Tiket (Free Open Input - No Quick Buttons) -->
+    <div
+      v-if="showAddQuotaModal && quotaCustomer"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4 overflow-y-auto"
+    >
+      <div
+        class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-lg p-6 space-y-4 text-xs animate-in fade-in zoom-in-95 duration-150 my-auto"
+      >
+        <!-- Modal Title -->
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <h4 class="font-black text-slate-900 text-sm">
+                Tambah Kuota Tiket Mitra
+              </h4>
+              <p class="text-[11px] text-slate-500">
+                Alokasi tiket insiden tambahan untuk <strong class="text-slate-800">{{ quotaCustomer.name }}</strong>
+              </p>
+            </div>
+          </div>
+          <button
+            @click="showAddQuotaModal = false"
+            class="text-slate-400 hover:text-slate-600 text-xl font-bold leading-none cursor-pointer"
+          >
+            &times;
+          </button>
+        </div>
+
+        <!-- Quota Status Current Cards -->
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2">
+          <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">
+            <span>Status Saldo Kuota Tiket</span>
+            <span v-if="quotaCustomerInfo?.isCritical" class="text-rose-600 flex items-center gap-1 font-mono font-bold">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping"></span>
+              Perlu Top-Up
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-center">
+            <div class="p-2 bg-white rounded-lg border border-slate-200">
+              <span class="text-[10px] text-slate-500 block">Sisa Saldo Kuota</span>
+              <span
+                class="font-mono font-black text-xs sm:text-sm"
+                :class="quotaCustomerInfo?.isCritical ? 'text-rose-600' : 'text-emerald-700'"
+              >
+                {{ quotaCustomerInfo?.remaining }} Tiket
+              </span>
+            </div>
+            <div class="p-2 bg-white rounded-lg border border-slate-200">
+              <span class="text-[10px] text-slate-500 block">Total Riwayat Insiden</span>
+              <span class="font-mono font-bold text-slate-700 text-xs sm:text-sm">
+                {{ quotaCustomerInfo?.used }} Tiket
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <form @submit.prevent="submitAddQuota" class="space-y-4">
+          <!-- Free Input Field (Strictly no quick buttons as requested) -->
+          <div>
+            <label class="block font-bold text-slate-800 mb-1">
+              Jumlah Tiket Tambahan *
+            </label>
+            <div class="relative">
+              <input
+                v-model.number="addQuotaAmount"
+                type="number"
+                min="1"
+                step="1"
+                required
+                placeholder="Masukkan jumlah tiket, misal: 5, 10, 20..."
+                class="w-full p-2.5 pl-3 pr-16 border border-slate-200 rounded-lg text-sm font-bold font-mono focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+                autofocus
+              />
+              <div class="absolute inset-y-0 right-3 flex items-center pointer-events-none text-xs text-slate-400 font-semibold font-mono">
+                Tiket
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Preview / Simulasi Real-Time -->
+          <div
+            v-if="addQuotaAmount && addQuotaAmount > 0"
+            class="p-3 bg-blue-50/70 border border-blue-200 rounded-xl space-y-2 animate-in fade-in duration-150"
+          >
+            <div class="text-[11px] font-bold text-blue-900 flex items-center justify-between">
+              <span>Hasil Simulasi Tambahan:</span>
+              <span class="font-mono font-black text-blue-700 text-xs">
+                +{{ addQuotaAmount }} Tiket
+              </span>
+            </div>
+            <div class="p-2.5 bg-white rounded-lg border border-blue-100 flex items-center justify-between">
+              <span class="text-xs text-slate-600 font-medium">Saldo Kuota Tiket Baru</span>
+              <span class="font-mono font-black text-emerald-700 text-sm">
+                {{ calculatedNewQuota }} Tiket
+              </span>
+            </div>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              :disabled="isSubmittingQuota"
+              @click="showAddQuotaModal = false"
+              class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 font-semibold hover:bg-slate-50 cursor-pointer disabled:opacity-50"
+            >
+              Batal
+            </button>
+            <button
+              type="submit"
+              :disabled="isSubmittingQuota || !addQuotaAmount || addQuotaAmount <= 0"
+              class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm cursor-pointer disabled:opacity-50 flex items-center space-x-1.5"
+            >
+              <svg
+                v-if="isSubmittingQuota"
+                class="w-3.5 h-3.5 animate-spin text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+              </svg>
+              <span>{{ isSubmittingQuota ? "Menyimpan..." : "Simpan & Tambah Kuota" }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -1619,6 +1802,11 @@ const focusedCustomerId = ref(null);
 const activeCustomer = ref(null);
 const isExporting = ref(false);
 const isSubmittingPic = ref(false);
+
+const showAddQuotaModal = ref(false);
+const quotaCustomer = ref(null);
+const addQuotaAmount = ref(null);
+const isSubmittingQuota = ref(false);
 
 const activeMenuCustomer = computed(() => {
   return (
@@ -2187,6 +2375,79 @@ const handleDeletePic = async (pic) => {
   }
 };
 
+const openAddQuotaModal = (customer) => {
+  if (!customer) return;
+  quotaCustomer.value = customer;
+  addQuotaAmount.value = null;
+  showAddQuotaModal.value = true;
+};
+
+const quotaCustomerInfo = computed(() => {
+  if (!quotaCustomer.value) return null;
+  const current = ticketStore.customers.find((c) => String(c.id) === String(quotaCustomer.value.id)) || quotaCustomer.value;
+  return ticketStore.getCustomerQuotaInfo(current);
+});
+
+const calculatedNewQuota = computed(() => {
+  if (!quotaCustomer.value) return 0;
+  const current = ticketStore.customers.find((c) => String(c.id) === String(quotaCustomer.value.id)) || quotaCustomer.value;
+  const currentStr = String(current.ticketQuota || '').trim().toLowerCase();
+  const amt = parseInt(addQuotaAmount.value, 10) || 0;
+  if (!currentStr || currentStr === 'unlimited') {
+    return amt > 0 ? amt : 'Unlimited';
+  }
+  const cur = parseInt(currentStr, 10) || 0;
+  return cur + amt;
+});
+
+const calculatedNewRemaining = computed(() => {
+  if (!quotaCustomer.value) return 0;
+  const info = quotaCustomerInfo.value;
+  if (!info || info.quota === 'Unlimited') return 'Unlimited';
+  const amt = parseInt(addQuotaAmount.value, 10) || 0;
+  return (info.remaining || 0) + amt;
+});
+
+const submitAddQuota = async () => {
+  if (!quotaCustomer.value || isSubmittingQuota.value) return;
+  const amt = parseInt(addQuotaAmount.value, 10);
+  if (isNaN(amt) || amt <= 0) {
+    uiStore.toastWarning("Silakan masukkan jumlah tambahan kuota minimal 1 tiket.");
+    return;
+  }
+
+  isSubmittingQuota.value = true;
+  try {
+    const custId = quotaCustomer.value.id;
+    const custName = quotaCustomer.value.name;
+
+    await ticketStore.topUpCustomerQuota(
+      custId,
+      amt,
+      "",
+      authStore.currentUser
+    );
+
+    // Refresh customers from backend if available
+    try {
+      await ticketStore.fetchCustomers();
+    } catch (e) {}
+
+    const updated = ticketStore.customers.find((c) => String(c.id) === String(custId));
+    if (updated) {
+      quotaCustomer.value = updated;
+    }
+
+    showAddQuotaModal.value = false;
+    uiStore.toastSuccess(`Berhasil menambahkan ${amt} tiket untuk mitra "${custName}"!`);
+  } catch (err) {
+    console.error("Gagal top-up kuota:", err);
+    uiStore.toastError("Gagal menambahkan kuota: " + (err.message || "Terjadi kesalahan sistem"));
+  } finally {
+    isSubmittingQuota.value = false;
+  }
+};
+
 const handleExportExcel = async () => {
   try {
     isExporting.value = true;
@@ -2215,10 +2476,7 @@ const handleExportExcel = async () => {
       { header: "PAKET KONTRAK SLA", width: 24, align: "center" },
       { header: "PERIODE MULAI", width: 15, align: "center" },
       { header: "PERIODE SELESAI", width: 16, align: "center" },
-      { header: "KUOTA TAHUNAN", width: 16, align: "center" },
-      { header: "TIKET TERPAKAI", width: 15, align: "center" },
-      { header: "SISA TIKET", width: 14, align: "center" },
-      { header: "% SISA KUOTA", width: 15, align: "center" },
+      { header: "SISA KUOTA TIKET", width: 18, align: "center" },
       { header: "STATUS OPERASIONAL", width: 20, align: "center" },
       { header: "KONTAK PIC TERDAFTAR", width: 42, align: "left", wrap: true },
       { header: "ALAMAT LENGKAP", width: 44, align: "left", wrap: true },
@@ -2295,9 +2553,6 @@ const handleExportExcel = async () => {
         c.maintenanceStart || "-",
         c.maintenanceEnd || "-",
         c.ticketQuota || "Unlimited",
-        qInfo.used,
-        qInfo.remaining,
-        qInfo.percentage !== null ? `${qInfo.percentage}%` : "Unlimited",
         statusStr,
         picsStr,
         c.address || "-",

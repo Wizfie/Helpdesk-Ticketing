@@ -128,6 +128,63 @@ export async function updateCustomer(req, res) {
   }
 }
 
+export async function topUpQuota(req, res) {
+  try {
+    const { id } = req.params;
+    const { amount, notes } = req.body;
+    const actor = req.user;
+
+    const addVal = parseInt(amount, 10);
+    if (isNaN(addVal) || addVal <= 0) {
+      return res.status(400).json({ message: 'Jumlah tambahan kuota harus berupa angka bulat positif lebih dari 0.' });
+    }
+
+    const customer = await prisma.customer.findUnique({
+      where: { id: Number(id) }
+    });
+
+    if (!customer) {
+      return res.status(404).json({ message: 'Mitra pelanggan tidak ditemukan.' });
+    }
+
+    const currentQuotaStr = String(customer.ticketQuota || '').trim().toLowerCase();
+    let newQuota;
+    if (!currentQuotaStr || currentQuotaStr === 'unlimited') {
+      newQuota = addVal;
+    } else {
+      const curNum = parseInt(currentQuotaStr, 10) || 0;
+      newQuota = curNum + addVal;
+    }
+
+    const updated = await prisma.customer.update({
+      where: { id: Number(id) },
+      data: {
+        ticketQuota: String(newQuota)
+      },
+      include: { pics: true }
+    });
+
+    await logAuditEvent({
+      userName: actor?.name || 'System Admin',
+      role: actor?.role || 'ADMIN',
+      action: 'CUSTOMER_QUOTA_TOPUP',
+      entityType: 'CUSTOMER',
+      entityId: String(updated.id),
+      description: `Top-up kuota tiket mitra ${updated.name}: +${addVal} tiket. Total kuota baru: ${newQuota} tiket.${notes ? ` (Ref: ${notes})` : ''}`,
+      ipAddress: req.ip
+    });
+
+    return res.json({
+      message: `Berhasil menambahkan ${addVal} tiket untuk mitra ${updated.name}.`,
+      customer: updated,
+      addedAmount: addVal,
+      ticketQuota: updated.ticketQuota
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Gagal melakukan penambahan kuota tiket.', error: error.message });
+  }
+}
+
 export async function addCustomerPic(req, res) {
   try {
     const { id } = req.params;

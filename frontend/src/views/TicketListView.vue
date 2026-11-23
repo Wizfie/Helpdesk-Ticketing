@@ -280,7 +280,7 @@
               v-for="ticket in paginatedTickets"
               :key="ticket.id"
               @click="$router.push(`/tickets/${ticket.id}`)"
-              class="hover:bg-blue-50/50 transition-colors cursor-pointer group"
+              class="hover:bg-blue-50/50 dark:hover:bg-slate-700/60 transition-colors cursor-pointer group"
             >
               <!-- 1. Checkbox -->
               <td class="py-3 px-3 text-center" @click.stop>
@@ -297,20 +297,20 @@
                 <router-link
                   :to="`/tickets/${ticket.id}`"
                   @click.stop
-                  class="font-medium text-blue-600 hover:text-blue-800 hover:underline"
+                  class="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                 >
                   {{ ticket.ticketNumber }}
                 </router-link>
               </td>
 
               <!-- 3. PELANGGAN (MITRA) -->
-              <td class="py-3 px-3 whitespace-nowrap font-medium text-slate-800">
+              <td class="py-3 px-3 whitespace-nowrap font-medium text-slate-800 dark:text-slate-200">
                 {{ getCustomerName(ticket.customerId) }}
               </td>
 
               <!-- 4. JUDUL KENDALA & RUANG LINGKUP -->
               <td class="py-3 px-3">
-                <div class="font-bold text-slate-900 group-hover:text-blue-900 leading-snug line-clamp-1">
+                <div class="font-bold text-slate-900 group-hover:text-blue-900 dark:group-hover:text-blue-300 leading-snug line-clamp-1">
                   {{ ticket.title }}
                 </div>
                 <div class="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
@@ -385,7 +385,7 @@
                       'font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wide inline-block',
                       ticket.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
                       ticket.status === 'ASSIGNED' ? 'bg-blue-50 text-blue-600 border border-blue-200' :
-                      ticket.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
+                      (ticket.status === 'PENDING' || ticket.status === 'WAITING') ? 'bg-amber-100 text-amber-700' :
                       ticket.status === 'ESCALATED' ? 'bg-purple-100 text-purple-700' :
                       ticket.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-700' :
                       ticket.status === 'NEAR_BREACH' ? 'bg-rose-100 text-rose-700' :

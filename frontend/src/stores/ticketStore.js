@@ -315,8 +315,8 @@ export const useTicketStore = defineStore('tickets', {
           };
         }
         const quotaStr = String(customer.ticketQuota || '').trim().toLowerCase();
-        const actualTicketsCount = state.tickets.filter(t => t.customerId === customer.id).length;
-        if (!quotaStr || quotaStr === 'unlimited' || isNaN(Number(quotaStr)) || Number(quotaStr) <= 0) {
+        const actualTicketsCount = state.tickets.filter(t => t.customerId === customer.id || String(t.customerId) === String(customer.id)).length;
+        if (!quotaStr || quotaStr === 'unlimited') {
           return {
             quota: 'Unlimited',
             used: actualTicketsCount,
@@ -327,18 +327,15 @@ export const useTicketStore = defineStore('tickets', {
             badgeColor: 'slate'
           };
         }
-        const numQuota = Number(quotaStr);
-        const used = actualTicketsCount;
-        const remaining = Math.max(0, numQuota - used);
-        const percentage = Math.round((remaining / numQuota) * 100);
-        const isCritical = percentage <= 10;
-        const isNearLimit = percentage <= 20;
+        const remaining = Math.max(0, parseInt(quotaStr, 10) || 0);
+        const isCritical = remaining <= 1;
+        const isNearLimit = remaining > 1 && remaining <= 3;
         const badgeColor = isCritical ? 'rose' : (isNearLimit ? 'amber' : 'emerald');
         return {
-          quota: numQuota,
-          used,
-          remaining,
-          percentage,
+          quota: remaining,
+          used: actualTicketsCount,
+          remaining: remaining,
+          percentage: null,
           isNearLimit,
           isCritical,
           badgeColor
@@ -877,6 +874,22 @@ export const useTicketStore = defineStore('tickets', {
     },
 
     createTicket(ticketData, actorUser) {
+      if (ticketData.customerId) {
+        const customer = (this.customers || []).find(c => String(c.id) === String(ticketData.customerId));
+        if (customer) {
+          const qInfo = this.getCustomerQuotaInfo(customer);
+          if (qInfo && qInfo.quota !== 'Unlimited' && typeof qInfo.remaining === 'number' && qInfo.remaining <= 0) {
+            throw new Error(`Gagal membuat tiket: Kuota tiket untuk mitra "${customer.name}" telah habis (sisa 0 tiket). Silakan tambah kuota terlebih dahulu.`);
+          }
+          // Kurangi saldo kuota tiket aktif jika bukan Unlimited (Model Saldo Kuota Berjalan)
+          if (customer.ticketQuota && String(customer.ticketQuota).toLowerCase() !== 'unlimited') {
+            const cur = parseInt(customer.ticketQuota, 10) || 0;
+            customer.ticketQuota = String(Math.max(0, cur - 1));
+            saveStoredData(STORAGE_KEYS.CUSTOMERS, this.customers);
+          }
+        }
+      }
+
       const nowUtc = new Date().toISOString();
       const count = this.tickets.length + 1;
       const year2 = String(new Date().getFullYear()).slice(-2);
@@ -1823,6 +1836,59 @@ export const useTicketStore = defineStore('tickets', {
           entityType: 'CUSTOMER',
           entityId: String(cust.id),
           description: `${newState ? 'Mengaktifkan' : 'Menonaktifkan'} status mitra ${cust.name} secara manual`
+        });
+      }
+
+      return cust;
+    },
+
+    async topUpCustomerQuota(customerId, amount, notes, actorUser) {
+      const cust = this.customers.find(c => String(c.id) === String(customerId));
+      if (!cust) throw new Error('Data mitra pelanggan tidak ditemukan.');
+
+      const addVal = parseInt(amount, 10);
+      if (isNaN(addVal) || addVal <= 0) {
+        throw new Error('Jumlah tambahan kuota harus angka bulat positif lebih dari 0.');
+      }
+
+      const currentQuotaStr = String(cust.ticketQuota || '').trim().toLowerCase();
+      let newQuota;
+      if (!currentQuotaStr || currentQuotaStr === 'unlimited') {
+        newQuota = addVal;
+      } else {
+        const cur = parseInt(currentQuotaStr, 10) || 0;
+        newQuota = cur + addVal;
+      }
+
+      cust.ticketQuota = String(newQuota);
+      saveStoredData(STORAGE_KEYS.CUSTOMERS, this.customers);
+
+      // Sinkronisasi ke MySQL Backend
+      try {
+        const res = await api.topUpCustomerQuota(customerId, {
+          amount: addVal,
+          notes: notes || ''
+        });
+        if (res && res.ticketQuota !== undefined) {
+          cust.ticketQuota = String(res.ticketQuota);
+          saveStoredData(STORAGE_KEYS.CUSTOMERS, this.customers);
+        }
+      } catch (err) {
+        console.warn('[TicketStore] Gagal top-up kuota customer di MySQL:', err.message);
+        // Fallback ke endpoint updateCustomer standar
+        try {
+          await api.updateCustomer(customerId, { ticketQuota: String(newQuota) });
+        } catch (e2) {}
+      }
+
+      if (actorUser) {
+        this.addAuditLog({
+          userName: actorUser.name,
+          role: actorUser.roleCode,
+          action: 'CUSTOMER_QUOTA_TOPUP',
+          entityType: 'CUSTOMER',
+          entityId: String(cust.id),
+          description: `Top-up kuota tiket mitra ${cust.name}: +${addVal} tiket (Total kuota baru: ${cust.ticketQuota} tiket)${notes ? ` [Ref: ${notes}]` : ''}`
         });
       }
 

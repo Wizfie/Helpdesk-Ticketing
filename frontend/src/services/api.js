@@ -113,6 +113,7 @@ export const api = {
   getCustomerById: (id) => request(`/customers/${id}`),
   createCustomer: (data) => request('/customers', { method: 'POST', body: JSON.stringify(data) }),
   updateCustomer: (id, data) => request(`/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  topUpCustomerQuota: (id, data) => request(`/customers/${id}/top-up-quota`, { method: 'POST', body: JSON.stringify(data) }),
   deleteCustomer: (id) => request(`/customers/${id}`, { method: 'DELETE' }),
   addCustomerPic: (id, data) => request(`/customers/${id}/pics`, { method: 'POST', body: JSON.stringify(data) }),
   updateCustomerPic: (id, picId, data) => request(`/customers/${id}/pics/${picId}`, { method: 'PUT', body: JSON.stringify(data) }),

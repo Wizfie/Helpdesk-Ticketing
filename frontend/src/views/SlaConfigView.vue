@@ -255,7 +255,7 @@
 
           <thead>
 
-            <tr class="bg-slate-50/75 border-b border-slate-200 text-[11px] font-bold text-slate-600">
+            <tr class="bg-slate-50/75 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300">
 
               <th class="py-3.5 px-4 w-12 text-center">No</th>
 
@@ -279,7 +279,7 @@
 
               :key="policy.id"
 
-              class="hover:bg-blue-50/25 transition-colors cursor-pointer"
+              class="hover:bg-blue-50/25 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
 
               @click="openDetailModal(policy)"
 

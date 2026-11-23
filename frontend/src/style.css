@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-800 antialiased font-sans min-h-screen;
+    @apply bg-slate-50 text-slate-800 antialiased font-sans min-h-screen transition-colors duration-200;
   }
 
   /* Modern styled native select fallback */
@@ -42,4 +42,488 @@
 /* Stepper Connection Line Animation */
 .step-line {
   transition: all 0.3s ease-in-out;
+}
+
+/* ==========================================================================
+   GLOBAL DARK MODE ENGINE & WCAG HIGH CONTRAST SAFEGUARDS
+   Ensures seamless theme switching with zero illegible / low-contrast text.
+   ========================================================================== */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #0b1120 !important; /* Deep Slate Navy */
+  color: #f1f5f9 !important;
+}
+
+/* 1. Core Surfaces, Cards, and Containers */
+html.dark .bg-white,
+html.dark .bg-white\/75,
+html.dark .bg-white\/80,
+html.dark .bg-white\/95 {
+  background-color: #1e293b !important; /* Slate 800 */
+}
+
+html.dark .bg-slate-50,
+html.dark .bg-slate-50\/40,
+html.dark .bg-slate-50\/50,
+html.dark .bg-slate-50\/60,
+html.dark .bg-slate-50\/70,
+html.dark .bg-slate-50\/75,
+html.dark .bg-slate-50\/80,
+html.dark .bg-slate-50\/85,
+html.dark .bg-slate-50\/90,
+html.dark .bg-slate-100,
+html.dark .bg-slate-100\/70,
+html.dark .bg-slate-100\/80 {
+  background-color: #0f172a !important; /* Slate 900 */
+}
+
+html.dark .bg-slate-200,
+html.dark .bg-slate-200\/60,
+html.dark .bg-slate-200\/70,
+html.dark .bg-slate-200\/80,
+html.dark .bg-slate-300 {
+  background-color: #1e293b !important; /* Slate 800 for UI pill/containers */
+}
+
+html.dark header.bg-white,
+html.dark aside.bg-white {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+/* 2. Borders and Dividers */
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-200\/60,
+html.dark .border-slate-200\/80,
+html.dark .border-slate-200\/90,
+html.dark .border-slate-300,
+html.dark .border-slate-400 {
+  border-color: #334155 !important; /* Slate 700 */
+}
+
+html.dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]),
+html.dark .divide-slate-200 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #334155 !important;
+}
+
+/* 3. Global Table Header and Row Safeguards */
+html.dark thead,
+html.dark thead tr,
+html.dark thead th,
+html.dark th {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+html.dark tbody tr {
+  color: #f1f5f9 !important;
+}
+
+html.dark tbody tr.bg-white {
+  background-color: transparent !important;
+}
+
+/* 4. Typography & High-Contrast Text Overrides */
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-gray-900,
+html.dark .text-gray-800,
+html.dark .text-black {
+  color: #f8fafc !important; /* Slate 50 - Crisp Bright Text */
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-600,
+html.dark .text-gray-700,
+html.dark .text-gray-600 {
+  color: #cbd5e1 !important; /* Slate 300 - Clean Readable Subtext */
+}
+
+html.dark .text-slate-500,
+html.dark .text-gray-500 {
+  color: #94a3b8 !important; /* Slate 400 - High Contrast Muted */
+}
+
+html.dark .text-slate-400,
+html.dark .text-gray-400 {
+  color: #94a3b8 !important; /* Never fade into invisible grey */
+}
+
+/* Dark Colored Titles & Big KPI Numbers (invisible on dark without light pastel override) */
+html.dark .text-blue-900,
+html.dark .text-blue-950 {
+  color: #bfdbfe !important; /* Crisp Soft Blue */
+}
+
+html.dark .text-emerald-900,
+html.dark .text-emerald-950 {
+  color: #a7f3d0 !important; /* Crisp Soft Mint */
+}
+
+html.dark .text-orange-700,
+html.dark .text-orange-800,
+html.dark .text-orange-900 {
+  color: #fdba74 !important; /* Crisp Soft Orange */
+}
+
+html.dark .text-amber-900,
+html.dark .text-amber-950 {
+  color: #fde68a !important; /* Crisp Soft Amber */
+}
+
+html.dark .text-rose-900 {
+  color: #fecdd3 !important; /* Crisp Soft Rose */
+}
+
+html.dark .text-indigo-800,
+html.dark .text-indigo-900 {
+  color: #c7d2fe !important; /* Crisp Soft Indigo */
+}
+
+html.dark .text-sky-800,
+html.dark .text-sky-900 {
+  color: #bae6fd !important; /* Crisp Soft Sky */
+}
+
+/* 5. Interactive Elements & Hover States (Eliminates Milky Washout & Blurry Contrast) */
+html.dark .hover\:bg-slate-50:hover,
+html.dark .hover\:bg-slate-50\/40:hover,
+html.dark .hover\:bg-slate-50\/50:hover,
+html.dark .hover\:bg-slate-50\/60:hover,
+html.dark .hover\:bg-slate-50\/70:hover,
+html.dark .hover\:bg-slate-50\/80:hover,
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-200:hover,
+html.dark .hover\:bg-slate-300:hover,
+html.dark .hover\:bg-white:hover {
+  background-color: #334155 !important; /* Slate 700 */
+}
+
+html.dark .hover\:bg-blue-50:hover,
+html.dark .hover\:bg-blue-50\/20:hover,
+html.dark .hover\:bg-blue-50\/25:hover,
+html.dark .hover\:bg-blue-50\/30:hover,
+html.dark .hover\:bg-blue-50\/40:hover,
+html.dark .hover\:bg-blue-50\/50:hover,
+html.dark .hover\:bg-blue-50\/60:hover,
+html.dark .hover\:bg-blue-100:hover {
+  background-color: rgba(30, 58, 138, 0.45) !important; /* High-contrast Deep Blue Slate */
+}
+
+html.dark .hover\:bg-emerald-50:hover,
+html.dark .hover\:bg-emerald-50\/50:hover,
+html.dark .hover\:bg-emerald-100:hover {
+  background-color: rgba(6, 78, 59, 0.45) !important;
+}
+
+html.dark .hover\:bg-amber-50:hover,
+html.dark .hover\:bg-amber-100:hover {
+  background-color: rgba(120, 53, 15, 0.45) !important;
+}
+
+html.dark .hover\:bg-rose-50:hover,
+html.dark .hover\:bg-rose-100:hover {
+  background-color: rgba(136, 19, 55, 0.45) !important;
+}
+
+html.dark .group:hover .group-hover\:text-blue-900,
+html.dark .group-hover\:text-blue-900:hover,
+html.dark .hover\:text-blue-900:hover {
+  color: #93c5fd !important; /* Bright Blue 300 - Never dark blue on dark rows */
+}
+
+html.dark .hover\:text-slate-900:hover {
+  color: #ffffff !important;
+}
+
+html.dark .hover\:text-slate-700:hover {
+  color: #e2e8f0 !important;
+}
+
+/* 6. Inputs, Textareas, and Dropdown Controls */
+html.dark input:not([type="checkbox"]):not([type="radio"]),
+html.dark select,
+html.dark textarea {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border-color: #334155 !important;
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: #3b82f6 !important;
+  background-color: #0b1120 !important;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b !important;
+}
+
+html.dark select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e") !important;
+}
+
+html.dark select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+/* 7. High-Contrast Status Badges, Pills & Color Sets */
+/* Blue Badges (In Progress, Assigned, General Info) */
+html.dark .bg-blue-50,
+html.dark .bg-blue-50\/20,
+html.dark .bg-blue-50\/30,
+html.dark .bg-blue-50\/40,
+html.dark .bg-blue-50\/50,
+html.dark .bg-blue-50\/60,
+html.dark .bg-blue-50\/70,
+html.dark .bg-blue-50\/80,
+html.dark .bg-blue-100,
+html.dark .bg-blue-100\/70,
+html.dark .bg-blue-200\/80 {
+  background-color: rgba(37, 99, 235, 0.22) !important;
+}
+html.dark .text-blue-600,
+html.dark .text-blue-700,
+html.dark .text-blue-800 {
+  color: #93c5fd !important; /* Bright Blue */
+}
+html.dark .border-blue-100,
+html.dark .border-blue-200,
+html.dark .border-blue-300 {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+/* Emerald / Green Badges (Resolved, Closed, Active, Safe Quota) */
+html.dark .bg-emerald-50,
+html.dark .bg-emerald-50\/70,
+html.dark .bg-emerald-100,
+html.dark .bg-emerald-100\/70,
+html.dark .bg-green-50,
+html.dark .bg-green-100 {
+  background-color: rgba(16, 185, 129, 0.22) !important;
+}
+html.dark .text-emerald-600,
+html.dark .text-emerald-700,
+html.dark .text-emerald-800,
+html.dark .text-green-600,
+html.dark .text-green-700,
+html.dark .text-green-800 {
+  color: #6ee7b7 !important; /* Bright Mint / Emerald */
+}
+html.dark .border-emerald-200,
+html.dark .border-emerald-300 {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+/* Amber / Yellow Badges (Waiting, Hold SLA, Low Quota Warning) */
+html.dark .bg-amber-50,
+html.dark .bg-amber-50\/60,
+html.dark .bg-amber-50\/70,
+html.dark .bg-amber-50\/80,
+html.dark .bg-amber-100,
+html.dark .bg-yellow-50,
+html.dark .bg-yellow-100 {
+  background-color: rgba(245, 158, 11, 0.22) !important;
+}
+html.dark .text-amber-600,
+html.dark .text-amber-700,
+html.dark .text-amber-800,
+html.dark .text-yellow-700,
+html.dark .text-yellow-800 {
+  color: #fcd34d !important; /* Bright Amber */
+}
+html.dark .border-amber-200,
+html.dark .border-amber-300 {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+/* Orange Badges & Cards (Open / In Progress in Reports) */
+html.dark .bg-orange-50,
+html.dark .bg-orange-100 {
+  background-color: rgba(249, 115, 22, 0.22) !important;
+}
+html.dark .border-orange-200,
+html.dark .border-orange-300 {
+  border-color: rgba(249, 115, 22, 0.4) !important;
+}
+
+/* Sky Badges & Cards (SLA Rate in Reports) */
+html.dark .bg-sky-50,
+html.dark .bg-sky-100 {
+  background-color: rgba(14, 165, 233, 0.22) !important;
+}
+html.dark .border-sky-200,
+html.dark .border-sky-300 {
+  border-color: rgba(14, 165, 233, 0.4) !important;
+}
+html.dark .text-sky-600,
+html.dark .text-sky-700,
+html.dark .text-sky-800 {
+  color: #7dd3fc !important;
+}
+
+/* Indigo Badges & Cards (MTTR in Reports) */
+html.dark .bg-indigo-50,
+html.dark .bg-indigo-100 {
+  background-color: rgba(99, 102, 241, 0.22) !important;
+}
+html.dark .border-indigo-200,
+html.dark .border-indigo-300 {
+  border-color: rgba(99, 102, 241, 0.4) !important;
+}
+html.dark .text-indigo-600,
+html.dark .text-indigo-700,
+html.dark .text-indigo-800 {
+  color: #a5b4fc !important;
+}
+
+/* Rose / Red Badges (Breached SLA, Critical, Danger) */
+html.dark .bg-rose-50,
+html.dark .bg-rose-50\/60,
+html.dark .bg-rose-50\/70,
+html.dark .bg-rose-100,
+html.dark .bg-rose-100\/70,
+html.dark .bg-rose-200,
+html.dark .bg-red-50,
+html.dark .bg-red-100 {
+  background-color: rgba(244, 63, 94, 0.22) !important;
+}
+html.dark .text-rose-600,
+html.dark .text-rose-700,
+html.dark .text-rose-800,
+html.dark .text-red-600,
+html.dark .text-red-700,
+html.dark .text-red-800 {
+  color: #fb7185 !important; /* Vibrant Rose 400 - Anti Pudar */
+}
+html.dark .border-rose-200,
+html.dark .border-rose-300 {
+  border-color: rgba(244, 63, 94, 0.5) !important;
+}
+
+/* Sidebar Logout Action Button - Anti-Pudar High Contrast */
+html.dark .sidebar-logout-btn {
+  background-color: rgba(225, 29, 72, 0.15) !important;
+  color: #fb7185 !important;
+  border-color: rgba(244, 63, 94, 0.55) !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3) !important;
+}
+
+html.dark .sidebar-logout-btn:hover {
+  background-color: #e11d48 !important;
+  color: #ffffff !important;
+  border-color: #e11d48 !important;
+  box-shadow: 0 4px 12px -2px rgba(225, 29, 72, 0.5) !important;
+}
+
+html.dark .sidebar-logout-btn svg {
+  color: inherit !important;
+}
+
+/* Purple Badges */
+html.dark .bg-purple-50,
+html.dark .bg-purple-100 {
+  background-color: rgba(168, 85, 247, 0.22) !important;
+}
+html.dark .text-purple-600,
+html.dark .text-purple-700,
+html.dark .text-purple-800 {
+  color: #d8b4fe !important;
+}
+html.dark .border-purple-200,
+html.dark .border-purple-300 {
+  border-color: rgba(168, 85, 247, 0.4) !important;
+}
+
+/* Teal Badges (Customer Actions in Audit Logs, etc.) */
+html.dark .bg-teal-50,
+html.dark .bg-teal-100 {
+  background-color: rgba(20, 184, 166, 0.22) !important;
+}
+html.dark .text-teal-600,
+html.dark .text-teal-700,
+html.dark .text-teal-800 {
+  color: #5eead4 !important; /* Bright Teal 300 - High Contrast & Sharp */
+}
+html.dark .border-teal-200,
+html.dark .border-teal-300 {
+  border-color: rgba(20, 184, 166, 0.45) !important;
+}
+
+/* Cyan Badges */
+html.dark .bg-cyan-50,
+html.dark .bg-cyan-100 {
+  background-color: rgba(6, 182, 212, 0.22) !important;
+}
+html.dark .text-cyan-600,
+html.dark .text-cyan-700,
+html.dark .text-cyan-800 {
+  color: #67e8f9 !important;
+}
+html.dark .border-cyan-200,
+html.dark .border-cyan-300 {
+  border-color: rgba(6, 182, 212, 0.45) !important;
+}
+
+/* 8. Reports Custom Panels, Tables, and Alternating Rows */
+html.dark .rpt-panel {
+  background-color: #1e293b !important;
+  border-color: #334155 !important;
+}
+html.dark .rpt-panel-title {
+  color: #93c5fd !important;
+}
+html.dark .rpt-panel-title p {
+  color: #94a3b8 !important;
+}
+html.dark .rpt-table th {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+html.dark .rpt-table td {
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+html.dark .rpt-cases tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02) !important;
+}
+html.dark .rpt-cases tbody tr:hover {
+  background-color: rgba(30, 58, 138, 0.35) !important;
+}
+
+/* 9. Dark Scrollbar */
+html.dark ::-webkit-scrollbar-track {
+  background: #0f172a;
+}
+html.dark ::-webkit-scrollbar-thumb {
+  background: #334155;
+}
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* 10. Stepper and Timeline Details */
+html.dark .before\:bg-slate-200::before {
+  background-color: #334155 !important;
+}
+html.dark .border-white {
+  border-color: #1e293b !important;
+}
+html.dark .ring-white {
+  --tw-ring-color: #1e293b !important;
+}
+
+/* 11. Floating Modals and Dropdowns Elevated Elevation */
+html.dark .shadow-2xl,
+html.dark .shadow-xl {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.5) !important;
 }

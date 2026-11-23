@@ -21,7 +21,7 @@
             />
             <div>
               <div class="flex items-center space-x-2">
-                <span class="font-black text-slate-900 text-lg tracking-tight">GTT Helpdesk</span>
+                <span class="font-black text-slate-900 text-lg tracking-tight">Glotra ServiceDesk</span>
                 <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">v1.0 RBAC</span>
               </div>
               <p class="text-xs text-slate-500 font-medium italic">"Think it, Solve it" &bull; 24x7 Enterprise SLA</p>

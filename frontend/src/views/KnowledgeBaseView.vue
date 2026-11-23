@@ -215,11 +215,11 @@
           </div>
 
           <!-- Toggle View Mode: Table vs Grid -->
-          <div class="flex items-center p-0.5 bg-slate-200/60 border border-slate-200 rounded-lg h-[34px] shrink-0">
+          <div class="flex items-center p-0.5 bg-slate-200/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg h-[34px] shrink-0">
             <button
               @click="viewMode = 'table'"
               class="h-[28px] px-2 rounded-md transition-all cursor-pointer flex items-center space-x-1"
-              :class="viewMode === 'table' ? 'bg-white text-blue-600 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-700'"
+              :class="viewMode === 'table' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
               title="Tampilan Tabel"
             >
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -230,7 +230,7 @@
             <button
               @click="viewMode = 'grid'"
               class="h-[28px] px-2 rounded-md transition-all cursor-pointer flex items-center space-x-1"
-              :class="viewMode === 'grid' ? 'bg-white text-blue-600 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-700'"
+              :class="viewMode === 'grid' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'"
               title="Tampilan Grid"
             >
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

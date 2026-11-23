@@ -504,11 +504,11 @@
       <button
         @click="handleLogout"
         type="button"
-        class="w-full flex items-center justify-center space-x-2 px-3 py-2 text-xs font-semibold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200/80 rounded-lg transition-colors cursor-pointer group shadow-xs"
+        class="sidebar-logout-btn w-full flex items-center justify-center space-x-2 px-3 py-2 text-xs font-bold text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200/90 rounded-lg transition-all cursor-pointer group shadow-2xs active:scale-[0.98]"
         title="Keluar dari akun (Logout)"
       >
         <svg
-          class="w-4 h-4 transition-transform group-hover:-translate-x-0.5"
+          class="w-4 h-4 transition-transform group-hover:-translate-x-0.5 shrink-0"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -523,11 +523,11 @@
         <span>Keluar Sistem</span>
       </button>
 
-      <div class="text-[11px] text-slate-400 text-center">
-        <p class="font-semibold text-slate-600">
+      <div class="text-[11px] text-center pt-0.5 space-y-0.5">
+        <p class="font-bold text-slate-700 dark:text-slate-200 tracking-tight">
           PT Global Transformasi Teknologi
         </p>
-        <p class="text-[10px] text-slate-400">Helpdesk Ticketing System</p>
+        <p class="text-[10px] text-slate-400 dark:text-slate-400 font-medium">Helpdesk Ticketing System</p>
       </div>
     </div>
   </aside>

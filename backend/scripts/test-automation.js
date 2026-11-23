@@ -120,6 +120,67 @@ async function main() {
     assert.strictEqual(evalResult.isResolutionBreached, true, 'Harus mendeteksi tiket telah melanggar SLA');
   });
 
+  await runScenario('1.5', 'Validasi Kuota Kontrak & Pencegahan Overlimit (Quota Guard)', () => {
+    const evaluateQuotaLock = (quotaBalance) => {
+      const qStr = String(quotaBalance || '').trim().toLowerCase();
+      if (!qStr || qStr === 'unlimited' || isNaN(Number(qStr))) {
+        return { isAllowed: true, remaining: 'Unlimited' };
+      }
+      const balance = parseInt(qStr, 10) || 0;
+      return { isAllowed: balance > 0, remaining: balance };
+    };
+
+    // Kasus 1: Saldo Kuota 0 -> Harus DITOLAK
+    const checkFull = evaluateQuotaLock('0');
+    assert.strictEqual(checkFull.isAllowed, false, 'Saldo kuota 0 tiket harus DITOLAK');
+    assert.strictEqual(checkFull.remaining, 0, 'Sisa kuota harus 0');
+
+    // Kasus 2: Saldo Kuota 1 -> Harus DIIZINKAN (Sisa 1)
+    const checkOneLeft = evaluateQuotaLock('1');
+    assert.strictEqual(checkOneLeft.isAllowed, true, 'Sisa 1 tiket harus diizinkan');
+    assert.strictEqual(checkOneLeft.remaining, 1, 'Sisa kuota harus 1');
+
+    // Kasus 3: Kuota Unlimited -> Bebas
+    const checkUnlimited = evaluateQuotaLock('Unlimited');
+    assert.strictEqual(checkUnlimited.isAllowed, true, 'Unlimited harus selalu diizinkan');
+  });
+
+  await runScenario('1.6', 'Validasi Top-Up Kuota Bebas (Free Input) & Saldo Kuota Berjalan', () => {
+    const applyTopUp = (currentBalanceStr, addAmount) => {
+      const addVal = parseInt(addAmount, 10);
+      if (isNaN(addVal) || addVal <= 0) {
+        throw new Error('Jumlah tambahan kuota harus berupa angka bulat positif lebih dari 0.');
+      }
+      const qStr = String(currentBalanceStr || '').trim().toLowerCase();
+      let newBalance;
+      if (!qStr || qStr === 'unlimited') {
+        newBalance = addVal;
+      } else {
+        const cur = parseInt(qStr, 10) || 0;
+        newBalance = cur + addVal;
+      }
+      return { newBalance, isAllowed: newBalance > 0 };
+    };
+
+    // Kasus 1: Awalnya saldo 0 (terkunci). Top up bebas 5 tiket -> Saldo baru 5 tiket.
+    const res1 = applyTopUp('0', 5);
+    assert.strictEqual(res1.newBalance, 5, 'Saldo kuota baru harus 0 + 5 = 5');
+    assert.strictEqual(res1.isAllowed, true, 'Klien kini diizinkan membuat tiket kembali');
+
+    // Kasus 2: Saldo kuota 4 tiket. Top up bebas 12 tiket -> Saldo baru 16 tiket.
+    const res2 = applyTopUp('4', 12);
+    assert.strictEqual(res2.newBalance, 16, 'Saldo kuota baru harus 4 + 12 = 16');
+
+    // Pengurangan saldo per tiket yang terbit
+    const consumeTicket = (balance) => Math.max(0, balance - 1);
+    assert.strictEqual(consumeTicket(res2.newBalance), 15, 'Setelah 1 tiket terbit saldo berkurang dari 16 jadi 15');
+
+    // Kasus 3: Input tidak valid (0 atau negatif) harus ditolak
+    assert.throws(() => applyTopUp('10', 0), /harus berupa angka bulat positif/);
+    assert.throws(() => applyTopUp('10', -5), /harus berupa angka bulat positif/);
+    assert.throws(() => applyTopUp('10', 'abc'), /harus berupa angka bulat positif/);
+  });
+
   // ============================================================================
   // PANDUAN 2: PENGUJIAN KEAMANAN UPLOAD BERKAS & GATEWAY EMAIL
   // ============================================================================

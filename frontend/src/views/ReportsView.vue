@@ -1547,6 +1547,16 @@ const exportExcel = async () => {
 .rpt-table td { padding: 7px 8px; text-align: center; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
 .rpt-table th.text-left, .rpt-table td.text-left { text-align: left; }
 
+html.dark .rpt-panel { background: #1e293b !important; border-color: #334155 !important; }
+html.dark .rpt-panel-title { color: #93c5fd !important; }
+html.dark .rpt-panel-title p { color: #94a3b8 !important; }
+html.dark .rpt-table th { background: #0f172a !important; color: #cbd5e1 !important; border-bottom-color: #334155 !important; }
+html.dark .rpt-table td { border-bottom-color: #334155 !important; color: #f1f5f9 !important; }
+html.dark .rpt-cases th { background: #0f172a !important; color: #cbd5e1 !important; border-bottom-color: #334155 !important; }
+html.dark .rpt-cases td { border-bottom-color: #334155 !important; color: #f1f5f9 !important; }
+html.dark .rpt-cases tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.02) !important; }
+html.dark .rpt-cases tbody tr:hover { background: rgba(30, 58, 138, 0.35) !important; }
+
 .rpt-badge { display: inline-block; border-radius: 5px; padding: 2.5px 7px; font-weight: 700; font-size: 11px; white-space: nowrap; }
 .rpt-chip { border-width: 1px; border-radius: 6px; padding: 3px 12px; font-size: 11px; }
 

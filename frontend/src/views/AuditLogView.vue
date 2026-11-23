@@ -86,41 +86,41 @@
               <th class="py-3 px-4">IP Address</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100">
-            <tr v-for="log in paginatedLogs" :key="log.id" class="hover:bg-slate-50/70 transition-colors">
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+            <tr v-for="log in paginatedLogs" :key="log.id" class="hover:bg-slate-50/70 dark:hover:bg-slate-800/60 transition-colors">
               <!-- Timestamp -->
               <td class="py-3 px-4 font-mono text-[11px] whitespace-nowrap">
-                <span class="font-semibold text-slate-800">{{ formatTime(log.timestampUtc).local }}</span>
+                <span class="font-semibold text-slate-800 dark:text-slate-200">{{ formatTime(log.timestampUtc).local }}</span>
                 <span class="block text-slate-400 text-[10px]">{{ formatTime(log.timestampUtc).utc }}</span>
               </td>
 
               <!-- Actor -->
               <td class="py-3 px-4">
-                <div class="font-bold text-slate-900">{{ log.userName }}</div>
-                <span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">
+                <div class="font-bold text-slate-900 dark:text-slate-100">{{ log.userName }}</div>
+                <span class="text-[10px] bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:border dark:border-slate-700/60 px-1.5 py-0.5 rounded font-medium">
                   {{ log.role }}
                 </span>
               </td>
 
               <!-- Action Badge -->
               <td class="py-3 px-4">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono" :class="getActionBadgeClass(log.action)">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold font-mono tracking-wide" :class="getActionBadgeClass(log.action)">
                   {{ log.action }}
                 </span>
               </td>
 
               <!-- Entity -->
-              <td class="py-3 px-4 font-mono text-blue-700 font-semibold">
+              <td class="py-3 px-4 font-mono text-blue-700 dark:text-blue-400 font-semibold">
                 {{ log.entityId }}
               </td>
 
               <!-- Description -->
-              <td class="py-3 px-4 text-slate-700 max-w-md">
+              <td class="py-3 px-4 text-slate-700 dark:text-slate-300 max-w-md">
                 {{ log.description }}
               </td>
 
               <!-- IP -->
-              <td class="py-3 px-4 font-mono text-slate-400 text-[11px]">
+              <td class="py-3 px-4 font-mono text-slate-400 dark:text-slate-300 text-[11px]">
                 {{ log.ipAddress }}
               </td>
             </tr>
@@ -222,13 +222,17 @@ onMounted(async () => {
 const formatTime = (utc) => formatUtcToLocal(utc);
 
 const getActionBadgeClass = (action) => {
-  if (action.includes('RESOLVED')) return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
-  if (action.includes('PAUSED')) return 'bg-amber-50 text-amber-700 border border-amber-200';
-  if (action.includes('USER_')) return 'bg-purple-50 text-purple-700 border border-purple-200';
-  if (action.includes('CUSTOMER_')) return 'bg-teal-50 text-teal-700 border border-teal-200';
-  if (action.includes('CREATED')) return 'bg-blue-50 text-blue-700 border border-blue-200';
-  if (action.includes('CLOSED')) return 'bg-slate-100 text-slate-700 border border-slate-200';
-  return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
+  if (action.includes('RESOLVED')) return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-600/50';
+  if (action.includes('PAUSED')) return 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-600/50';
+  if (action.includes('ESCALATED')) return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-600/50';
+  if (action.includes('RESUMED')) return 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-600/50';
+  if (action.includes('USER_')) return 'bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-600/50';
+  if (action.includes('CUSTOMER_')) return 'bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-500/50';
+  if (action.includes('KB_')) return 'bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-600/50';
+  if (action.includes('EMAIL_')) return 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-600/50';
+  if (action.includes('CREATED')) return 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-600/50';
+  if (action.includes('CLOSED')) return 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+  return 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-600/50';
 };
 
 const filteredLogs = computed(() => {

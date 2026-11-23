@@ -21,8 +21,8 @@
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 mb-2">
             <div class="flex items-center space-x-2">
               <span class="font-bold text-slate-900 text-sm">{{ step.stepName }}</span>
-              <span class="text-[11px] font-medium px-2 py-0.5 rounded-md" :class="getStatusBadgeClass(step.status)">
-                {{ step.status }}
+              <span class="text-[11px] font-bold px-2 py-0.5 rounded-md uppercase" :class="getStatusBadgeClass(step.status)">
+                {{ step.status === 'PENDING' ? 'WAITING' : step.status }}
               </span>
             </div>
             <!-- Time Badge (WIB with UTC tooltip) -->
@@ -111,14 +111,14 @@ const formatTime = (utcTime) => formatUtcToLocal(utcTime);
 const getNodeColor = (status, isLatest) => {
   if (status === 'RESOLVED') return 'bg-emerald-600 text-white';
   if (status === 'CLOSED') return 'bg-slate-600 text-white';
-  if (status.includes('PENDING')) return 'bg-amber-500 text-white';
+  if (status === 'WAITING' || status.includes('PENDING')) return 'bg-amber-500 text-white';
   if (isLatest) return 'bg-blue-600 text-white ring-4 ring-blue-100';
   return 'bg-slate-400 text-white';
 };
 
 const getPingColor = (status) => {
   if (status === 'RESOLVED') return 'bg-emerald-400';
-  if (status.includes('PENDING')) return 'bg-amber-400';
+  if (status === 'WAITING' || status.includes('PENDING')) return 'bg-amber-400';
   return 'bg-blue-400';
 };
 
@@ -127,6 +127,8 @@ const getStatusBadgeClass = (status) => {
     case 'OPEN': return 'bg-amber-50 text-amber-700 border border-amber-200';
     case 'ASSIGNED': return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
     case 'IN_PROGRESS': return 'bg-blue-50 text-blue-700 border border-blue-200';
+    case 'WAITING':
+    case 'PENDING': return 'bg-amber-50 text-amber-800 border border-amber-300';
     case 'PENDING_VENDOR':
     case 'PENDING_CUSTOMER': return 'bg-orange-50 text-orange-800 border border-orange-200';
     case 'RESOLVED': return 'bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold';

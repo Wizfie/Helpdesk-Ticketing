@@ -4,6 +4,7 @@ import {
   getCustomerById, 
   createCustomer, 
   updateCustomer, 
+  topUpQuota,
   deleteCustomer,
   addCustomerPic,
   updateCustomerPic,
@@ -25,6 +26,7 @@ router.get('/', authenticate, getCustomers);
 router.get('/:id', authenticate, getCustomerById);
 router.post('/', authenticate, authorizeRoles(['ADMIN']), createCustomer);
 router.put('/:id', authenticate, authorizeRoles(['ADMIN']), updateCustomer);
+router.post('/:id/top-up-quota', authenticate, authorizeRoles(['ADMIN']), topUpQuota);
 router.delete('/:id', authenticate, authorizeRoles(['ADMIN']), deleteCustomer);
 
 // PIC Sub-routes

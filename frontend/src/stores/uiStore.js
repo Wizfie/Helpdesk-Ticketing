@@ -1,8 +1,32 @@
 
 import { defineStore } from 'pinia';
 
+// Helper to determine initial dark mode state
+const getInitialDarkMode = () => {
+  if (typeof window === 'undefined') return false;
+  try {
+    const saved = localStorage.getItem('gtt_theme');
+    if (saved) return saved === 'dark';
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  } catch (e) {
+    return false;
+  }
+};
+
+// Immediately apply theme class to prevent FOUC (Flash of Unstyled Content)
+if (typeof document !== 'undefined') {
+  try {
+    if (getInitialDarkMode()) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  } catch (e) {}
+}
+
 export const useUiStore = defineStore('ui', {
   state: () => ({
+    isDarkMode: getInitialDarkMode(),
     isSidebarOpen: false, // Mobile drawer state (< 1024px)
     isSidebarCollapsed: false, // Desktop sidebar collapse state (>= 1024px)
     toasts: [],
@@ -19,6 +43,30 @@ export const useUiStore = defineStore('ui', {
   }),
 
   actions: {
+    // ------------------------------------------------------------------------
+    // Theme Mode Management (Light / Dark)
+    // ------------------------------------------------------------------------
+    initTheme() {
+      this.isDarkMode = getInitialDarkMode();
+      this.applyTheme();
+    },
+
+    toggleDarkMode() {
+      this.isDarkMode = !this.isDarkMode;
+      try {
+        localStorage.setItem('gtt_theme', this.isDarkMode ? 'dark' : 'light');
+      } catch (e) {}
+      this.applyTheme();
+    },
+
+    applyTheme() {
+      if (typeof document === 'undefined') return;
+      if (this.isDarkMode) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    },
     // ------------------------------------------------------------------------
     // 0. Sidebar & Drawer Navigation State
     // ------------------------------------------------------------------------

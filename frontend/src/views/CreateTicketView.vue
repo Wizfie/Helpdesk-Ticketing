@@ -119,9 +119,24 @@
                     customerQuotaInfo.isNearLimit ? 'bg-amber-100 text-amber-800 border-amber-300' :
                     'bg-emerald-100 text-emerald-800 border-emerald-300'
                   ]">
-                    {{ customerQuotaInfo.remaining }} / {{ customerQuotaInfo.quota }} ({{ customerQuotaInfo.percentage }}%)
+                    {{ customerQuotaInfo.remaining }} Tiket
                   </span>
                 </div>
+              </div>
+            </div>
+
+            <!-- Quota Exhausted Warning Alert (Peringatan & Penguncian Kuota Habis) -->
+            <div v-if="isQuotaExhausted" class="p-3.5 bg-rose-50 border border-rose-300 rounded-xl flex items-start space-x-3 text-rose-900 text-xs animate-in fade-in duration-200">
+              <div class="w-6 h-6 rounded-lg bg-rose-200 text-rose-700 flex items-center justify-center shrink-0 font-bold">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
+              <div class="space-y-0.5">
+                <div class="font-bold text-rose-800 text-[11px] uppercase tracking-wider">Peringatan: Kuota Tiket Pelanggan Telah Habis</div>
+                <p class="text-[11px] text-rose-700 leading-relaxed">
+                  Mitra <strong>{{ selectedCustomer.name }}</strong> telah kehabisan alokasi kuota tiket insiden (<strong>sisa 0 tiket / {{ customerQuotaInfo.used }} insiden tercatat</strong>). Penerbitan tiket baru dinonaktifkan sampai kuota ditambah melalui menu <em>Manajemen Pelanggan</em>.
+                </p>
               </div>
             </div>
 
@@ -414,14 +429,19 @@
 
               <button
                 type="submit"
-                :disabled="isSubmitting"
-                class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white rounded-xl text-xs font-bold shadow-md transition-all flex items-center space-x-2 cursor-pointer"
+                :disabled="isSubmitting || isQuotaExhausted"
+                :class="isQuotaExhausted ? 'bg-slate-300 text-slate-500 cursor-not-allowed hover:bg-slate-300 shadow-none' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-md cursor-pointer'"
+                class="px-6 py-2.5 disabled:opacity-60 rounded-xl text-xs font-bold transition-all flex items-center space-x-2"
+                :title="isQuotaExhausted ? 'Kuota tiket pelanggan telah habis (0 tiket tersisa)' : ''"
               >
                 <span v-if="isSubmitting" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg v-else-if="!isQuotaExhausted" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                <span>{{ isSubmitting ? 'Menerbitkan...' : 'Terbitkan &amp; Jalankan SLA Tiket' }}</span>
+                <svg v-else class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
+                </svg>
+                <span>{{ isSubmitting ? 'Menerbitkan...' : (isQuotaExhausted ? 'Kuota Tiket Habis (Terkunci)' : 'Terbitkan &amp; Jalankan SLA Tiket') }}</span>
               </button>
             </div>
 
@@ -1021,6 +1041,13 @@ const customerQuotaInfo = computed(() => {
   return ticketStore.getCustomerQuotaInfo(selectedCustomer.value);
 });
 
+const isQuotaExhausted = computed(() => {
+  if (!selectedCustomer.value) return false;
+  const q = customerQuotaInfo.value;
+  if (!q || q.quota === 'Unlimited') return false;
+  return typeof q.remaining === 'number' && q.remaining <= 0;
+});
+
 const availablePics = computed(() => {
   return selectedCustomer.value ? (selectedCustomer.value.pics || []) : [];
 });
@@ -1275,6 +1302,10 @@ const handleSaveNewCategory = () => {
 };
 
 const handleSubmitTicket = async () => {
+  if (isQuotaExhausted.value) {
+    uiStore.toastError(`Gagal: Kuota tiket untuk mitra "${selectedCustomer.value?.name}" telah habis (sisa 0 tiket). Tidak dapat menerbitkan tiket baru.`);
+    return;
+  }
   if (!form.value.assignedToId) {
     uiStore.toastWarning('Alokasi teknisi penanganan wajib dipilih. Tiket tidak dapat diterbitkan tanpa teknisi bertugas.');
     return;
@@ -1310,6 +1341,12 @@ const handleSubmitTicket = async () => {
         apiTicket = res.data;
       }
     } catch (err) {
+      const status = err.response?.status;
+      const errMsg = err.response?.data?.message || err.message;
+      if (status === 400 || status === 403 || status === 404) {
+        uiStore.toastError(errMsg);
+        return;
+      }
       console.warn('[CreateTicket] Gagal sync ke API backend, fallback store lokal:', err.message);
     }
 
