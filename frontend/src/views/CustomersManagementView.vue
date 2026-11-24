@@ -319,6 +319,9 @@
                       ]"
                     >
                       {{ c.ticketQuota }} Tiket
+                      <span v-if="getCustomerQuotaInfo(c).percentage !== null" class="text-[11px] font-normal opacity-75 ml-1">
+                        ({{ getCustomerQuotaInfo(c).percentage }}%)
+                      </span>
                     </span>
                   </div>
                 </template>
@@ -1686,6 +1689,9 @@
                 :class="quotaCustomerInfo?.isCritical ? 'text-rose-600' : 'text-emerald-700'"
               >
                 {{ quotaCustomerInfo?.remaining }} Tiket
+                <span v-if="quotaCustomerInfo?.percentage !== null" class="text-[11px] font-normal opacity-75 ml-1">
+                  ({{ quotaCustomerInfo?.percentage }}%)
+                </span>
               </span>
             </div>
             <div class="p-2 bg-white rounded-lg border border-slate-200">

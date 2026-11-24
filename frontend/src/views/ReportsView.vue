@@ -199,26 +199,26 @@
 
         <!-- Row 3: Account Performance + Priority Chart -->
         <div class="grid grid-cols-5 gap-2">
-          <div class="col-span-3 rpt-panel">
+          <div class="col-span-3 rpt-panel bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
             <div class="rpt-panel-title"><span class="material-symbols-outlined">business</span>
               <div>Account SLA Performance (Performa per Mitra)<p>Evaluasi pemenuhan SLA per instansi klien</p></div>
             </div>
             <table class="rpt-table">
-              <thead>
+              <thead class="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
                 <tr>
                   <th class="text-left">Customer Entity</th><th>Contract Tier</th><th>Total</th>
                   <th>Resp. SLA%</th><th>Resol. SLA%</th><th>Avg MTTR</th><th>Breaches</th><th>Trend</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="acc in customerShown.rows" :key="acc.id">
-                  <td class="text-left font-bold text-blue-900">{{ acc.name }}</td>
-                  <td class="text-[7px]">{{ acc.tier }}</td>
-                  <td class="font-bold">{{ acc.handled }}</td>
-                  <td class="font-bold" :class="acc.responseRate !== null && acc.responseRate < 90 ? 'text-rose-600' : 'text-emerald-600'">{{ acc.responseRate !== null ? `${acc.responseRate}%` : '-' }}</td>
-                  <td class="font-bold" :class="acc.resolutionRate !== null && acc.resolutionRate < 90 ? 'text-rose-600' : 'text-emerald-600'">{{ acc.resolutionRate !== null ? `${acc.resolutionRate}%` : '-' }}</td>
-                  <td>{{ acc.mttr }}</td>
-                  <td class="font-bold" :class="acc.breaches > 0 ? 'text-rose-600' : 'text-slate-400'">{{ acc.breaches }}</td>
+                <tr v-for="acc in customerShown.rows" :key="acc.id" class="border-b border-slate-100 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                  <td class="text-left font-bold text-blue-900 dark:text-blue-300">{{ acc.name }}</td>
+                  <td class="text-[7px] text-slate-700 dark:text-slate-300">{{ acc.tier }}</td>
+                  <td class="font-bold text-slate-800 dark:text-slate-200">{{ acc.handled }}</td>
+                  <td class="font-bold" :class="acc.responseRate !== null && acc.responseRate < 90 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'">{{ acc.responseRate !== null ? `${acc.responseRate}%` : '-' }}</td>
+                  <td class="font-bold" :class="acc.resolutionRate !== null && acc.resolutionRate < 90 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'">{{ acc.resolutionRate !== null ? `${acc.resolutionRate}%` : '-' }}</td>
+                  <td class="text-slate-800 dark:text-slate-200">{{ acc.mttr }}</td>
+                  <td class="font-bold" :class="acc.breaches > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-400 dark:text-slate-400'">{{ acc.breaches }}</td>
                   <td>
                     <span class="material-symbols-outlined text-[15px]" :class="acc.trendColor">{{ acc.trendIcon }}</span>
                   </td>
@@ -229,24 +229,24 @@
             </table>
           </div>
 
-          <div class="col-span-2 rpt-panel flex flex-col">
+          <div class="col-span-2 rpt-panel bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex flex-col">
             <div class="rpt-panel-title"><span class="material-symbols-outlined">bar_chart</span>
               <div>Incident Priority Distribution<p>Berdasarkan ITIL Severity Matrix (Total: {{ reportStats.total }} Tiket)</p></div>
             </div>
             <div class="px-1 flex-1 flex flex-col justify-between">
               <!-- bars stretch to the bottom of the card; baseline sits at the card's bottom edge -->
-              <div class="flex-1 min-h-[105px] print:min-h-[75px] flex items-stretch justify-around gap-2 pt-4 border-b-2 border-slate-400">
+              <div class="flex-1 min-h-[105px] print:min-h-[75px] flex items-stretch justify-around gap-2 pt-4 border-b-2 border-slate-400 dark:border-slate-600">
                 <div v-for="p in priorityDistribution" :key="p.key" class="relative w-1/3">
                   <div class="absolute bottom-0 left-0 right-0" :style="{ height: Math.max(p.count / maxPriorityCount * 88, p.count ? 6 : 2) + '%' }">
-                    <span class="absolute -top-4 print:-top-3.5 left-0 right-0 text-center text-[10px] print:text-[8px] font-bold text-slate-700 whitespace-nowrap">{{ p.count }} ({{ p.pct }}%)</span>
+                    <span class="absolute -top-4 print:-top-3.5 left-0 right-0 text-center text-[10px] print:text-[8px] font-bold text-slate-700 dark:text-slate-200 whitespace-nowrap">{{ p.count }} ({{ p.pct }}%)</span>
                     <div class="w-full h-full rounded-t" :class="p.color"></div>
                   </div>
                 </div>
               </div>
               <div class="flex justify-around gap-2 pt-1 pb-0.5">
                 <div v-for="p in priorityDistribution" :key="p.key + '-l'" class="w-1/3 text-center leading-tight">
-                  <div class="text-xs print:text-[8px] font-bold">{{ p.short }}</div>
-                  <div class="text-[11px] print:text-[7px] text-slate-500">{{ p.name }}</div>
+                  <div class="text-xs print:text-[8px] font-bold text-slate-800 dark:text-slate-100">{{ p.short }}</div>
+                  <div class="text-[11px] print:text-[7px] text-slate-500 dark:text-slate-400">{{ p.name }}</div>
                 </div>
               </div>
             </div>
@@ -254,23 +254,23 @@
         </div>
 
         <!-- Row 4: Engineer Roster -->
-        <div class="rpt-panel">
+        <div class="rpt-panel bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
           <div class="rpt-panel-title"><span class="material-symbols-outlined">engineering</span>
             <div>Engineer Workload &amp; Resolution Velocity Roster<p>Produktivitas tim teknis pada periode laporan</p></div>
           </div>
           <table class="rpt-table">
-            <thead>
+            <thead class="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
               <tr><th class="text-left">Engineer Name &amp; Role</th><th>Active Load</th><th>Resolved Tickets</th><th>Avg MTTR</th><th>SLA Compliance</th></tr>
             </thead>
             <tbody>
-              <tr v-for="eng in engineerShown.rows" :key="eng.name">
-                <td class="text-left font-semibold">{{ eng.name }} <span class="text-slate-500 font-normal">({{ eng.role }})</span></td>
-                <td>{{ eng.activeCount }}</td>
-                <td>{{ eng.resolvedCount }}</td>
-                <td>{{ eng.avgMttr }}</td>
+              <tr v-for="eng in engineerShown.rows" :key="eng.name" class="border-b border-slate-100 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                <td class="text-left font-semibold text-slate-900 dark:text-slate-100">{{ eng.name }} <span class="text-slate-500 dark:text-slate-400 font-normal">({{ eng.role }})</span></td>
+                <td class="text-slate-800 dark:text-slate-200">{{ eng.activeCount }}</td>
+                <td class="text-slate-800 dark:text-slate-200">{{ eng.resolvedCount }}</td>
+                <td class="text-slate-800 dark:text-slate-200">{{ eng.avgMttr }}</td>
                 <td>
                   <span v-if="eng.compliance !== null" class="inline-block min-w-[38px] rounded px-1.5 py-0.5 font-bold"
-                    :class="eng.compliance >= 90 ? 'bg-emerald-100 text-emerald-700' : eng.compliance >= 75 ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'">{{ eng.compliance }}%</span>
+                    :class="eng.compliance >= 90 ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border dark:border-emerald-800/60' : eng.compliance >= 75 ? 'bg-amber-100 text-amber-800 dark:bg-amber-950/70 dark:text-amber-300 dark:border dark:border-amber-800/60' : 'bg-rose-100 text-rose-800 dark:bg-rose-950/70 dark:text-rose-300 dark:border dark:border-rose-800/60'">{{ eng.compliance }}%</span>
                   <span v-else class="text-slate-400">-</span>
                 </td>
               </tr>
@@ -281,12 +281,12 @@
         </div>
 
         <!-- Row 5: Knowledge Base / Runbooks (Top 4 Artikel) -->
-        <div class="rpt-panel">
+        <div class="rpt-panel bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
           <div class="rpt-panel-title"><span class="material-symbols-outlined">menu_book</span>
             <div>Knowledge Base / Runbooks (Top 4 Artikel Terverifikasi)<p>Dokumentasi mitigasi teknis yang telah divalidasi</p></div>
           </div>
           <table class="rpt-table">
-            <thead>
+            <thead class="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200">
               <tr>
                 <th class="text-left">Artikel / Judul Solusi</th>
                 <th>Kategori Teknis</th>
@@ -295,11 +295,11 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="kb in topKbArticles" :key="kb.id">
-                <td class="text-left font-medium text-slate-800">{{ kb.title }}</td>
-                <td>{{ kb.categoryName || kb.category || '-' }}</td>
-                <td>{{ kb.author || '-' }}</td>
-                <td>{{ kb.date }}</td>
+              <tr v-for="kb in topKbArticles" :key="kb.id" class="border-b border-slate-100 dark:border-slate-700/60 hover:bg-slate-50 dark:hover:bg-slate-700/40">
+                <td class="text-left font-medium text-slate-800 dark:text-slate-200">{{ kb.title }}</td>
+                <td class="text-slate-700 dark:text-slate-300">{{ kb.categoryName || kb.category || '-' }}</td>
+                <td class="text-slate-700 dark:text-slate-300">{{ kb.author || '-' }}</td>
+                <td class="text-slate-700 dark:text-slate-300">{{ kb.date }}</td>
               </tr>
               <tr v-if="!topKbArticles || topKbArticles.length === 0"><td colspan="4" class="text-slate-400 py-1.5">Belum ada artikel knowledge base tercatat.</td></tr>
             </tbody>
@@ -428,33 +428,33 @@
                 <th>SLA</th>
               </tr>
             </thead>
-            <tbody>
-              <tr v-for="(row, idx) in caseRows" :key="row.id">
-                <td>{{ idx + 1 }}</td>
-                <td class="font-bold text-blue-700 whitespace-nowrap">{{ row.ticketNumber }}</td>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              <tr v-for="(row, idx) in caseRows" :key="row.id" class="border-b border-slate-100 dark:border-slate-800">
+                <td class="text-slate-700 dark:text-slate-300">{{ idx + 1 }}</td>
+                <td class="font-bold text-blue-700 dark:text-blue-400 whitespace-nowrap">{{ row.ticketNumber }}</td>
                 <td class="leading-tight text-center">
-                  <div class="font-medium text-slate-800">{{ row.openDateObj ? row.openDateObj.date : '-' }}</div>
-                  <div v-if="row.openDateObj" class="text-[10px] print:text-[5.5px] text-slate-500 font-mono">{{ row.openDateObj.time }}</div>
+                  <div class="font-medium text-slate-800 dark:text-slate-200">{{ row.openDateObj ? row.openDateObj.date : '-' }}</div>
+                  <div v-if="row.openDateObj" class="text-[10px] print:text-[5.5px] text-slate-500 dark:text-slate-400 font-mono">{{ row.openDateObj.time }}</div>
                 </td>
                 <td class="leading-tight text-center">
                   <template v-if="row.closedDateObj">
-                    <div class="font-medium text-slate-800">{{ row.closedDateObj.date }}</div>
-                    <div class="text-[10px] print:text-[5.5px] text-slate-500 font-mono">{{ row.closedDateObj.time }}</div>
+                    <div class="font-medium text-slate-800 dark:text-slate-200">{{ row.closedDateObj.date }}</div>
+                    <div class="text-[10px] print:text-[5.5px] text-slate-500 dark:text-slate-400 font-mono">{{ row.closedDateObj.time }}</div>
                   </template>
                   <span v-else class="text-slate-400 font-mono">-</span>
                 </td>
-                <td :title="row.customerFull" class="font-semibold text-slate-800 text-center">
+                <td :title="row.customerFull" class="font-semibold text-slate-800 dark:text-slate-200 text-center">
                   {{ row.customerShort }}
                 </td>
-                <td class="text-center">{{ row.category }}</td>
-                <td class="font-mono text-slate-700 text-center break-all">{{ row.serialNumber }}</td>
+                <td class="text-center text-slate-700 dark:text-slate-300">{{ row.category }}</td>
+                <td class="font-mono text-slate-700 dark:text-slate-300 text-center break-all">{{ row.serialNumber }}</td>
                 <td class="text-center"><span class="rpt-badge" :class="row.sevClass">{{ row.sev }}</span></td>
-                <td class="text-left">{{ row.title }}</td>
-                <td class="text-left">{{ row.resolution }}</td>
-                <td class="text-center">{{ row.engineer }}</td>
+                <td class="text-left text-slate-800 dark:text-slate-200">{{ row.title }}</td>
+                <td class="text-left text-slate-700 dark:text-slate-300">{{ row.resolution }}</td>
+                <td class="text-center text-slate-800 dark:text-slate-200">{{ row.engineer }}</td>
                 <td class="text-center"><span class="rpt-badge" :class="row.statusClass">{{ row.statusLabel }}</span></td>
-                <td class="text-center">{{ row.responseTime }}</td>
-                <td class="text-center">{{ row.resolutionTime }}</td>
+                <td class="text-center text-slate-800 dark:text-slate-200">{{ row.responseTime }}</td>
+                <td class="text-center text-slate-800 dark:text-slate-200">{{ row.resolutionTime }}</td>
                 <td class="text-center"><span class="rpt-badge" :class="row.slaClass">{{ row.slaLabel }}</span></td>
               </tr>
               <tr v-if="caseRows.length === 0"><td colspan="15" class="text-slate-400 py-4 text-center">Belum ada tiket pada periode ini.</td></tr>
@@ -1589,7 +1589,8 @@ html.dark .rpt-cases tbody tr:hover { background: rgba(30, 58, 138, 0.35) !impor
   .rpt-cases th:nth-child(15) { width: 75px; }
 }
 
-.rpt-cases tbody tr:nth-child(even) { background: #f8fafc; }
+:not(html.dark) .rpt-cases tbody tr:nth-child(even) { background: #f8fafc; }
+html.dark .rpt-cases tbody tr:nth-child(even) { background: rgba(255, 255, 255, 0.03) !important; }
 .rpt-cases tr { break-inside: avoid; page-break-inside: avoid; }
 
 @page {

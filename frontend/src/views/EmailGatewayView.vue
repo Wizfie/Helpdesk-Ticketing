@@ -18,7 +18,20 @@
         </div>
       </div>
 
-      <div class="flex items-center space-x-3">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <div v-if="ticketStore.tickets.length > 0" class="flex items-center space-x-1.5 text-xs">
+          <span class="text-slate-500 font-medium text-[11px]">Tiket Pratinjau:</span>
+          <select 
+            v-model="selectedTicketId" 
+            class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="DEMO">Demo Simulasi (TK-DEMO)</option>
+            <option v-for="t in ticketStore.tickets" :key="t.id" :value="t.id">
+              {{ t.ticketNumber }} - {{ t.title?.slice(0, 28) }}...
+            </option>
+          </select>
+        </div>
+
         <button 
           type="button"
           @click="showTemplatePreview = true" 
@@ -31,6 +44,22 @@
           </svg>
           <span>Format Template Email</span>
         </button>
+
+        <router-link
+          :to="selectedTicketId === 'DEMO' ? '/track/TK-DEMO?token=demo_token' : `/track/${previewTicket.ticketNumber}?token=${previewTicket.trackingToken}`"
+          target="_blank"
+          class="px-3.5 py-2 text-xs font-semibold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition flex items-center space-x-1.5 shadow-2xs cursor-pointer"
+          title="Buka langsung portal pemantauan mandiri pelanggan (Customer Tracking)"
+        >
+          <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+          </svg>
+          <span>Pantau Mandiri (PIC)</span>
+          <svg class="w-3 h-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+        </router-link>
       </div>
     </div>
 
@@ -38,7 +67,7 @@
     <div v-if="alertMessage" class="p-4 rounded-xl border flex items-start justify-between animate-in fade-in"
       :class="alertType === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-rose-50 border-rose-200 text-rose-800'">
       <div class="flex items-center space-x-2.5">
-        <span class="text-base">{{ alertType === 'success' ? '✅' : '❌' }}</span>
+        <span class="text-xs font-bold" :class="alertType === 'success' ? 'text-emerald-700' : 'text-rose-700'">{{ alertType === 'success' ? 'Berhasil:' : 'Gagal:' }}</span>
         <span class="text-xs font-semibold">{{ alertMessage }}</span>
       </div>
       <button @click="alertMessage = ''" class="text-slate-400 hover:text-slate-600 text-xs cursor-pointer">✕</button>
@@ -58,9 +87,8 @@
 
         <!-- 1. Identitas Pengirim (From Header) -->
         <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-          <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-            <span>✉️</span>
-            <span>1. Identitas Pengirim Resmi (From Header)</span>
+          <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider">
+            1. Identitas Pengirim Resmi (From Header)
           </h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -87,12 +115,9 @@
         <!-- 2. Parameter Koneksi Server SMTP -->
         <div class="p-4 rounded-xl border border-slate-200 space-y-4 bg-white">
           <h3 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center justify-between">
-            <span class="flex items-center gap-1.5">
-              <span>🌐</span>
-              <span>2. Parameter Server SMTP</span>
-            </span>
+            <span>2. Parameter Server SMTP</span>
             <span v-if="form.isConfigured" class="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold px-2 py-0.5 rounded">
-              ✓ Kredensial Tersimpan
+              Kredensial Tersimpan
             </span>
           </h3>
 
@@ -115,7 +140,7 @@
                 class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
               />
               <span class="text-[10px] text-slate-400 mt-1 block font-sans">
-                {{ Number(form.port) === 465 ? '🔒 Enkripsi: SSL/TLS (Otomatis)' : '🛡️ Enkripsi: STARTTLS (Otomatis)' }}
+                {{ Number(form.port) === 465 ? 'Enkripsi: SSL/TLS (Otomatis)' : 'Enkripsi: STARTTLS (Otomatis)' }}
               </span>
             </div>
           </div>
@@ -226,7 +251,7 @@
               <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
               </svg>
-              <span>{{ isTesting ? 'Menghubungkan ke Server SMTP...' : '🚀 Kirim Email Uji Coba Sekarang' }}</span>
+              <span>{{ isTesting ? 'Menghubungkan ke Server SMTP...' : 'Kirim Email Uji Coba Sekarang' }}</span>
             </button>
           </div>
 
@@ -234,7 +259,15 @@
           <div v-if="testResult" class="p-4 rounded-xl border bg-slate-900/90 text-xs space-y-2"
             :class="testResult.success ? 'border-emerald-500/40 text-emerald-200' : 'border-rose-500/40 text-rose-200'">
             <div class="flex items-center justify-between font-bold">
-              <span>{{ testResult.success ? '🎉 PENGIRIMAN BERHASIL!' : '❌ PENGIRIMAN GAGAL' }}</span>
+              <span class="flex items-center space-x-1.5">
+                <svg v-if="testResult.success" class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <svg v-else class="w-4 h-4 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+                <span>{{ testResult.success ? 'PENGIRIMAN BERHASIL' : 'PENGIRIMAN GAGAL' }}</span>
+              </span>
               <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-black/40">
                 {{ testResult.data?.provider?.toUpperCase() || 'SMTP' }}
               </span>
@@ -255,9 +288,9 @@
     <EmailPreviewModal
       :is-open="showTemplatePreview"
       :target="'all'"
-      :ticket="sampleTicket"
-      :customer="sampleCustomer"
-      :pic="samplePic"
+      :ticket="previewTicket"
+      :customer="previewCustomer"
+      :pic="previewPic"
       :engineer="{ name: 'Budi Santoso' }"
       @close="showTemplatePreview = false"
     />
@@ -265,16 +298,19 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import api from '../services/api';
+import { useTicketStore } from '../stores/ticketStore';
 import EmailPreviewModal from '../components/EmailPreviewModal.vue';
 
+const ticketStore = useTicketStore();
+const selectedTicketId = ref('DEMO');
 const showTemplatePreview = ref(false);
 const showPassword = ref(false);
 
-const sampleTicket = {
-  id: 1,
-  ticketNumber: 'TK-26001',
+const demoSampleTicket = {
+  id: 9999,
+  ticketNumber: 'TK-DEMO',
   severity: 'HIGH',
   status: 'ASSIGNED',
   title: 'Network Switch Core Flapping & Packet Loss',
@@ -282,12 +318,36 @@ const sampleTicket = {
   createdAt: new Date().toISOString(),
   responseDeadline: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   resolutionDeadline: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-  trackingToken: 'sec_demo_token_123',
+  trackingToken: 'demo_token',
   rootCause: 'Kabel fiber optic patch cord mengalami micro-loss di rack server B.',
   actionTaken: 'Penggantian patch cord duplex LC-LC dan pembersihan konektor ferrule optik.'
 };
-const sampleCustomer = { name: 'PT Astra Graphia Information Technology (AGIT)', slaTier: 'PLATINUM 24x7' };
-const samplePic = { name: 'Bambang Trihatmodjo', email: 'bambang.t@agit.astra.co.id' };
+const demoSampleCustomer = { name: 'PT Bank Central Asia Tbk (BCA)', slaTier: 'TITANIUM 24x7 CRITICAL' };
+const demoSamplePic = { name: 'Bpk. Hendrik Pratama', email: 'hendrik.p@bca.co.id' };
+
+const previewTicket = computed(() => {
+  if (selectedTicketId.value === 'DEMO' || !selectedTicketId.value) {
+    return demoSampleTicket;
+  }
+  const real = ticketStore.tickets.find(t => t.id === Number(selectedTicketId.value) || t.ticketNumber === selectedTicketId.value);
+  return real || demoSampleTicket;
+});
+
+const previewCustomer = computed(() => {
+  if (selectedTicketId.value === 'DEMO' || !selectedTicketId.value) {
+    return demoSampleCustomer;
+  }
+  const cust = ticketStore.customers.find(c => c.id === previewTicket.value.customerId);
+  return cust || { name: 'Mitra Pelanggan', slaTier: previewTicket.value.contractTier || 'GOLD 24x7' };
+});
+
+const previewPic = computed(() => {
+  if (selectedTicketId.value === 'DEMO' || !selectedTicketId.value) {
+    return demoSamplePic;
+  }
+  const cust = previewCustomer.value;
+  return cust?.pics?.[0] || { name: 'PIC Pelanggan', email: 'pic@customer.co.id' };
+});
 
 const isLoading = ref(false);
 const isSaving = ref(false);
@@ -402,7 +462,13 @@ async function executeTestEmail() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   fetchConfig();
+  if (ticketStore.tickets.length === 0) {
+    await ticketStore.fetchTickets();
+  }
+  if (ticketStore.customers.length === 0) {
+    await ticketStore.fetchCustomers();
+  }
 });
 </script>

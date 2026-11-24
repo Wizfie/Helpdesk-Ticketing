@@ -76,7 +76,7 @@
     <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden text-xs">
       <div class="overflow-x-auto">
         <table class="w-full text-left min-w-[900px]">
-          <thead class="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+          <thead class="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 font-bold uppercase tracking-wider text-[11px]">
             <tr>
               <th class="py-3 px-4">Waktu (WIB / UTC)</th>
               <th class="py-3 px-4">Aktor / Pengguna</th>
@@ -86,7 +86,7 @@
               <th class="py-3 px-4">IP Address</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900/40">
             <tr v-for="log in paginatedLogs" :key="log.id" class="hover:bg-slate-50/70 dark:hover:bg-slate-800/60 transition-colors">
               <!-- Timestamp -->
               <td class="py-3 px-4 font-mono text-[11px] whitespace-nowrap">
@@ -222,17 +222,18 @@ onMounted(async () => {
 const formatTime = (utc) => formatUtcToLocal(utc);
 
 const getActionBadgeClass = (action) => {
-  if (action.includes('RESOLVED')) return 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-600/50';
-  if (action.includes('PAUSED')) return 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-600/50';
-  if (action.includes('ESCALATED')) return 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-600/50';
-  if (action.includes('RESUMED')) return 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-600/50';
-  if (action.includes('USER_')) return 'bg-purple-50 text-purple-700 border border-purple-200 dark:bg-purple-950/60 dark:text-purple-300 dark:border-purple-600/50';
-  if (action.includes('CUSTOMER_')) return 'bg-teal-50 text-teal-700 border border-teal-200 dark:bg-teal-950/60 dark:text-teal-300 dark:border-teal-500/50';
-  if (action.includes('KB_')) return 'bg-cyan-50 text-cyan-700 border border-cyan-200 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-600/50';
-  if (action.includes('EMAIL_')) return 'bg-sky-50 text-sky-700 border border-sky-200 dark:bg-sky-950/60 dark:text-sky-300 dark:border-sky-600/50';
-  if (action.includes('CREATED')) return 'bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-600/50';
-  if (action.includes('CLOSED')) return 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
-  return 'bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-600/50';
+  if (action.includes('RESOLVED')) return 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-500/60 shadow-2xs';
+  if (action.includes('PAUSED')) return 'bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-950/80 dark:text-amber-300 dark:border-amber-500/60 shadow-2xs';
+  if (action.includes('ESCALATED')) return 'bg-rose-50 text-rose-800 border border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-500/60 shadow-2xs';
+  if (action.includes('RESUMED')) return 'bg-sky-50 text-sky-800 border border-sky-200 dark:bg-sky-950/80 dark:text-sky-300 dark:border-sky-500/60 shadow-2xs';
+  if (action.includes('USER_')) return 'bg-purple-50 text-purple-800 border border-purple-200 dark:bg-purple-950/80 dark:text-purple-300 dark:border-purple-500/60 shadow-2xs';
+  if (action.includes('CUSTOMER_QUOTA')) return 'bg-emerald-50 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-500/60 shadow-2xs';
+  if (action.includes('CUSTOMER_')) return 'bg-teal-50 text-teal-800 border border-teal-200 dark:bg-teal-950/80 dark:text-teal-300 dark:border-teal-500/60 shadow-2xs';
+  if (action.includes('KB_')) return 'bg-cyan-50 text-cyan-800 border border-cyan-200 dark:bg-cyan-950/80 dark:text-cyan-300 dark:border-cyan-500/60 shadow-2xs';
+  if (action.includes('EMAIL_')) return 'bg-sky-50 text-sky-800 border border-sky-200 dark:bg-sky-950/80 dark:text-sky-300 dark:border-sky-500/60 shadow-2xs';
+  if (action.includes('CREATED')) return 'bg-blue-50 text-blue-800 border border-blue-200 dark:bg-blue-950/80 dark:text-blue-300 dark:border-blue-500/60 shadow-2xs';
+  if (action.includes('CLOSED')) return 'bg-slate-100 text-slate-800 border border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 shadow-2xs';
+  return 'bg-indigo-50 text-indigo-800 border border-indigo-200 dark:bg-indigo-950/80 dark:text-indigo-300 dark:border-indigo-500/60 shadow-2xs';
 };
 
 const filteredLogs = computed(() => {

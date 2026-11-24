@@ -253,9 +253,9 @@
 
         <table class="w-full text-left text-xs border-collapse">
 
-          <thead>
+          <thead class="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
 
-            <tr class="bg-slate-50/75 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300">
+            <tr class="text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
 
               <th class="py-3.5 px-4 w-12 text-center">No</th>
 
@@ -271,7 +271,7 @@
 
           </thead>
 
-          <tbody class="divide-y divide-slate-100">
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900/40">
 
             <tr 
 
@@ -279,7 +279,7 @@
 
               :key="policy.id"
 
-              class="hover:bg-blue-50/25 dark:hover:bg-slate-700/50 transition-colors cursor-pointer"
+              class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors cursor-pointer group"
 
               @click="openDetailModal(policy)"
 
@@ -287,7 +287,7 @@
 
               <!-- No -->
 
-              <td class="py-3.5 px-4 text-center font-mono text-slate-500">
+              <td class="py-3.5 px-4 text-center font-mono text-slate-500 dark:text-slate-400">
 
                 {{ (currentPage - 1) * itemsPerPage + index + 1 }}
 
@@ -299,7 +299,7 @@
 
               <td class="py-3.5 px-4">
 
-                <span class="font-bold text-slate-900 hover:text-blue-600 transition-colors">
+                <span class="font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
 
                   {{ policy.tierName }}
 
@@ -313,7 +313,7 @@
 
               <td class="py-3.5 px-4">
 
-                <span class="text-slate-700">
+                <span class="text-slate-700 dark:text-slate-300">
 
                   {{ policy.operatingHours }}
 
@@ -331,7 +331,7 @@
 
                   v-if="getPolicyStatus(policy) === 'Active'"
 
-                  class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-600/60"
 
                 >
 
@@ -345,7 +345,7 @@
 
                   v-else
 
-                  class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200"
+                  class="inline-flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/70 dark:text-rose-300 dark:border-rose-600/60"
 
                 >
 
@@ -373,7 +373,7 @@
 
                     title="Lihat Detail"
 
-                    class="p-1.5 text-slate-500 hover:text-blue-700 bg-slate-100 hover:bg-blue-50 rounded-lg transition-colors"
+                    class="p-1.5 text-slate-500 hover:text-blue-700 bg-slate-100 hover:bg-blue-50 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700 dark:hover:text-blue-300 rounded-lg transition-colors cursor-pointer"
 
                   >
 
@@ -395,7 +395,7 @@
 
                     title="Edit Kebijakan SLA"
 
-                    class="p-1.5 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    class="p-1.5 text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/70 dark:text-blue-300 dark:hover:bg-blue-900/80 rounded-lg transition-colors cursor-pointer"
 
                   >
 
@@ -415,7 +415,7 @@
 
                     title="Hapus Kebijakan SLA"
 
-                    class="p-1.5 text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors"
+                    class="p-1.5 text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/70 dark:text-rose-300 dark:hover:bg-rose-900/80 rounded-lg transition-colors cursor-pointer"
 
                   >
 
@@ -814,7 +814,7 @@
 
             <table class="w-full text-left text-xs">
 
-              <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-600">
+              <thead class="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
 
                 <tr>
 
@@ -1105,7 +1105,7 @@
 
                 <thead>
 
-                  <tr class="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-600">
+                  <tr class="bg-slate-100 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 text-[11px] font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
 
                     <th class="py-2.5 px-4 w-40">Priority</th>
 
@@ -1499,9 +1499,15 @@
 
             </div>
 
-            <p class="text-[11px] text-amber-800 pt-1 leading-normal">
+            <p class="text-[11px] text-amber-800 pt-1 leading-normal flex items-start gap-1.5">
 
-              💡 <em>Sesuai aturan integritas data, silakan alihkan paket kontrak pelanggan di menu <strong>Enterprise Accounts</strong> sebelum menghapus kebijakan ini.</em>
+              <svg class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+
+              </svg>
+
+              <em>Sesuai aturan integritas data, silakan alihkan paket kontrak pelanggan di menu <strong>Enterprise Accounts</strong> sebelum menghapus kebijakan ini.</em>
 
             </p>
 

@@ -181,6 +181,46 @@ async function main() {
     assert.throws(() => applyTopUp('10', 'abc'), /harus berupa angka bulat positif/);
   });
 
+  await runScenario('1.7', 'Validasi Peringatan Dini Kuota Persentase (Opsi 2: Baseline PKS & Anti-Akumulasi False Alert)', () => {
+    const evaluateQuotaPercentage = (remaining, baseline) => {
+      const rem = Math.max(0, parseInt(remaining, 10) || 0);
+      const base = Math.max(rem, parseInt(baseline, 10) || rem);
+      const pct = base > 0 ? Math.round((rem / base) * 100) : (rem === 0 ? 0 : 100);
+      const isCritical = rem === 0 || pct <= 10 || rem <= 1;
+      const isNearLimit = !isCritical && (pct <= 20 || rem <= 3);
+      return { percentage: pct, isCritical, isNearLimit };
+    };
+
+    // Kasus 1: Skenario TC-05 Bab 3 Laporan KP (PT PJB sisa 5 dari 50 tiket / 10%)
+    const pjbCase = evaluateQuotaPercentage(5, 50);
+    assert.strictEqual(pjbCase.percentage, 10, 'Persentase sisa kuota PT PJB harus persis 10%');
+    assert.strictEqual(pjbCase.isCritical, true, 'Sisa 10% harus memicu alert Kritis (Critical)');
+    assert.strictEqual(pjbCase.isNearLimit, false, 'Tidak berada di status warning karena sudah kritis');
+
+    // Kasus 2: Skenario Peringatan Dini (PT PJB sisa 10 dari 50 tiket / 20%)
+    const pjbWarn = evaluateQuotaPercentage(10, 50);
+    assert.strictEqual(pjbWarn.percentage, 20, 'Persentase sisa kuota harus persis 20%');
+    assert.strictEqual(pjbWarn.isNearLimit, true, 'Sisa 20% harus memicu alert Peringatan (Warning/Menipis)');
+    assert.strictEqual(pjbWarn.isCritical, false, 'Belum mencapai status kritis');
+
+    // Kasus 3: Anti-Akumulasi Jangka Panjang (Riwayat masa lalu 100 tiket, baru top-up 10 tiket)
+    // Dengan Opsi 2 (Baseline paket aktif = 10), kuota terisi 10 tiket -> Persentase 100% (AMAN, bebas false alert!)
+    const freshTopUp = evaluateQuotaPercentage(10, 10);
+    assert.strictEqual(freshTopUp.percentage, 100, 'Top-up paket 10 tiket baru harus 100% penuh');
+    assert.strictEqual(freshTopUp.isCritical, false, 'Tidak boleh memicu alert Kritis palsu!');
+    assert.strictEqual(freshTopUp.isNearLimit, false, 'Tidak boleh memicu alert Warning palsu!');
+
+    // Kasus 4: Dari paket 10 tiket terpakai 8, sisa 2 tiket -> 20% (Warning)
+    const topUpWarn = evaluateQuotaPercentage(2, 10);
+    assert.strictEqual(topUpWarn.percentage, 20, 'Sisa 2 dari 10 tiket harus 20%');
+    assert.strictEqual(topUpWarn.isNearLimit, true, 'Sisa 20% pada paket top-up harus memicu alert warning');
+
+    // Kasus 5: Dari paket 10 tiket terpakai 9, sisa 1 tiket -> 10% (Critical)
+    const topUpCrit = evaluateQuotaPercentage(1, 10);
+    assert.strictEqual(topUpCrit.percentage, 10, 'Sisa 1 dari 10 tiket harus 10%');
+    assert.strictEqual(topUpCrit.isCritical, true, 'Sisa 10% pada paket top-up harus memicu alert kritis');
+  });
+
   // ============================================================================
   // PANDUAN 2: PENGUJIAN KEAMANAN UPLOAD BERKAS & GATEWAY EMAIL
   // ============================================================================

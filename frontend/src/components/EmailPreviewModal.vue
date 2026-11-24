@@ -1,10 +1,10 @@
 <template>
-  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-150">
-    <div class="bg-white rounded-2xl shadow-2xl border border-slate-200 w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+  <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm p-3 sm:p-4 md:p-6 animate-in fade-in duration-150">
+    <div class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 w-full max-w-5xl 2xl:max-w-6xl overflow-hidden flex flex-col h-[94vh] max-h-[94vh] transition-all">
       <!-- Header -->
-      <div class="bg-slate-900 text-white px-5 py-3.5 flex items-center justify-between border-b border-slate-800">
-        <div class="flex items-center space-x-2.5">
-          <div class="w-8 h-8 rounded-lg bg-blue-600/30 border border-blue-500/40 flex items-center justify-center text-blue-400">
+      <div class="bg-slate-900 dark:bg-slate-950 text-white px-6 py-4 flex items-center justify-between border-b border-slate-800 shrink-0">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-blue-600/30 border border-blue-500/40 flex items-center justify-center text-blue-400">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
             </svg>
@@ -33,51 +33,51 @@
       </div>
 
       <!-- Navigation & Mode Bar -->
-      <div class="bg-slate-100 px-5 py-2.5 border-b border-slate-200 flex items-center justify-between overflow-x-auto text-xs">
+      <div class="bg-slate-100 dark:bg-slate-800/80 px-6 py-2.5 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between overflow-x-auto text-xs shrink-0">
         <!-- Target All: Show switcher tabs -->
         <div v-if="props.target === 'all'" class="flex items-center space-x-2 shrink-0">
           <button
             type="button"
             @click="activeTab = 'customer_email'"
             class="px-3.5 py-1.5 rounded-lg font-bold transition-all shrink-0 flex items-center space-x-1.5 cursor-pointer"
-            :class="activeTab === 'customer_email' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'"
+            :class="activeTab === 'customer_email' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600'"
           >
-            <span>✉️ 1. Email Klien (Tiket & Tracking)</span>
+            <span>1. Email Klien (Tiket & Tracking)</span>
           </button>
 
           <button
             type="button"
             @click="activeTab = 'engineer_dispatch'"
             class="px-3.5 py-1.5 rounded-lg font-bold transition-all shrink-0 flex items-center space-x-1.5 cursor-pointer"
-            :class="activeTab === 'engineer_dispatch' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'"
+            :class="activeTab === 'engineer_dispatch' ? 'bg-blue-600 text-white shadow-sm' : 'bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-600 border border-slate-200 dark:border-slate-600'"
           >
-            <span>👷 2. Penugasan Kerja (Teknisi)</span>
+            <span>2. Penugasan Kerja (Teknisi)</span>
           </button>
         </div>
 
         <!-- Target Specific: Show target label -->
-        <div v-else class="text-[11px] font-bold text-slate-600 flex items-center gap-1.5">
+        <div v-else class="text-[11px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
           <span class="w-2 h-2 rounded-full" :class="activeTab === 'engineer_dispatch' ? 'bg-amber-500' : 'bg-blue-600'"></span>
           <span>{{ activeTab === 'engineer_dispatch' ? 'Email Notifikasi Penugasan Teknisi Lapangan / NOC' : 'Satu Email Resmi Klien (Tautan Tracking & Konfirmasi Mandiri)' }}</span>
         </div>
 
         <!-- Simulation Toggle for Customer Email View (Progress vs Resolved) -->
-        <div v-if="activeTab === 'customer_email'" class="flex items-center space-x-1.5 shrink-0 bg-white px-2.5 py-1 rounded-lg border border-slate-200 text-[11px]">
+        <div v-if="activeTab === 'customer_email'" class="flex items-center space-x-1.5 shrink-0 bg-white dark:bg-slate-800 px-3 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-[11px]">
           <span class="text-slate-400 font-medium">Mode Pratinjau:</span>
           <button 
             type="button" 
             @click="simulatedStatus = 'IN_PROGRESS'" 
-            class="px-2 py-0.5 rounded font-semibold cursor-pointer transition-colors"
-            :class="currentStatusMode === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' : 'text-slate-500 hover:text-slate-800'"
+            class="px-2.5 py-0.5 rounded font-semibold cursor-pointer transition-colors"
+            :class="currentStatusMode === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/60 dark:text-blue-300' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'"
           >
             Saat Diproses
           </button>
-          <span class="text-slate-300">|</span>
+          <span class="text-slate-300 dark:text-slate-600">|</span>
           <button 
             type="button" 
             @click="simulatedStatus = 'RESOLVED'" 
-            class="px-2 py-0.5 rounded font-semibold cursor-pointer transition-colors"
-            :class="currentStatusMode === 'RESOLVED' ? 'bg-emerald-100 text-emerald-700' : 'text-slate-500 hover:text-slate-800'"
+            class="px-2.5 py-0.5 rounded font-semibold cursor-pointer transition-colors"
+            :class="currentStatusMode === 'RESOLVED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200'"
           >
             Saat Selesai (BAP)
           </button>
@@ -85,25 +85,25 @@
       </div>
 
       <!-- Modal Body (Email Envelope & Rendered HTML Box) -->
-      <div class="p-5 overflow-y-auto flex-1 bg-slate-200/60 space-y-3">
+      <div class="p-5 md:p-6 overflow-y-auto flex-1 bg-slate-100 dark:bg-slate-950/80 space-y-4">
         <!-- Envelope Headers (To, From, Subject) -->
-        <div class="bg-white border border-slate-200 rounded-xl p-3 text-xs space-y-1.5 shadow-sm">
-          <div class="flex items-center text-slate-600">
+        <div class="bg-white dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700/80 rounded-xl p-4 text-xs space-y-2 shadow-xs max-w-4xl mx-auto">
+          <div class="flex items-center text-slate-600 dark:text-slate-300">
             <span class="w-20 font-bold text-slate-400 text-[11px]">Pengirim:</span>
-            <span class="font-mono text-slate-800 font-semibold">PT Global Transformasi Teknologi (No-Reply) &lt;noreply@gtteknologi.com&gt;</span>
+            <span class="font-mono text-slate-800 dark:text-slate-200 font-semibold">PT Global Transformasi Teknologi (No-Reply) &lt;noreply@gtteknologi.com&gt;</span>
           </div>
-          <div class="flex items-center text-slate-600">
+          <div class="flex items-center text-slate-600 dark:text-slate-300">
             <span class="w-20 font-bold text-slate-400 text-[11px]">Penerima:</span>
-            <span class="font-mono text-blue-700 font-bold">{{ emailMeta.recipient }}</span>
+            <span class="font-mono text-blue-700 dark:text-blue-400 font-bold">{{ emailMeta.recipient }}</span>
           </div>
-          <div class="flex items-center text-slate-600">
+          <div class="flex items-center text-slate-600 dark:text-slate-300">
             <span class="w-20 font-bold text-slate-400 text-[11px]">Subjek:</span>
-            <span class="font-bold text-slate-900">{{ emailMeta.subject }}</span>
+            <span class="font-bold text-slate-900 dark:text-slate-100">{{ emailMeta.subject }}</span>
           </div>
         </div>
 
         <!-- Rendered Corporate HTML Email Card -->
-        <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden font-sans">
+        <div class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden font-sans max-w-4xl mx-auto">
           <!-- Email Brand Header -->
           <div class="bg-slate-900 px-6 py-4 flex items-center justify-between border-b-4 border-blue-600">
             <div class="flex items-center space-x-3">
@@ -181,8 +181,11 @@
 
               <!-- Specific Section when Resolved (BAP Result - High-level & Aman dari Kebocoran Data Perusahaan) -->
               <div v-if="isCurrentResolved" class="bg-emerald-50 border border-emerald-200 rounded-lg p-3.5 space-y-1.5 text-emerald-900 mt-2">
-                <span class="font-bold text-xs flex items-center space-x-1">
-                  <span>✓ Berita Acara Pemulihan (BAP):</span>
+                <span class="font-bold text-xs flex items-center space-x-1.5 text-emerald-800">
+                  <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                  <span>Berita Acara Pemulihan (BAP):</span>
                 </span>
                 <p class="text-[11px]"><strong>Status Pemulihan:</strong> Layanan operasional telah berhasil dipulihkan normal dan pengujian verifikasi telah tuntas dilaksanakan oleh tim teknisi GTT.</p>
                 <p class="text-[11px]"><strong>Progres:</strong> 100% Selesai (Masa Verifikasi &amp; Pemantauan Stabilitas 72 Jam)</p>
@@ -193,22 +196,24 @@
             </div>
 
             <!-- Action Button Khusus Email Klien (Tautan Portal Tracking Mandiri Anti-IDOR Tanpa Perlu Login) -->
-            <div v-if="activeTab === 'customer_email'" class="py-2 text-center">
+            <div v-if="activeTab === 'customer_email'" class="py-3 text-center">
               <router-link
-                :to="`/track/${ticket.ticketNumber}?token=${ticket.trackingToken}`"
+                :to="trackingUrl"
                 target="_blank"
-                class="inline-block px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-sm transition-all"
+                class="inline-block px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-md transition-all text-xs"
               >
                 {{ emailMeta.buttonText }} &rarr;
               </router-link>
-              <p class="text-[10px] text-slate-400 mt-1 font-mono">
-                Tautan Asli Email: /track/{{ ticket.ticketNumber }}?token={{ ticket.trackingToken }} (Anti-IDOR Secured Tanpa Perlu Login)
+              <p class="text-[10px] text-slate-400 mt-1.5 font-mono">
+                Tautan Asli Email: {{ trackingUrl }} (Anti-IDOR Secured Tanpa Perlu Login)
               </p>
             </div>
 
             <!-- Petunjuk Masuk untuk Teknisi (Email Murni Sebagai Alert Penugasan Cepat) -->
-            <div v-else class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 text-[11px] leading-relaxed flex items-center gap-2">
-              <span class="text-base shrink-0">📌</span>
+            <div v-else class="p-3 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 text-[11px] leading-relaxed flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
               <span><strong>Petunjuk Teknisi:</strong> Email ini merupakan notifikasi penugasan resmi (dispatch alert). Silakan login ke aplikasi Helpdesk GTT untuk mulai menangani tiket, menahan/melanjutkan SLA, dan mencatat milestone penanganan.</span>
             </div>
 
@@ -244,16 +249,30 @@
       </div>
 
       <!-- Footer Modal -->
-      <div class="bg-white px-5 py-3 border-t border-slate-200 flex items-center justify-between text-xs">
-        <span class="text-slate-500 font-mono text-[11px]">
+      <div class="bg-white dark:bg-slate-900 px-6 py-3.5 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
+        <span class="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
           {{ activeTab === 'engineer_dispatch' ? 'Template Penugasan Kerja Teknisi' : 'Satu Email Customer Serbaguna (Tracking & Konfirmasi)' }}
         </span>
-        <button 
-          @click="$emit('close')" 
-          class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-semibold shadow-sm transition-all cursor-pointer"
-        >
-          Tutup Pratinjau
-        </button>
+        <div class="flex items-center gap-2">
+          <router-link
+            v-if="activeTab === 'customer_email'"
+            :to="trackingUrl"
+            target="_blank"
+            class="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 dark:hover:bg-blue-900/60 border border-blue-200 dark:border-blue-700/60 rounded-lg font-bold transition-all flex items-center gap-1.5 cursor-pointer text-xs"
+            title="Buka tampilan pemantauan mandiri pelanggan di tab baru"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+            </svg>
+            <span>Buka Portal Monitoring Mandiri</span>
+          </router-link>
+          <button 
+            @click="$emit('close')" 
+            class="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg font-semibold shadow-sm transition-all cursor-pointer dark:bg-slate-700 dark:hover:bg-slate-600"
+          >
+            Tutup Pratinjau
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -312,6 +331,15 @@ const headerTitle = computed(() => {
 const isCurrentResolved = computed(() => {
   if (simulatedStatus.value) return simulatedStatus.value === 'RESOLVED';
   return ['RESOLVED', 'CLOSED'].includes(props.ticket?.status);
+});
+
+const trackingToken = computed(() => {
+  return props.ticket?.trackingToken || 'demo_token';
+});
+
+const trackingUrl = computed(() => {
+  const num = props.ticket?.ticketNumber || 'TK-DEMO';
+  return `/track/${num}?token=${trackingToken.value}`;
 });
 
 const currentStatusMode = computed(() => {

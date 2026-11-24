@@ -120,6 +120,9 @@
                     'bg-emerald-100 text-emerald-800 border-emerald-300'
                   ]">
                     {{ customerQuotaInfo.remaining }} Tiket
+                    <span v-if="customerQuotaInfo.percentage !== null" class="font-normal opacity-85 ml-1">
+                      ({{ customerQuotaInfo.percentage }}%)
+                    </span>
                   </span>
                 </div>
               </div>
@@ -136,6 +139,21 @@
                 <div class="font-bold text-rose-800 text-[11px] uppercase tracking-wider">Peringatan: Kuota Tiket Pelanggan Telah Habis</div>
                 <p class="text-[11px] text-rose-700 leading-relaxed">
                   Mitra <strong>{{ selectedCustomer.name }}</strong> telah kehabisan alokasi kuota tiket insiden (<strong>sisa 0 tiket / {{ customerQuotaInfo.used }} insiden tercatat</strong>). Penerbitan tiket baru dinonaktifkan sampai kuota ditambah melalui menu <em>Manajemen Pelanggan</em>.
+                </p>
+              </div>
+            </div>
+
+            <!-- Quota Critical Warning Alert (Sesuai TC-05 Laporan Bab 3: Sisa kuota hampir habis <= 10%) -->
+            <div v-else-if="customerQuotaInfo.isCritical" class="p-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-xl flex items-start space-x-3 text-amber-900 dark:text-amber-200 text-xs animate-in fade-in duration-200">
+              <div class="w-6 h-6 rounded-lg bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-200 flex items-center justify-center shrink-0 font-bold">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
+              <div class="space-y-0.5">
+                <div class="font-bold text-amber-800 dark:text-amber-300 text-[11px] uppercase tracking-wider">Perhatian: Alokasi Kuota Tiket Hampir Habis</div>
+                <p class="text-[11px] text-amber-700 dark:text-amber-300/90 leading-relaxed">
+                  Sisa kuota insiden untuk mitra <strong>{{ selectedCustomer.name }}</strong> tinggal <strong>{{ customerQuotaInfo.remaining }} tiket ({{ customerQuotaInfo.percentage }}%)</strong>. Segera persiapkan penambahan kuota kontrak melalui menu <em>Kelola Customer</em>.
                 </p>
               </div>
             </div>
@@ -344,8 +362,10 @@
               <!-- File Preview Pill when file selected -->
               <div v-else class="p-3 bg-white border border-slate-200 rounded-xl flex items-center justify-between shadow-2xs">
                 <div class="flex items-center space-x-2.5 min-w-0">
-                  <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
-                    📎
+                  <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                    </svg>
                   </div>
                   <div class="min-w-0">
                     <p class="font-bold text-slate-800 text-xs truncate">{{ selectedFile.name }}</p>

@@ -328,14 +328,25 @@ export const useTicketStore = defineStore('tickets', {
           };
         }
         const remaining = Math.max(0, parseInt(quotaStr, 10) || 0);
-        const isCritical = remaining <= 1;
-        const isNearLimit = remaining > 1 && remaining <= 3;
+        // Opsi 2 (Baseline Kuota Kontrak / Paket PKS Aktif):
+        // Pembagi persentase adalah alokasi paket kontrak aktif, bukan akumulasi seumur hidup.
+        // Menjaga keselarasan 100% dengan TC-05 Bab 3 Laporan KP (contoh PT PJB sisa 5 dari 50 tiket / 10%).
+        const baseline = (customer.baselineQuota && Number(customer.baselineQuota) > 0)
+          ? Number(customer.baselineQuota)
+          : (customer.contractQuota && Number(customer.contractQuota) > 0)
+            ? Number(customer.contractQuota)
+            : Math.max(remaining, remaining + actualTicketsCount);
+        const percentage = baseline > 0 ? Math.round((remaining / baseline) * 100) : (remaining === 0 ? 0 : 100);
+        // Alert Kritis jika sisa kuota <= 10% (sesuai TC-05 Laporan) ATAU sisa tiket <= 1
+        const isCritical = remaining === 0 || percentage <= 10 || remaining <= 1;
+        // Alert Peringatan jika sisa kuota <= 20% ATAU sisa tiket <= 3 (dan belum kritis)
+        const isNearLimit = !isCritical && (percentage <= 20 || remaining <= 3);
         const badgeColor = isCritical ? 'rose' : (isNearLimit ? 'amber' : 'emerald');
         return {
-          quota: remaining,
+          quota: baseline,
           used: actualTicketsCount,
           remaining: remaining,
-          percentage: null,
+          percentage,
           isNearLimit,
           isCritical,
           badgeColor
@@ -389,10 +400,10 @@ export const useTicketStore = defineStore('tickets', {
         isAdmin = !isEngineer;
       }
 
-      // 1. Quota alerts for customers (critical <= 10% & warning <= 20%)
+      // 1. Quota alerts for customers (critical <= 10% / sisa <= 1 tiket & warning <= 20% / sisa <= 3 tiket)
       state.customers.forEach(c => {
         const qInfo = getInfo(c);
-        if (qInfo.percentage !== null && qInfo.isCritical) {
+        if (qInfo.quota !== 'Unlimited' && qInfo.isCritical) {
           notifs.push({
             id: `quota-${c.id}`,
             category: 'KUOTA',
@@ -401,15 +412,15 @@ export const useTicketStore = defineStore('tickets', {
             title: `Sisa Kuota Kritis: ${c.name}`,
             entityName: c.name,
             entityCode: String(c.id),
-            message: `Sisa kuota ${qInfo.remaining} tiket (${qInfo.percentage}%). Segera tambah kuota.`,
-            shortDesc: `Sisa ${qInfo.remaining} tiket (${qInfo.percentage}%)`,
+            message: `Sisa kuota ${qInfo.remaining} tiket${qInfo.percentage !== null ? ` (${qInfo.percentage}%)` : ''}. Segera tambah kuota melalui menu Kelola Customer.`,
+            shortDesc: `Sisa ${qInfo.remaining} tiket${qInfo.percentage !== null ? ` (${qInfo.percentage}%)` : ''}`,
             timestamp: 'Penting',
             link: '/admin/customers',
             targetId: c.id,
-            badgeText: `${qInfo.remaining} Tiket (${qInfo.percentage}%)`,
+            badgeText: `${qInfo.remaining} Tiket${qInfo.percentage !== null ? ` (${qInfo.percentage}%)` : ''}`,
             badgeColor: 'rose'
           });
-        } else if (qInfo.percentage !== null && qInfo.isNearLimit) {
+        } else if (qInfo.quota !== 'Unlimited' && qInfo.isNearLimit) {
           notifs.push({
             id: `quota-warn-${c.id}`,
             category: 'KUOTA',
@@ -418,12 +429,12 @@ export const useTicketStore = defineStore('tickets', {
             title: `Sisa Kuota Menipis: ${c.name}`,
             entityName: c.name,
             entityCode: String(c.id),
-            message: `Sisa kuota tersisa ${qInfo.remaining} tiket (${qInfo.percentage}%).`,
-            shortDesc: `Sisa ${qInfo.remaining} tiket (${qInfo.percentage}%)`,
+            message: `Sisa kuota tersisa ${qInfo.remaining} tiket${qInfo.percentage !== null ? ` (${qInfo.percentage}%)` : ''}.`,
+            shortDesc: `Sisa ${qInfo.remaining} tiket${qInfo.percentage !== null ? ` (${qInfo.percentage}%)` : ''}`,
             timestamp: 'Perhatian',
             link: '/admin/customers',
             targetId: c.id,
-            badgeText: `${qInfo.remaining} Tiket (${qInfo.percentage}%)`,
+            badgeText: `${qInfo.remaining} Tiket${qInfo.percentage !== null ? ` (${qInfo.percentage}%)` : ''}`,
             badgeColor: 'amber'
           });
         }
@@ -1640,6 +1651,7 @@ export const useTicketStore = defineStore('tickets', {
         maintenanceStart: customerData.maintenanceStart || new Date().toISOString().slice(0, 10),
         maintenanceEnd: customerData.maintenanceEnd || new Date(Date.now() + 365*24*3600*1000).toISOString().slice(0, 10),
         ticketQuota: customerData.ticketQuota !== undefined && customerData.ticketQuota !== '' ? customerData.ticketQuota : 'Unlimited',
+        baselineQuota: (customerData.ticketQuota && String(customerData.ticketQuota).toLowerCase() !== 'unlimited' && !isNaN(Number(customerData.ticketQuota))) ? Number(customerData.ticketQuota) : null,
         isActive: true,
         pics: [
           {
@@ -1713,7 +1725,12 @@ export const useTicketStore = defineStore('tickets', {
       }
       if (updatedData.maintenanceStart !== undefined) cust.maintenanceStart = updatedData.maintenanceStart;
       if (updatedData.maintenanceEnd !== undefined) cust.maintenanceEnd = updatedData.maintenanceEnd;
-      if (updatedData.ticketQuota !== undefined) cust.ticketQuota = updatedData.ticketQuota;
+      if (updatedData.ticketQuota !== undefined) {
+        cust.ticketQuota = updatedData.ticketQuota;
+        if (cust.ticketQuota && String(cust.ticketQuota).toLowerCase() !== 'unlimited' && !isNaN(Number(cust.ticketQuota))) {
+          cust.baselineQuota = Number(cust.ticketQuota);
+        }
+      }
       if (typeof updatedData.isActive === 'boolean') {
         cust.isActive = updatedData.isActive;
       }
@@ -1861,6 +1878,8 @@ export const useTicketStore = defineStore('tickets', {
       }
 
       cust.ticketQuota = String(newQuota);
+      // Opsi 2: Perbarui baseline kapasitas aktif dengan saldo baru agar persentase proporsional dan tidak false-alert
+      cust.baselineQuota = newQuota;
       saveStoredData(STORAGE_KEYS.CUSTOMERS, this.customers);
 
       // Sinkronisasi ke MySQL Backend

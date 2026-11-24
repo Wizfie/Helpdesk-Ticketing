@@ -275,12 +275,12 @@
             </tr>
           </thead>
 
-          <tbody class="divide-y divide-slate-100 bg-white">
+          <tbody class="divide-y divide-slate-100 dark:divide-slate-800 bg-white dark:bg-slate-900/40">
             <tr
               v-for="ticket in paginatedTickets"
               :key="ticket.id"
               @click="$router.push(`/tickets/${ticket.id}`)"
-              class="hover:bg-blue-50/50 dark:hover:bg-slate-700/60 transition-colors cursor-pointer group"
+              class="hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-colors cursor-pointer group"
             >
               <!-- 1. Checkbox -->
               <td class="py-3 px-3 text-center" @click.stop>
@@ -288,7 +288,7 @@
                   type="checkbox" 
                   :value="ticket.id" 
                   v-model="selectedTicketIds" 
-                  class="rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer" 
+                  class="rounded text-blue-600 border-slate-300 dark:border-slate-600 dark:bg-slate-800 focus:ring-blue-500 cursor-pointer" 
                 />
               </td>
 
@@ -297,7 +297,7 @@
                 <router-link
                   :to="`/tickets/${ticket.id}`"
                   @click.stop
-                  class="font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
+                  class="font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                 >
                   {{ ticket.ticketNumber }}
                 </router-link>
@@ -310,17 +310,17 @@
 
               <!-- 4. JUDUL KENDALA & RUANG LINGKUP -->
               <td class="py-3 px-3">
-                <div class="font-bold text-slate-900 group-hover:text-blue-900 dark:group-hover:text-blue-300 leading-snug line-clamp-1">
+                <div class="font-bold text-slate-900 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-300 leading-snug line-clamp-1 transition-colors">
                   {{ ticket.title }}
                 </div>
-                <div class="text-[11px] text-slate-400 mt-0.5 line-clamp-1">
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
                   {{ ticket.scopeSubtitle || ticket.description || 'Deskripsi singkat kendala teknis layanan.' }}
                 </div>
               </td>
 
               <!-- 5. KATEGORI & SERIAL NUMBER -->
               <td class="py-3 px-2.5 whitespace-nowrap">
-                <span class="inline-block bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-medium px-2 py-0.5 rounded">
+                <span class="inline-block bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60 text-[10px] font-medium px-2 py-0.5 rounded">
                   {{ getCategoryDisplay(ticket) }}
                 </span>
                 <div v-if="ticket.serialNumber" class="text-[9px] font-mono text-slate-400 mt-0.5">
@@ -366,9 +366,9 @@
                   </span>
                   <span 
                     :class="[
-                      isResolutionBreached(ticket) ? 'text-rose-600 font-bold' :
-                      isResolutionWarning(ticket) ? 'text-amber-700 font-semibold' :
-                      'text-emerald-700 font-medium'
+                      isResolutionBreached(ticket) ? 'text-rose-600 dark:text-rose-400 font-bold' :
+                      isResolutionWarning(ticket) ? 'text-amber-700 dark:text-amber-400 font-semibold' :
+                      'text-emerald-700 dark:text-emerald-400 font-medium'
                     ]"
                   >
                     {{ getSlaResolutionDisplay(ticket) }}
@@ -383,38 +383,38 @@
                   <span 
                     :class="[
                       'font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wide inline-block',
-                      ticket.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700' :
-                      ticket.status === 'ASSIGNED' ? 'bg-blue-50 text-blue-600 border border-blue-200' :
-                      (ticket.status === 'PENDING' || ticket.status === 'WAITING') ? 'bg-amber-100 text-amber-700' :
-                      ticket.status === 'ESCALATED' ? 'bg-purple-100 text-purple-700' :
-                      ticket.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-700' :
-                      ticket.status === 'NEAR_BREACH' ? 'bg-rose-100 text-rose-700' :
-                      'bg-slate-100 text-slate-700'
+                      ticket.status === 'IN_PROGRESS' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 dark:border dark:border-blue-700/60' :
+                      ticket.status === 'ASSIGNED' ? 'bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-700/60' :
+                      (ticket.status === 'PENDING' || ticket.status === 'WAITING') ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 dark:border dark:border-amber-700/60' :
+                      ticket.status === 'ESCALATED' ? 'bg-purple-100 text-purple-700 dark:bg-purple-950/80 dark:text-purple-300 dark:border dark:border-purple-700/60' :
+                      ticket.status === 'RESOLVED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border dark:border-emerald-700/60' :
+                      ticket.status === 'NEAR_BREACH' ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 dark:border dark:border-rose-700/60' :
+                      'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:border dark:border-slate-700'
                     ]"
                   >
                     {{ formatStatusLabel(ticket.status) }}
                   </span>
 
                   <!-- Subtext or Progress Bar -->
-                  <div v-if="ticket.status === 'PENDING'" class="text-[10px] text-slate-500 mt-0.5">
+                  <div v-if="ticket.status === 'PENDING'" class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                     {{ ticket.statusSubtext || 'Menunggu Konfirmasi' }}
                   </div>
-                  <div v-else-if="ticket.status === 'ESCALATED'" class="text-[10px] text-slate-500 mt-0.5">
+                  <div v-else-if="ticket.status === 'ESCALATED'" class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                     {{ ticket.statusSubtext || 'Menunggu Principal' }}
                   </div>
-                  <div v-else-if="ticket.status === 'RESOLVED'" class="text-[10px] text-slate-500 mt-0.5">
+                  <div v-else-if="ticket.status === 'RESOLVED'" class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
                     {{ ticket.statusSubtext || 'Selesai' }}
                   </div>
                   <!-- Progress Bar for IN_PROGRESS, ASSIGNED, NEAR_BREACH -->
                   <div v-else class="flex items-center space-x-1.5 mt-1">
-                    <div class="w-16 bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                    <div class="w-16 bg-slate-200 dark:bg-slate-700 rounded-full h-1.5 overflow-hidden">
                       <div 
                         class="h-1.5 rounded-full transition-all duration-300"
                         :class="ticket.status === 'NEAR_BREACH' ? 'bg-rose-500' : 'bg-blue-600'"
                         :style="{ width: `${ticket.progressPercent || 0}%` }"
                       ></div>
                     </div>
-                    <span class="text-[10px] font-mono text-slate-500">{{ ticket.progressPercent || 0 }}%</span>
+                    <span class="text-[10px] font-mono text-slate-500 dark:text-slate-400">{{ ticket.progressPercent || 0 }}%</span>
                   </div>
                 </div>
               </td>
@@ -422,10 +422,12 @@
 
             <!-- Empty State -->
             <tr v-if="filteredTickets.length === 0">
-              <td colspan="8" class="py-12 text-center text-slate-400 bg-white">
+              <td colspan="8" class="py-12 text-center text-slate-400 dark:text-slate-500 bg-white dark:bg-slate-900/40">
                 <div v-if="ticketStore.tickets.length === 0" class="max-w-md mx-auto space-y-3 py-4">
-                  <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl mx-auto shadow-inner">
-                    🎫
+                  <div class="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-slate-800 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-inner">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path>
+                    </svg>
                   </div>
                   <div>
                     <h3 class="font-bold text-slate-800 text-sm">Belum Ada Tiket Insiden</h3>

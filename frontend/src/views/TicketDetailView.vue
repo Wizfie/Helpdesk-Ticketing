@@ -67,6 +67,20 @@
 
         <!-- Action Buttons Right (Hold & Closed) -->
         <div class="flex items-center gap-2 text-xs no-print">
+          <!-- Button Pratinjau Format Email & Tracking Mandiri -->
+          <button
+            type="button"
+            @click="showEmailPreviewModal = true"
+            class="inline-flex items-center space-x-1.5 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 hover:text-slate-900 font-bold border border-slate-300 rounded-lg text-xs transition-all shadow-2xs cursor-pointer dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700"
+            title="Lihat format tampilan email resmi dan tautan pelacakan mandiri tiket ini"
+          >
+            <svg class="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+            </svg>
+            <span>Pratinjau Email</span>
+          </button>
+
           <!-- Button Kirim Email Manual ke PIC (1 Email Terpadu: Tracking & Konfirmasi) -->
           <button
             v-if="authStore.isAdmin"
@@ -89,7 +103,11 @@
             class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-2xs transition-all cursor-pointer"
             title="Lanjutkan perhitungan waktu SLA"
           >
-            <span>▶ Lanjutkan SLA</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Lanjutkan SLA</span>
           </button>
           <button
             v-else-if="!ticket.isPaused && canEngineerAct && !['RESOLVED', 'CLOSED'].includes(ticket.status)"
@@ -97,7 +115,10 @@
             class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg shadow-2xs transition-all cursor-pointer"
             title="Tahan jam SLA tiket ini (Hold)"
           >
-            <span>⏸ Hold Tiket</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Hold Tiket</span>
           </button>
 
           <!-- Closed / Selesaikan Tiket Button -->
@@ -107,13 +128,19 @@
             class="inline-flex items-center space-x-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-2xs transition-all cursor-pointer"
             title="Tutup dan selesaikan tiket ini"
           >
-            <span>✓ Closed Tiket</span>
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Closed Tiket</span>
           </button>
           <div v-else-if="['RESOLVED', 'CLOSED'].includes(ticket.status)" class="flex items-center gap-2">
             <span
               class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 rounded-lg text-xs"
             >
-              ✓ Kasus Closed
+              <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+              </svg>
+              <span>Kasus Closed</span>
             </span>
           </div>
         </div>
@@ -254,6 +281,22 @@
               </svg>
             </a>
           </div>
+        </div>
+
+        <!-- Tracking Mandiri Action Links (Customer Self-Service) -->
+        <div class="mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs no-print">
+          <span class="text-[11px] font-bold text-slate-400">Portal Tracking PIC:</span>
+          <button
+            type="button"
+            @click="handleCopyLink"
+            class="px-2.5 py-1 text-[11px] font-semibold text-slate-700 hover:text-blue-600 dark:text-slate-200 dark:hover:text-blue-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-700 transition cursor-pointer flex items-center gap-1.5"
+            title="Salin tautan resmi bertoken ini untuk dikirimkan ke PIC"
+          >
+            <svg class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+            </svg>
+            <span>{{ copiedLink ? 'Tersalin' : 'Salin Link' }}</span>
+          </button>
         </div>
       </div>
 
@@ -1103,8 +1146,10 @@
         </div>
 
         <!-- Notice -->
-        <div class="flex items-start space-x-2 p-3 bg-emerald-50/70 border border-emerald-200/60 rounded-xl text-left text-[11px] text-emerald-900 leading-relaxed">
-          <span class="text-emerald-600 mt-0.5 text-sm shrink-0">💡</span>
+        <div class="flex items-start space-x-2 p-3 bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl text-left text-[11px] text-emerald-900 dark:text-emerald-200 leading-relaxed">
+          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
           <span>Setelah tiket berstatus RESOLVED, tombol penambahan tahapan diagnosa (+ Add Diagnostic Step) akan resmi ditutup.</span>
         </div>
 
@@ -1140,8 +1185,11 @@
         </div>
 
         <div class="space-y-3">
-          <div class="p-2.5 bg-slate-50 border border-slate-200 rounded-lg font-mono text-slate-800 text-[11px]">
-            📄 {{ targetAttachmentToLink?.name }}
+          <div class="p-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg font-mono text-slate-800 dark:text-slate-200 text-[11px] flex items-center space-x-2">
+            <svg class="w-4 h-4 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+            </svg>
+            <span class="truncate">{{ targetAttachmentToLink?.name }}</span>
           </div>
 
           <div>
@@ -1492,8 +1540,10 @@
         </div>
 
         <!-- Automation Note -->
-        <div class="flex items-start space-x-2 p-3 bg-emerald-50/70 border border-emerald-200/60 rounded-xl text-left text-[11px] text-emerald-900 leading-relaxed">
-          <span class="text-emerald-600 mt-0.5 text-sm shrink-0">💡</span>
+        <div class="flex items-start space-x-2 p-3 bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl text-left text-[11px] text-emerald-900 dark:text-emerald-200 leading-relaxed">
+          <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
           <span>Tiket akan resmi diselesaikan dan status diperbarui menjadi CLOSED. Seluruh catatan kronologi penanganan dan lampiran bukti tersimpan secara permanen pada timeline.</span>
         </div>
 
@@ -1556,6 +1606,18 @@
       :attachment="selectedAttachment"
       @close="selectedAttachment = null"
     />
+
+    <!-- Modal 9: Email Notification Preview Modal -->
+    <EmailPreviewModal
+      v-if="ticket"
+      :is-open="showEmailPreviewModal"
+      :target="'customer'"
+      :ticket="ticket"
+      :customer="getCustomer(ticket.customerId)"
+      :pic="picInfo"
+      :engineer="assignedEngineerUser"
+      @close="showEmailPreviewModal = false"
+    />
   </div>
 
   <!-- 404 Fallback State -->
@@ -1580,6 +1642,7 @@ import { api, getUploadUrl } from '../services/api';
 import { compressImageIfNeeded } from '../utils/imageCompressor';
 import { formatUtcToLocal } from '../utils/dateFormatter';
 import AttachmentPreviewModal from '../components/AttachmentPreviewModal.vue';
+import EmailPreviewModal from '../components/EmailPreviewModal.vue';
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -1594,6 +1657,7 @@ const ticket = computed(() => {
 });
 
 // Modals and UI States
+const showEmailPreviewModal = ref(false);
 const showMilestoneModal = ref(false);
 const showConfirmResolveStepModal = ref(false);
 const showEditModal = ref(false);
@@ -1850,6 +1914,14 @@ const assignedEngineerPhone = computed(() => {
   if (!ticket.value?.assignedToId) return '-';
   const u = authStore.users.find(item => item.id === ticket.value.assignedToId);
   return u?.phone || '-';
+});
+
+const assignedEngineerUser = computed(() => {
+  return {
+    name: assignedEngineerName.value !== 'Belum Ditugaskan' ? assignedEngineerName.value : 'Tim Support GTT',
+    email: assignedEngineerEmail.value !== '-' ? assignedEngineerEmail.value : 'engineer@gtteknologi.com',
+    phone: assignedEngineerPhone.value !== '-' ? assignedEngineerPhone.value : '-'
+  };
 });
 
 const getEngineerName = (id) => {

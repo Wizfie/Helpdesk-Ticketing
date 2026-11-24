@@ -504,7 +504,7 @@
       <button
         @click="handleLogout"
         type="button"
-        class="sidebar-logout-btn w-full flex items-center justify-center space-x-2 px-3 py-2 text-xs font-bold text-rose-600 hover:text-white bg-rose-50 hover:bg-rose-600 border border-rose-200/90 rounded-lg transition-all cursor-pointer group shadow-2xs active:scale-[0.98]"
+        class="sidebar-logout-btn w-full flex items-center justify-center space-x-2 px-3 py-2 text-xs font-bold text-rose-600 dark:text-rose-300 hover:text-white dark:hover:text-white bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-600 dark:hover:bg-rose-600 border border-rose-200/90 dark:border-rose-500/40 rounded-lg transition-all cursor-pointer group shadow-2xs active:scale-[0.98]"
         title="Keluar dari akun (Logout)"
       >
         <svg
