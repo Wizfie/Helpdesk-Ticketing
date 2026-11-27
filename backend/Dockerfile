@@ -22,9 +22,9 @@ COPY . .
 # Buat direktori penyimpanan upload persisten
 RUN mkdir -p uploads
 
-# Siapkan entrypoint script
+# Siapkan entrypoint script (pastikan LF line endings agar aman dibangun dari Windows/Linux)
 COPY docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && chmod +x /usr/local/bin/docker-entrypoint.sh
 
 EXPOSE 5000
 

@@ -81,6 +81,7 @@ import { ref, computed } from 'vue';
 import { formatUtcToLocal } from '../utils/dateFormatter';
 import { useAuthStore } from '../stores/authStore';
 import { useTicketStore } from '../stores/ticketStore';
+import { getUploadUrl } from '../services/api';
 import AttachmentPreviewModal from './AttachmentPreviewModal.vue';
 
 const props = defineProps({
@@ -143,6 +144,6 @@ const openProofPreview = (fileName) => {
 
 const getImagePreviewSrc = (fileName) => {
   if (!fileName) return '/gtt-logo.png';
-  return `/uploads/${encodeURIComponent(fileName)}`;
+  return getUploadUrl(fileName);
 };
 </script>

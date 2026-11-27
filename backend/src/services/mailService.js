@@ -4,25 +4,44 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+/**
+ * Tentukan platform email secara dinamis dari host SMTP agar tidak terjebak fallback Gmail
+ */
+function resolvePlatformFromHost(host, explicitPlatform) {
+  const h = String(host || '').toLowerCase().trim();
+  if (h.includes('resend.com')) return 'resend';
+  if (h === 'smtp.gmail.com' || h.includes('gmail.com')) return 'gmail';
+  if (h.includes('office365.com') || h.includes('outlook.com')) return 'office365';
+  if (h.includes('sumopod.com')) return 'sumopod';
+  if (explicitPlatform && explicitPlatform !== 'gmail') return explicitPlatform;
+  return h ? 'smtp' : (explicitPlatform || 'smtp');
+}
+
+const initialHost = process.env.SMTP_HOST || 'smtp.gmail.com';
+
 // Runtime in-memory email configuration (initialized from process.env)
 export const emailConfig = {
-  platform: process.env.EMAIL_PLATFORM || 'gmail',
+  platform: process.env.EMAIL_PLATFORM || resolvePlatformFromHost(initialHost, 'smtp'),
   driver: process.env.EMAIL_DRIVER || 'smtp',
   fromName: process.env.EMAIL_FROM_NAME || 'PT Global Transformasi Teknologi (No-Reply)',
   fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@gtteknologi.com',
   smtp: {
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    host: initialHost,
     port: Number(process.env.SMTP_PORT) || 465,
     secure: process.env.SMTP_SECURE === 'false' ? false : true,
-    user: process.env.SMTP_USER || process.env.GMAIL_USER || 'wiz.fie@gmail.com',
-    pass: (process.env.SMTP_PASS || process.env.GMAIL_APP_PASS || 'lirh vxnb xnda panw').replace(/\s+/g, ''),
+    user: process.env.SMTP_USER || process.env.GMAIL_USER || '',
+    pass: (process.env.SMTP_PASS || process.env.GMAIL_APP_PASS || '').replace(/\s+/g, ''),
   },
   gmail: {
-    user: process.env.GMAIL_USER || 'wiz.fie@gmail.com',
-    pass: (process.env.GMAIL_APP_PASS || 'lirh vxnb xnda panw').replace(/\s+/g, ''),
+    user: process.env.GMAIL_USER || '',
+    pass: (process.env.GMAIL_APP_PASS || '').replace(/\s+/g, ''),
   },
   resend: {
-    apiKey: process.env.RESEND_API_KEY || '',
+    apiKey: process.env.RESEND_API_KEY || (
+      String(initialHost).toLowerCase().includes('resend.com') && String(process.env.SMTP_PASS || '').startsWith('re_')
+        ? String(process.env.SMTP_PASS).trim()
+        : ''
+    ),
   },
   sumopod: {
     host: process.env.SUMOPOD_SMTP_HOST || 'smtp.sumopod.com',
@@ -44,11 +63,13 @@ async function createTransporter(driver = emailConfig.driver) {
     throw new Error('Modul nodemailer belum terpasang di backend. Silakan jalankan: npm install nodemailer di folder backend, atau gunakan Mode Simulator untuk pengujian.');
   }
 
-  // Jika platform Gmail atau host smtp.gmail.com
-  const isGmail = emailConfig.platform === 'gmail' || emailConfig.smtp.host === 'smtp.gmail.com' || driver === 'gmail';
+  const smtpHost = String(emailConfig.smtp.host || '').toLowerCase().trim();
+  const isGmail = smtpHost === 'smtp.gmail.com' || driver === 'gmail';
   if (isGmail) {
     return nodemailer.createTransport({
       service: 'gmail',
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
       auth: {
         user: emailConfig.smtp.user || emailConfig.gmail?.user,
         pass: (emailConfig.smtp.pass || emailConfig.gmail?.pass || '').replace(/\s+/g, '')
@@ -56,11 +77,13 @@ async function createTransporter(driver = emailConfig.driver) {
     });
   }
 
-  // Universal SMTP untuk platform apapun (Sumopod, SendGrid, Office 365, Brevo, Corporate GTT, cPanel, dll)
+  // Universal SMTP untuk platform apapun (Resend, Sumopod, SendGrid, Office 365, Brevo, Corporate GTT, cPanel, dll)
   return nodemailer.createTransport({
     host: emailConfig.smtp.host,
     port: Number(emailConfig.smtp.port) || 587,
     secure: emailConfig.smtp.secure === true || Number(emailConfig.smtp.port) === 465,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
     auth: {
       user: emailConfig.smtp.user,
       pass: emailConfig.smtp.pass
@@ -72,10 +95,13 @@ async function createTransporter(driver = emailConfig.driver) {
 }
 
 /**
- * Kirim email via Resend REST API (Native Fetch, tidak butuh SDK tambahan)
+ * Kirim email via Resend REST API (Native Fetch, melewati HTTPS port 443 agar bebas blokir port SMTP VPS)
  */
-async function sendViaResend({ to, subject, html, text }) {
-  if (!emailConfig.resend.apiKey) {
+async function sendViaResend({ to, subject, html, text, apiKeyOverride = '' }) {
+  const apiKey = apiKeyOverride || emailConfig.resend?.apiKey || (
+    String(emailConfig.smtp.pass || '').startsWith('re_') ? emailConfig.smtp.pass : ''
+  );
+  if (!apiKey) {
     throw new Error('API Key Resend belum dikonfigurasi di pengaturan.');
   }
 
@@ -83,7 +109,7 @@ async function sendViaResend({ to, subject, html, text }) {
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${emailConfig.resend.apiKey}`,
+      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
@@ -91,7 +117,7 @@ async function sendViaResend({ to, subject, html, text }) {
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
-      text
+      text: text || html.replace(/<[^>]+>/g, '')
     })
   });
 
@@ -104,11 +130,13 @@ async function sendViaResend({ to, subject, html, text }) {
 }
 
 /**
- * Eksekusi pengiriman email utama dengan dukungan Universal SMTP Gateway
+ * Eksekusi pengiriman email utama dengan dukungan Universal SMTP Gateway & Resend REST API
  */
 export async function sendMail({ to, subject, html, text, driverOverride = null }) {
   const activeDriver = driverOverride || (emailConfig.platform === 'mock' ? 'mock' : emailConfig.driver);
   const from = `"${emailConfig.fromName}" <${emailConfig.fromAddress}>`;
+  const smtpHost = String(emailConfig.smtp.host || '').toLowerCase().trim();
+  const resendApiKey = emailConfig.resend?.apiKey || (String(emailConfig.smtp.pass || '').startsWith('re_') ? emailConfig.smtp.pass : '');
 
   // 1. Mode Mock / Simulator (Development tanpa internet)
   if (activeDriver === 'mock' || emailConfig.platform === 'mock' || activeDriver === 'simulator') {
@@ -125,7 +153,7 @@ export async function sendMail({ to, subject, html, text, driverOverride = null 
   // 2. Mode Failover (Coba Resend -> Sumopod -> SMTP)
   if (activeDriver === 'failover') {
     const candidateDrivers = [];
-    if (emailConfig.resend?.apiKey) candidateDrivers.push('resend');
+    if (resendApiKey) candidateDrivers.push('resend');
     if (emailConfig.sumopod?.user && emailConfig.sumopod?.pass) candidateDrivers.push('sumopod');
     if (emailConfig.smtp?.user && emailConfig.smtp?.pass) candidateDrivers.push('smtp');
 
@@ -148,9 +176,9 @@ export async function sendMail({ to, subject, html, text, driverOverride = null 
     throw new Error(`Semua provider failover gagal mengirim email: ${errors.map(e => `${e.driver} (${e.error})`).join(', ')}`);
   }
 
-  // 3. Pengiriman spesifik Resend (REST API jika diperlukan)
-  if (activeDriver === 'resend' && emailConfig.resend?.apiKey) {
-    const res = await sendViaResend({ to, subject, html, text });
+  // 3. Pengiriman Resend via HTTPS REST API (aktif otomatis jika host smtp.resend.com dengan API Key re_... atau driver === 'resend')
+  if ((activeDriver === 'resend' || (smtpHost.includes('resend.com') && resendApiKey.startsWith('re_'))) && resendApiKey) {
+    const res = await sendViaResend({ to, subject, html, text, apiKeyOverride: resendApiKey });
     return { success: true, provider: 'resend', messageId: res.messageId, timestamp: new Date().toISOString() };
   }
 
@@ -183,6 +211,7 @@ export async function testEmailConnection(targetEmail, driver = null) {
   const chosenDriver = driver || (emailConfig.platform === 'mock' ? 'mock' : emailConfig.driver);
   const platformLabel = {
     gmail: 'Google Workspace / Gmail',
+    resend: 'Resend Cloud Mail Gateway',
     office365: 'Microsoft 365 / Outlook',
     cloud: 'Cloud Relay (SendGrid / Brevo / Resend)',
     custom: 'Server SMTP Korporat GTT',
@@ -283,13 +312,15 @@ export function getMaskedConfig() {
 
 // Strict whitelist of environment keys allowed to be modified from UI
 const ALLOWED_ENV_KEYS = new Set([
+  'EMAIL_PLATFORM',
   'EMAIL_FROM_NAME',
   'EMAIL_FROM_ADDRESS',
   'SMTP_HOST',
   'SMTP_PORT',
   'SMTP_SECURE',
   'SMTP_USER',
-  'SMTP_PASS'
+  'SMTP_PASS',
+  'RESEND_API_KEY'
 ]);
 
 /**
@@ -335,7 +366,13 @@ export function updateRuntimeAndEnvConfig(newConfig) {
     const cleanPass = newConfig.pass.replace(/\s+/g, '');
     emailConfig.smtp.pass = cleanPass;
     emailConfig.gmail.pass = cleanPass;
+    if (String(emailConfig.smtp.host || '').toLowerCase().includes('resend.com') || cleanPass.startsWith('re_')) {
+      emailConfig.resend.apiKey = cleanPass;
+    }
   }
+
+  // Sinkronkan platform secara dinamis mengikuti SMTP host terbaru
+  emailConfig.platform = resolvePlatformFromHost(emailConfig.smtp.host, newConfig.platform);
 
   // Nested form fallback
   if (newConfig.smtp) {
@@ -348,6 +385,9 @@ export function updateRuntimeAndEnvConfig(newConfig) {
   if (newConfig.gmail) {
     if (newConfig.gmail.user) emailConfig.smtp.user = newConfig.gmail.user;
     if (newConfig.gmail.pass) emailConfig.smtp.pass = newConfig.gmail.pass.replace(/\s+/g, '');
+  }
+  if (newConfig.resend?.apiKey) {
+    emailConfig.resend.apiKey = newConfig.resend.apiKey.trim();
   }
 
   // Simpan ke file .env (baik di folder backend maupun root jika ada)
@@ -378,6 +418,7 @@ export function updateRuntimeAndEnvConfig(newConfig) {
         };
 
         // Clean universal SMTP gateway configuration keys
+        updateKey('EMAIL_PLATFORM', emailConfig.platform);
         updateKey('EMAIL_FROM_NAME', emailConfig.fromName);
         updateKey('EMAIL_FROM_ADDRESS', emailConfig.fromAddress);
         updateKey('SMTP_HOST', emailConfig.smtp.host);
@@ -386,6 +427,9 @@ export function updateRuntimeAndEnvConfig(newConfig) {
         updateKey('SMTP_USER', emailConfig.smtp.user);
         if (newConfig.pass || (newConfig.smtp && newConfig.smtp.pass)) {
           updateKey('SMTP_PASS', emailConfig.smtp.pass);
+          if (String(emailConfig.smtp.host || '').toLowerCase().includes('resend.com')) {
+            updateKey('RESEND_API_KEY', emailConfig.resend.apiKey);
+          }
         }
 
         fs.writeFileSync(envPath, envContent, 'utf8');

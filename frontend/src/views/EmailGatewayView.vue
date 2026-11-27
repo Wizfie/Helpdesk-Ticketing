@@ -127,7 +127,7 @@
               <input 
                 v-model="form.host" 
                 type="text" 
-                placeholder="Contoh: smtp.sumopod.com / smtp.sendgrid.net"
+                placeholder="Contoh: smtp.resend.com / smtp.sumopod.com"
                 class="w-full text-xs px-3 py-2 rounded-lg border border-slate-300 bg-white focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono"
               />
             </div>
@@ -404,9 +404,14 @@ async function saveConfig() {
   isSaving.value = true;
   alertMessage.value = '';
   try {
+    const hostLower = String(form.value.host || '').toLowerCase();
+    const detectedPlatform = hostLower.includes('resend')
+      ? 'resend'
+      : (hostLower === 'smtp.gmail.com' ? 'gmail' : 'smtp');
+
     const payload = {
       driver: 'smtp',
-      platform: 'smtp',
+      platform: detectedPlatform,
       fromName: form.value.fromName,
       fromAddress: form.value.fromAddress,
       host: form.value.host,

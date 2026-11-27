@@ -7,13 +7,17 @@ while ! nc -z db 3306; do
 done
 echo "==> [Entrypoint] Database MySQL aktif dan siap menerima koneksi."
 
-echo "==> [Entrypoint] Menjalankan Prisma Safe Migration (deploy)..."
-npx prisma migrate deploy
+echo "==> [Entrypoint] Menyinkronkan skema Prisma terbaru ke MySQL (db push)..."
+npx prisma db push --skip-generate
 
-# Jalankan seeder otomatis saat inisialisasi jika diizinkan
-if [ "$SEED_ON_START" = "true" ]; then
-  echo "==> [Entrypoint] Menjalankan seeding data awal..."
-  node prisma/seed.js || true
+# Auto-seed aman: hanya berjalan jika database masih kosong (0 user) agar data produksi tidak tertimpa saat restart/rebuild
+if [ "$SEED_ON_START" = "auto" ] || [ "$SEED_ON_START" = "true" ]; then
+  if node -e "import('./src/lib/prisma.js').then(async ({default: p}) => { const c = await p.user.count(); await p.\$disconnect(); process.exit(c === 0 ? 0 : 1); }).catch(() => process.exit(1));"; then
+    echo "==> [Entrypoint] Database masih kosong, menjalankan seeding data awal..."
+    node prisma/seed.js || true
+  else
+    echo "==> [Entrypoint] Data user sudah ada, melewati seeding agar data eksisting tetap aman."
+  fi
 fi
 
 echo "==> [Entrypoint] Menjalankan Backend Express Server..."
