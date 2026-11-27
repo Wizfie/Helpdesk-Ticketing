@@ -25,7 +25,6 @@
             v-model="selectedTicketId" 
             class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold focus:ring-2 focus:ring-blue-500"
           >
-            <option v-if="isDevMode" value="DEMO">Demo Simulasi (TK-DEMO)</option>
             <option v-for="t in ticketStore.tickets" :key="t.id" :value="t.id">
               {{ t.ticketNumber }} - {{ t.title?.slice(0, 28) }}...
             </option>
@@ -46,8 +45,8 @@
         </button>
 
         <router-link
-          v-if="previewTicket?.trackingToken && (selectedTicketId !== 'DEMO' || isDevMode)"
-          :to="selectedTicketId === 'DEMO' ? '/track/TK-DEMO?token=demo_token' : `/track/${previewTicket.ticketNumber}?token=${previewTicket.trackingToken}`"
+          v-if="Boolean(selectedTicketId) && Boolean(previewTicket?.trackingToken)"
+          :to="`/track/${previewTicket.ticketNumber}?token=${previewTicket.trackingToken}`"
           target="_blank"
           class="px-3.5 py-2 text-xs font-semibold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition flex items-center space-x-1.5 shadow-2xs cursor-pointer"
           title="Buka langsung portal pemantauan mandiri pelanggan (Customer Tracking)"
@@ -292,7 +291,7 @@
       :ticket="previewTicket"
       :customer="previewCustomer"
       :pic="previewPic"
-      :engineer="{ name: 'Budi Santoso' }"
+      :engineer="{ name: 'Teknisi Helpdesk' }"
       @close="showTemplatePreview = false"
     />
   </div>
@@ -305,14 +304,13 @@ import { useTicketStore } from '../stores/ticketStore';
 import EmailPreviewModal from '../components/EmailPreviewModal.vue';
 
 const ticketStore = useTicketStore();
-const isDevMode = import.meta.env.DEV;
-const selectedTicketId = ref(ticketStore.tickets[0]?.id || (isDevMode ? 'DEMO' : ''));
+const selectedTicketId = ref(ticketStore.tickets[0]?.id || '');
 const showTemplatePreview = ref(false);
 const showPassword = ref(false);
 
-const demoSampleTicket = {
-  id: 9999,
-  ticketNumber: 'TK-DEMO',
+const templateSampleTicket = {
+  id: 0,
+  ticketNumber: 'TK-26000',
   severity: 'HIGH',
   status: 'ASSIGNED',
   title: 'Network Switch Core Flapping & Packet Loss',
@@ -320,35 +318,35 @@ const demoSampleTicket = {
   createdAt: new Date().toISOString(),
   responseDeadline: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   resolutionDeadline: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
-  trackingToken: 'demo_token',
-  rootCause: 'Kabel fiber optic patch cord mengalami micro-loss di rack server B.',
+  trackingToken: 'token_pelacakan',
+  rootCause: 'Kabel fiber optic patch cord mengalami micro-loss di rack server.',
   actionTaken: 'Penggantian patch cord duplex LC-LC dan pembersihan konektor ferrule optik.'
 };
-const demoSampleCustomer = { name: 'PT Bank Central Asia Tbk (BCA)', slaTier: 'TITANIUM 24x7 CRITICAL' };
-const demoSamplePic = { name: 'Bpk. Hendrik Pratama', email: 'hendrik.p@bca.co.id' };
+const templateSampleCustomer = { name: 'Mitra Pelanggan', slaTier: 'GOLD 24x7' };
+const templateSamplePic = { name: 'PIC Pelanggan', email: 'pic@perusahaan.com' };
 
 const previewTicket = computed(() => {
-  if (selectedTicketId.value === 'DEMO' || !selectedTicketId.value) {
-    return demoSampleTicket;
+  if (!selectedTicketId.value || selectedTicketId.value === 'DEMO') {
+    return templateSampleTicket;
   }
   const real = ticketStore.tickets.find(t => t.id === Number(selectedTicketId.value) || t.ticketNumber === selectedTicketId.value);
-  return real || demoSampleTicket;
+  return real || templateSampleTicket;
 });
 
 const previewCustomer = computed(() => {
-  if (selectedTicketId.value === 'DEMO' || !selectedTicketId.value) {
-    return demoSampleCustomer;
+  if (!selectedTicketId.value || selectedTicketId.value === 'DEMO') {
+    return templateSampleCustomer;
   }
   const cust = ticketStore.customers.find(c => c.id === previewTicket.value.customerId);
   return cust || { name: 'Mitra Pelanggan', slaTier: previewTicket.value.contractTier || 'GOLD 24x7' };
 });
 
 const previewPic = computed(() => {
-  if (selectedTicketId.value === 'DEMO' || !selectedTicketId.value) {
-    return demoSamplePic;
+  if (!selectedTicketId.value || selectedTicketId.value === 'DEMO') {
+    return templateSamplePic;
   }
   const cust = previewCustomer.value;
-  return cust?.pics?.[0] || { name: 'PIC Pelanggan', email: 'pic@customer.co.id' };
+  return cust?.pics?.[0] || { name: 'PIC Pelanggan', email: 'pic@perusahaan.com' };
 });
 
 const isLoading = ref(false);

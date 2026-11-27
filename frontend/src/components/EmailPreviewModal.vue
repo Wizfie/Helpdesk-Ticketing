@@ -334,11 +334,11 @@ const isCurrentResolved = computed(() => {
 });
 
 const trackingToken = computed(() => {
-  return props.ticket?.trackingToken || 'demo_token';
+  return props.ticket?.trackingToken || 'token_pelacakan';
 });
 
 const trackingUrl = computed(() => {
-  const num = props.ticket?.ticketNumber || 'TK-DEMO';
+  const num = props.ticket?.ticketNumber || 'TK-26000';
   return `/track/${num}?token=${trackingToken.value}`;
 });
 
@@ -358,18 +358,18 @@ const emailMeta = computed(() => {
   if (activeTab.value === 'customer_email') {
     if (isCurrentResolved.value) {
       return {
-        recipient: `${props.pic.name || 'Bpk. Hendrik Pratama'} <${props.pic.email || 'customer@bca.co.id'}>`,
+        recipient: `${props.pic.name || 'PIC Pelanggan'} <${props.pic.email || 'pic@perusahaan.com'}>`,
         subject: `[TICKET #${props.ticket.ticketNumber}] Pemulihan Selesai: ${props.ticket.title || 'Laporan Gangguan'}`,
-        greeting: `Yth. ${props.pic.name || 'Bpk. Hendrik Pratama'} (${props.customer.name || 'PT Bank Central Asia Tbk'}),`,
+        greeting: `Yth. ${props.pic.name || 'PIC Pelanggan'} (${props.customer.name || 'Mitra Pelanggan'}),`,
         intro: `Dengan hormat kami informasikan bahwa perbaikan teknis terkait laporan Anda telah berhasil diselesaikan oleh tim engineer GTT. Layanan Anda saat ini telah pulih normal.`,
         buttonText: `Verifikasi Hasil & Konfirmasi Selesai`,
         footerNote: `Tiket berstatus RESOLVED dan memiliki masa pemantauan 72 jam. Anda dapat memverifikasi operasional dan mengonfirmasi penyelesaian tuntas secara mandiri melalui tombol di atas.`
       };
     } else {
       return {
-        recipient: `${props.pic.name || 'Bpk. Hendrik Pratama'} <${props.pic.email || 'customer@bca.co.id'}>`,
+        recipient: `${props.pic.name || 'PIC Pelanggan'} <${props.pic.email || 'pic@perusahaan.com'}>`,
         subject: `[TICKET #${props.ticket.ticketNumber}] Konfirmasi Penerimaan Laporan Gangguan - PT GTT`,
-        greeting: `Yth. ${props.pic.name || 'Bpk. Hendrik Pratama'} (${props.customer.name || 'PT Bank Central Asia Tbk'}),`,
+        greeting: `Yth. ${props.pic.name || 'PIC Pelanggan'} (${props.customer.name || 'Mitra Pelanggan'}),`,
         intro: `Terima kasih telah menghubungi Helpdesk PT Global Transformasi Teknologi. Laporan kendala Anda telah kami terima dan dicatat ke dalam sistem dengan rincian berikut:`,
         buttonText: `Buka Portal Tracking Mandiri`,
         footerNote: `Simpan tautan di atas untuk memantau progres langsung teknisi kami. Ketika perbaikan selesai, Anda dapat langsung mengonfirmasi penutupan tiket di portal tersebut.`
@@ -377,10 +377,10 @@ const emailMeta = computed(() => {
     }
   } else {
     return {
-      recipient: `${props.engineer.name || 'Budi Santoso'} <budi.santoso@gtteknologi.com>`,
+      recipient: `${props.engineer.name || 'Teknisi Helpdesk'} <engineer@perusahaan.com>`,
       subject: `[DISPATCH ALERT] Penugasan Tiket Baru: #${props.ticket.ticketNumber} (${props.ticket.severity})`,
-      greeting: `Halo ${props.engineer.name || 'Budi Santoso'},`,
-      intro: `Anda telah ditugaskan untuk menangani insiden teknis baru dari klien ${props.customer.name || 'BCA'}. Harap segera melakukan respon dan membuka investigasi sebelum batas Response SLA berakhir.`,
+      greeting: `Halo ${props.engineer.name || 'Teknisi Helpdesk'},`,
+      intro: `Anda telah ditugaskan untuk menangani insiden teknis baru dari klien ${props.customer.name || 'Mitra Pelanggan'}. Harap segera melakukan respon dan membuka investigasi sebelum batas Response SLA berakhir.`,
       buttonText: ``,
       footerNote: `Pastikan setiap tindakan pemeriksaan dicatat pada Checkpoint Milestones dan melampirkan berkas bukti (KVM log / screenshot).`
     };

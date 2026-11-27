@@ -27,7 +27,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue';
+import { computed, watch, onMounted, onUnmounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useTicketStore } from './stores/ticketStore';
 import { useAuthStore } from './stores/authStore';
@@ -54,6 +54,14 @@ onMounted(() => {
     ticketStore.fetchInitialDataFromApi();
     authStore.fetchUsersFromApi();
   }
+
+  // Muat data otomatis tepat setelah user berhasil login
+  watch(() => authStore.isAuthenticated, (authed) => {
+    if (authed && !isPublicRoute.value) {
+      ticketStore.fetchInitialDataFromApi();
+      authStore.fetchUsersFromApi();
+    }
+  });
 
   // 2. Realtime sync on window focus (saat user beralih dari HeidiSQL/Laragon/DB kembali ke browser)
   const onFocusSync = () => {

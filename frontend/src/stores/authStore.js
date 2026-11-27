@@ -71,7 +71,7 @@ const STORAGE_KEY_ROLE = 'gtt_current_role';
 const STORAGE_KEY_USERS = 'gtt_users_data';
 
 const USER_DATA_VERSION_KEY = 'gtt_user_data_version';
-const CURRENT_USER_DATA_VERSION = 'v11.0-prod-auth-clean';
+const CURRENT_USER_DATA_VERSION = 'v12.0-prod-jwt-auth';
 
 function getStoredUsers() {
   if (typeof window === 'undefined' || !window.localStorage) {
@@ -209,6 +209,42 @@ export const useAuthStore = defineStore('auth', {
       } catch (e) {
         // Backend offline, keep local state
       }
+    },
+    async loginWithApi(email, password) {
+      const trimmedEmail = (email || '').trim().toLowerCase();
+      if (!trimmedEmail || !password) {
+        return { success: false, message: 'Email dan kata sandi wajib diisi.' };
+      }
+
+      try {
+        const res = await api.login({ email: trimmedEmail, password });
+        if (res?.token && res?.user) {
+          const roleVal = typeof res.user.role === 'string' ? res.user.role : (res.user.role?.code || res.user.roleCode || 'ENGINEER');
+          const normalizedUser = { ...res.user, role: roleVal, roleCode: roleVal };
+          if (typeof window !== 'undefined' && window.localStorage) {
+            localStorage.removeItem('gtt_is_logged_out');
+            localStorage.setItem('gtt_jwt_token', res.token);
+          }
+          this.currentUser = normalizedUser;
+          saveCurrentAuthState(normalizedUser);
+
+          const idx = this.users.findIndex(u => u.id === normalizedUser.id);
+          if (idx >= 0) {
+            this.users[idx] = normalizedUser;
+          } else {
+            this.users.push(normalizedUser);
+          }
+          saveUsersState(this.users);
+          return { success: true, user: normalizedUser };
+        }
+      } catch (err) {
+        if (err?.status && [400, 401, 403].includes(err.status)) {
+          return { success: false, message: err.message || 'Email atau kata sandi tidak sesuai. Periksa kembali kredensial Anda.' };
+        }
+      }
+
+      // Fallback offline hanya jika server API tidak terjangkau
+      return this.login(trimmedEmail, password);
     },
     login(email, password) {
       const trimmedEmail = (email || '').trim().toLowerCase();

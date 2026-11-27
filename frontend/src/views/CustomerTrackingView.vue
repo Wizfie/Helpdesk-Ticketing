@@ -78,50 +78,6 @@
 
       <!-- State 3: Token Valid & Ticket Found -> Render Full Tracking View -->
       <div v-else class="space-y-6 animate-in fade-in duration-200">
-        <!-- Interactive Demo Notification Banner if in Demo Mode -->
-        <div v-if="isDemoMode" class="bg-gradient-to-r from-blue-900 to-indigo-900 border border-blue-500/40 rounded-2xl p-4 text-white shadow-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-3 animate-in fade-in">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-xl bg-blue-500/30 border border-blue-400/40 flex items-center justify-center text-blue-200 shrink-0">
-              <svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-              </svg>
-            </div>
-            <div>
-              <div class="flex items-center space-x-2">
-                <span class="font-bold text-sm text-white">Mode Pratinjau: Portal Monitoring Mandiri Pelanggan</span>
-                <span class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-blue-500 text-white font-bold uppercase tracking-wider">
-                  Simulasi PIC
-                </span>
-              </div>
-              <p class="text-xs text-blue-200 mt-0.5">
-                Ini adalah contoh pratinjau tampilan yang dilihat oleh PIC Klien saat mengklik tautan resmi dari email helpdesk tanpa perlu login.
-              </p>
-            </div>
-          </div>
-
-          <!-- Interactive Demo Status Switcher -->
-          <div class="flex items-center space-x-1.5 bg-slate-900/80 p-1.5 rounded-xl border border-blue-500/30 text-xs shrink-0">
-            <span class="text-[11px] text-slate-300 font-medium px-2">Status Kasus:</span>
-            <button
-              type="button"
-              @click="demoStatus = 'IN_PROGRESS'"
-              class="px-2.5 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer"
-              :class="demoStatus === 'IN_PROGRESS' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'"
-            >
-              Saat Dikerjakan
-            </button>
-            <button
-              type="button"
-              @click="demoStatus = 'RESOLVED'"
-              class="px-2.5 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer"
-              :class="demoStatus === 'RESOLVED' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'"
-            >
-              Saat Selesai (BAP)
-            </button>
-          </div>
-        </div>
-
         <!-- Top Alert Status Banner -->
         <div 
           class="rounded-2xl p-5 border shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4"
@@ -295,8 +251,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { api } from '../services/api';
 import { useTicketStore } from '../stores/ticketStore';
 import { useUiStore } from '../stores/uiStore';
 import { formatUtcToLocal } from '../utils/dateFormatter';
@@ -308,97 +265,50 @@ const uiStore = useUiStore();
 const ticketNumber = computed(() => route.params.ticketNumber);
 const routeToken = computed(() => route.query.token);
 
-const isDemoMode = computed(() => {
-  if (!import.meta.env.DEV) return false;
-  const num = (ticketNumber.value || '').toUpperCase();
-  const token = routeToken.value || '';
-  return num === 'DEMO' || num === 'TK-DEMO' || num.includes('DEMO') || token === 'demo_token' || token === 'sec_demo_token_123' || route.query.demo === 'true';
-});
+const publicTicket = ref(null);
+const tokenRejected = ref(false);
 
-const demoStatus = ref('IN_PROGRESS');
+const loadPublicTicket = async () => {
+  publicTicket.value = null;
+  tokenRejected.value = false;
+  if (!ticketNumber.value) return;
 
-const demoTicketData = computed(() => ({
-  id: 9999,
-  ticketNumber: ticketNumber.value && !['DEMO', 'TK-DEMO'].includes(ticketNumber.value.toUpperCase()) ? ticketNumber.value : 'TK-DEMO-2026',
-  title: 'Degradasi Throughput Core Fiber Optic & Latency Tinggi',
-  severity: 'HIGH',
-  status: demoStatus.value,
-  contractTier: 'TITANIUM 24x7 CRITICAL',
-  trackingToken: routeToken.value || 'demo_token',
-  serialNumber: 'SN-N9K-CISCO-8800',
-  description: 'Port trunk fiber optic core switch antar Data Center 1 & 2 mengalami penurunan throughput I/O sebesar 50% dan packet loss berkala. Tim teknisi GTT sedang melakukan diagnosa optical budget SFP+ dan pembersihan patch cord.',
-  createdAt: new Date(Date.now() - 45 * 60 * 1000).toISOString(),
-  respondedAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-  responseDeadline: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
-  resolutionDeadline: new Date(Date.now() + 75 * 60 * 1000).toISOString(),
-  resolvedAt: demoStatus.value === 'RESOLVED' ? new Date().toISOString() : null,
-  milestones: [
-    {
-      id: 1,
-      stepName: 'Ticket Intake & First-Touch Triage',
-      status: 'ASSIGNED',
-      actorName: 'Ahmad Fauzi (Helpdesk)',
-      notes: 'Tiket berhasil diterbitkan ke antrean darurat. Respon awal (first touch SLA) terpenuhi dalam 15 menit.',
-      timestampUtc: new Date(Date.now() - 30 * 60 * 1000).toISOString()
-    },
-    {
-      id: 2,
-      stepName: 'Alokasi Teknisi Spesialis Jaringan NOC',
-      status: 'ASSIGNED',
-      actorName: 'Farhan Pratama (Field Engineer)',
-      notes: 'Penugasan teknisi senior dikonfirmasi. Engineer menuju Data Center membawa perangkat optical power meter.',
-      timestampUtc: new Date(Date.now() - 25 * 60 * 1000).toISOString()
-    },
-    {
-      id: 3,
-      stepName: 'Pemeriksaan Daya Optik & Penggantian SFP+',
-      status: 'IN_PROGRESS',
-      actorName: 'Farhan Pratama (Field Engineer)',
-      notes: 'Modul SFP-10G-LR port Eth1/49 menunjukkan nilai -14.8 dBm. Telah dilakukan pembersihan ferrule dan kalibrasi kabel optik patch cord duplex LC-LC.',
-      timestampUtc: new Date(Date.now() - 10 * 60 * 1000).toISOString()
-    },
-    ...(demoStatus.value === 'RESOLVED' ? [{
-      id: 4,
-      stepName: 'Verifikasi Throughput & Penyelesaian Berita Acara (BAP)',
-      status: 'RESOLVED',
-      actorName: 'Farhan Pratama (Field Engineer)',
-      notes: 'Throughput stabil 10 Gbps tanpa packet loss. Seluruh interface operasional normal. Tiket diselesaikan dan memasuki masa pemantauan 72 jam.',
-      timestampUtc: new Date().toISOString()
-    }] : [])
-  ]
-}));
-
-const demoCustomer = {
-  name: 'PT Bank Central Asia Tbk (BCA)',
-  slaTier: 'TITANIUM 24x7 CRITICAL'
+  try {
+    const data = await api.getPublicTicket(ticketNumber.value, routeToken.value || '');
+    if (data && data.ticketNumber) {
+      publicTicket.value = data;
+    }
+  } catch (err) {
+    if (err?.status === 403) {
+      tokenRejected.value = true;
+      publicTicket.value = { ticketNumber: ticketNumber.value };
+    }
+  }
 };
 
-const demoPic = {
-  name: 'Bpk. Hendrik Pratama',
-  email: 'hendrik.p@bca.co.id',
-  phone: '0812-9876-5432'
-};
+onMounted(loadPublicTicket);
+watch([ticketNumber, routeToken], loadPublicTicket);
 
 const ticket = computed(() => {
-  if (isDemoMode.value) return demoTicketData.value;
+  if (publicTicket.value) return publicTicket.value;
   return ticketStore.tickets.find(t => t.ticketNumber === ticketNumber.value);
 });
 
 const isTokenValid = computed(() => {
-  if (isDemoMode.value) return true;
-  if (!ticket.value) return false;
+  if (tokenRejected.value || !ticket.value) return false;
+  if (ticket.value.isTokenValid === true) return true;
   // Strictly check that token is provided in URL query and matches ticket's trackingToken
   return Boolean(routeToken.value && routeToken.value === ticket.value.trackingToken);
 });
 
 const customer = computed(() => {
-  if (isDemoMode.value) return demoCustomer;
+  if (ticket.value?.customer) return ticket.value.customer;
   if (!ticket.value) return {};
   return ticketStore.customers.find(c => c.id === ticket.value.customerId) || {};
 });
 
 const pic = computed(() => {
-  if (isDemoMode.value) return demoPic;
+  if (ticket.value?.customerPic) return ticket.value.customerPic;
   if (!customer.value || !customer.value.pics) return {};
   return customer.value.pics.find(p => p.id === ticket.value.customerPicId) || customer.value.pics[0] || {};
 });
@@ -406,6 +316,7 @@ const pic = computed(() => {
 const formatTime = (t) => formatUtcToLocal(t);
 
 const getCategoryName = (id) => {
+  if (ticket.value?.category?.name) return ticket.value.category.name;
   const cat = ticketStore.categories.find(c => c.id === id);
   return cat ? cat.name : 'Network & Infrastructure';
 };
@@ -472,17 +383,14 @@ const confirmCustomerSatisfaction = async () => {
   });
   if (!ok) return;
 
-  if (isDemoMode.value) {
-    demoStatus.value = 'CLOSED';
-    uiStore.toastSuccess('✓ [Mode Demo] Konfirmasi kepuasan berhasil disimulasikan! Tiket ditutup tuntas.');
-    return;
-  }
-
   ticketStore.closeTicket(
     ticket.value.id,
     { name: pic.value?.name || 'PIC Pelanggan', roleCode: 'CUSTOMER' },
     'Pelanggan telah memverifikasi layanan normal dan mengonfirmasi penyelesaian tiket.'
   );
+  if (publicTicket.value) {
+    publicTicket.value.status = 'CLOSED';
+  }
   uiStore.toastSuccess('Terima kasih! Tiket resmi diarsipkan dengan status CLOSED.');
 };
 

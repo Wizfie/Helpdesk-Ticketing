@@ -1,10 +1,29 @@
 import prisma from '../lib/prisma.js';
 import { logAuditEvent } from '../services/auditService.js';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
+
+const PLACEHOLDER_HASH = '$2a$10$defaultPlaceholderHash2026';
+
+function sanitizeUser(user) {
+  if (!user) return null;
+  const { password: _, ...safeUser } = user;
+  return safeUser;
+}
 
 export async function getUsers(req, res) {
   try {
     const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        phone: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true
+      },
       orderBy: { id: 'asc' }
     });
     return res.json(users);
@@ -18,7 +37,7 @@ export async function getCurrentUser(req, res) {
     if (!req.user) {
       return res.status(401).json({ message: 'Pengguna belum terotentikasi.' });
     }
-    return res.json(req.user);
+    return res.json(sanitizeUser(req.user));
   } catch (error) {
     return res.status(500).json({ message: 'Gagal memuat profil pengguna.', error: error.message });
   }
@@ -26,21 +45,46 @@ export async function getCurrentUser(req, res) {
 
 export async function login(req, res) {
   try {
-    const { userId, email } = req.body;
+    const { userId, email, password } = req.body;
     let user = null;
 
-    if (userId) {
+    if (email) {
+      const normalizedEmail = String(email).trim().toLowerCase();
+      user = await prisma.user.findFirst({
+        where: { email: normalizedEmail }
+      });
+    } else if (userId && process.env.NODE_ENV !== 'production') {
       user = await prisma.user.findUnique({
         where: { id: Number(userId) }
-      });
-    } else if (email) {
-      user = await prisma.user.findUnique({
-        where: { email }
       });
     }
 
     if (!user) {
-      return res.status(404).json({ message: 'Akun staf pengguna tidak ditemukan.' });
+      return res.status(401).json({ message: 'Email atau kata sandi tidak sesuai. Periksa kembali kredensial Anda.' });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({ message: 'Akun staf berstatus non-aktif. Silakan hubungi Administrator.' });
+    }
+
+    const requirePasswordCheck = Boolean(email) || password !== undefined || process.env.NODE_ENV === 'production';
+    if (requirePasswordCheck) {
+      const hasCustomPassword = Boolean(user.password && user.password !== PLACEHOLDER_HASH);
+      let isPasswordValid = false;
+
+      if (!password) {
+        isPasswordValid = false;
+      } else if (!hasCustomPassword) {
+        isPasswordValid = password === 'password123';
+      } else if (user.password.startsWith('$2a$') || user.password.startsWith('$2b$')) {
+        isPasswordValid = bcrypt.compareSync(String(password), user.password);
+      } else {
+        isPasswordValid = user.password === String(password);
+      }
+
+      if (!isPasswordValid) {
+        return res.status(401).json({ message: 'Email atau kata sandi tidak sesuai. Periksa kembali kredensial Anda.' });
+      }
     }
 
     const token = jwt.sign(
@@ -56,14 +100,14 @@ export async function login(req, res) {
       action: 'LOGIN',
       entityType: 'USER',
       entityId: `USER-00${user.id}`,
-      description: `Staf ${user.name} (${user.role}) berhasil masuk / beralih sesi ke sistem`,
+      description: `Staf ${user.name} (${user.role}) berhasil masuk ke sistem`,
       ipAddress: req.ip || '127.0.0.1'
     });
 
     return res.json({
       message: 'Login berhasil.',
       token,
-      user
+      user: sanitizeUser(user)
     });
   } catch (error) {
     return res.status(500).json({ message: 'Terjadi kesalahan saat otentikasi login.', error: error.message });
@@ -96,7 +140,7 @@ export async function createUser(req, res) {
       ipAddress: req.ip
     });
 
-    return res.status(201).json(newUser);
+    return res.status(201).json(sanitizeUser(newUser));
   } catch (error) {
     return res.status(500).json({ message: 'Gagal menambahkan staf baru.', error: error.message });
   }
@@ -114,7 +158,7 @@ export async function updateUser(req, res) {
     const dataToUpdate = {};
     if (phone !== undefined) dataToUpdate.phone = phone ? phone.trim() : null;
     if (password && String(password).trim().length >= 6) {
-      dataToUpdate.password = String(password).trim();
+      dataToUpdate.password = bcrypt.hashSync(String(password).trim(), 10);
     }
 
     // Hanya ADMIN yang boleh mengubah nama, email, role, dan status aktif
@@ -143,7 +187,7 @@ export async function updateUser(req, res) {
       ipAddress: req.ip
     });
 
-    return res.json(updatedUser);
+    return res.json(sanitizeUser(updatedUser));
   } catch (error) {
     return res.status(500).json({ message: 'Gagal memperbarui data staf.', error: error.message });
   }

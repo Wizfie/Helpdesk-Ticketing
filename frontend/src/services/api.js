@@ -49,7 +49,7 @@ async function request(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  if (currentUserId) {
+  if (import.meta.env.DEV && currentUserId) {
     headers['x-simulated-user-id'] = currentUserId;
   }
 
@@ -61,7 +61,9 @@ async function request(endpoint, options = {}) {
 
     if (!response.ok) {
       const errorBody = await response.json().catch(() => ({}));
-      throw new Error(errorBody.message || `HTTP ${response.status}: ${response.statusText}`);
+      const err = new Error(errorBody.message || `HTTP ${response.status}: ${response.statusText}`);
+      err.status = response.status;
+      throw err;
     }
 
     return await response.json();

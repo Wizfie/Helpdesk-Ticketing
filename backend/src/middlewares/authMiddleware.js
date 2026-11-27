@@ -3,18 +3,22 @@ import prisma from '../lib/prisma.js';
 
 export async function authenticate(req, res, next) {
   try {
+    const isProduction = process.env.NODE_ENV === 'production';
     const authHeader = req.headers.authorization;
     let user = null;
 
-    // Check for simulated/switched user ID in headers (for convenient demo)
-    const simulatedUserId = req.headers['x-simulated-user-id'];
-    if (simulatedUserId) {
-      user = await prisma.user.findUnique({
-        where: { id: Number(simulatedUserId) }
-      });
-      if (user) {
-        req.user = user;
-        return next();
+    if (!isProduction) {
+      // Header simulasi hanya untuk pengembangan lokal non-produksi
+      const simulatedUserId = req.headers['x-simulated-user-id'];
+      if (simulatedUserId) {
+        user = await prisma.user.findUnique({
+          where: { id: Number(simulatedUserId) }
+        });
+        if (user) {
+          const { password: _, ...safeUser } = user;
+          req.user = safeUser;
+          return next();
+        }
       }
     }
 
@@ -24,16 +28,24 @@ export async function authenticate(req, res, next) {
       user = await prisma.user.findUnique({
         where: { id: decoded.id }
       });
+      if (user && !user.isActive) {
+        return res.status(403).json({ message: 'Akun pengguna berstatus non-aktif.' });
+      }
     }
 
-    if (!user) {
-      // Default fallback to first admin for seamless KP local development
+    if (!user && !isProduction) {
+      // Fallback hanya aktif untuk pengembangan lokal non-produksi
       user = await prisma.user.findFirst({
         where: { role: 'ADMIN' }
       });
     }
 
-    req.user = user;
+    if (!user) {
+      return res.status(401).json({ message: 'Otentikasi diperlukan. Silakan masuk terlebih dahulu.' });
+    }
+
+    const { password: _, ...safeUser } = user;
+    req.user = safeUser;
     next();
   } catch (error) {
     return res.status(401).json({ message: 'Sesi otentikasi tidak valid atau telah berakhir.', error: error.message });

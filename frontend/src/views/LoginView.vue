@@ -183,7 +183,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 
@@ -197,24 +197,12 @@ const showForgotPasswordModal = ref(false);
 const isLoading = ref(false);
 const errorMessage = ref('');
 
-let usersSyncPromise = null;
-
-onMounted(() => {
-  usersSyncPromise = authStore.fetchUsersFromApi();
-});
-
 const handleLogin = async () => {
   errorMessage.value = '';
   isLoading.value = true;
 
-  if (usersSyncPromise) {
-    await usersSyncPromise;
-  }
-
-  setTimeout(() => {
-    const res = authStore.login(email.value, password.value);
-    isLoading.value = false;
-
+  try {
+    const res = await authStore.loginWithApi(email.value, password.value);
     if (!res.success) {
       errorMessage.value = res.message || 'Login gagal. Periksa kembali email dan kata sandi Anda.';
       return;
@@ -226,6 +214,8 @@ const handleLogin = async () => {
     } else {
       router.push('/');
     }
-  }, 300);
+  } finally {
+    isLoading.value = false;
+  }
 };
 </script>
