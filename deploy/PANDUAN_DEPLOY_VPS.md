@@ -149,6 +149,12 @@ Buka browser ke `https://domainanda.com`:
 
 ## Update & Maintenance Rutin
 
+### Akses SSH Saat Proxy Cloudflare Aktif
+Karena Proxy Cloudflare hanya meneruskan trafik web HTTP/HTTPS (bukan port 22 SSH), gunakan **IP publik VPS secara langsung** untuk remote SSH:
+```bash
+ssh ubuntu@IP_VPS_ANDA
+```
+
 ### Update Kode Terbaru (Data Upload & DB Tetap Aman)
 ```bash
 cd /opt/apps/Helpdesk-Ticketing
@@ -158,12 +164,28 @@ bash deploy/deploy.sh frontend   # Khusus frontend saja
 bash deploy/deploy.sh backend    # Khusus backend saja
 ```
 
+### Akses Database VPS dari Laptop (DBeaver / HeidiSQL / MySQL Workbench)
+Port `3306` MySQL terikat khusus ke `127.0.0.1` VPS demi keamanan. Untuk mengakses dari laptop lokal, gunakan fitur **SSH Tunnel** pada client database Anda:
+* **Tab SSH Tunnel:** Host `IP_VPS_ANDA` | Port `22` | Username `ubuntu` | Password VPS
+* **Tab Main / MySQL:** Host `127.0.0.1` | Port `3306` | Database `helpdesk_glotra` | Username `glotra_user` *(atau `root`)* | Password sesuai `DB_PASSWORD` / `DB_ROOT_PASSWORD` di `.env` VPS
+
+### Migrasi / Import Database Lokal (`sql.sql`) ke MySQL VPS
+```bash
+# 1. Jalankan dari CMD/PowerShell di komputer lokal (folder proyek):
+scp sql.sql ubuntu@IP_VPS_ANDA:/opt/apps/Helpdesk-Ticketing/
+
+# 2. Jalankan di SSH VPS:
+cd /opt/apps/Helpdesk-Ticketing
+docker compose exec -T db mysql -u root -p"PASSWORD_ROOT_DB" helpdesk_glotra < sql.sql
+docker compose exec backend npx prisma db push
+```
+
 ### Backup & Restore Database
 ```bash
 # Backup
 docker compose exec -T db mysqldump -u root -p"PASSWORD_ROOT_DB" helpdesk_glotra | gzip > backup_$(date +%F).sql.gz
 
-# Restore (atau import sql.sql awal)
+# Restore
 gunzip < backup_YYYY-MM-DD.sql.gz | docker compose exec -T db mysql -u root -p"PASSWORD_ROOT_DB" helpdesk_glotra
 ```
 
@@ -171,3 +193,12 @@ gunzip < backup_YYYY-MM-DD.sql.gz | docker compose exec -T db mysql -u root -p"P
 ```bash
 tar -czvf backup_uploads_$(date +%F).tar.gz /srv/glotra-helpdesk/uploads
 ```
+
+### Perintah Monitoring Cepat
+| Kebutuhan | Perintah |
+| :--- | :--- |
+| Cek status semua container | `docker compose ps` |
+| Lihat log backend / database | `docker compose logs -f backend` |
+| Restart layanan | `docker compose restart` |
+| Hentikan sementara (data aman) | `docker compose down` |
+| Nyalakan kembali | `docker compose up -d` |

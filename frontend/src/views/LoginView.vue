@@ -7,10 +7,10 @@
     </div>
 
     <!-- Main Container Card -->
-    <div class="relative w-full max-w-4xl bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden grid grid-cols-1 lg:grid-cols-12 animate-in fade-in duration-300">
+    <div class="relative w-full max-w-md bg-white/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 overflow-hidden animate-in fade-in duration-300">
       
-      <!-- Left Column: Branding & Credentials Form (7 of 12) -->
-      <div class="p-6 sm:p-8 lg:p-10 lg:col-span-7 flex flex-col justify-between">
+      <!-- Branding & Credentials Form -->
+      <div class="p-6 sm:p-8 flex flex-col justify-between">
         <div>
           <!-- Logo & Brand Header -->
           <div class="flex items-center space-x-3 mb-6">
@@ -34,7 +34,7 @@
               Masuk ke Portal Operasional
             </h1>
             <p class="text-xs text-slate-500 mt-1">
-              Silakan masukkan kredensial akun staf atau pilih akun demo di samping untuk menguji pembatasan peran (RBAC).
+              Silakan masukkan email dan kata sandi akun staf Anda untuk mengakses sistem.
             </p>
           </div>
 
@@ -76,17 +76,13 @@
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
                   Kata Sandi
                 </label>
-                <div class="flex items-center space-x-2">
-                  <button 
-                    type="button"
-                    @click="showForgotPasswordModal = true"
-                    class="text-[11px] text-blue-600 hover:text-blue-800 hover:underline font-semibold cursor-pointer"
-                  >
-                    Lupa sandi?
-                  </button>
-                  <span class="text-slate-300">&bull;</span>
-                  <span class="text-[11px] text-slate-500 font-medium">Demo: password123</span>
-                </div>
+                <button 
+                  type="button"
+                  @click="showForgotPasswordModal = true"
+                  class="text-[11px] text-blue-600 hover:text-blue-800 hover:underline font-semibold cursor-pointer"
+                >
+                  Lupa sandi?
+                </button>
               </div>
               <div class="relative">
                 <input 
@@ -140,47 +136,6 @@
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
             Node JKT-01A Operational
           </span>
-        </div>
-      </div>
-
-      <!-- Right Column: Quick Demo RBAC Switcher (5 of 12) -->
-      <div class="bg-slate-50/90 p-6 sm:p-8 lg:col-span-5 border-t lg:border-t-0 lg:border-l border-slate-200/80 flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between mb-3">
-            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Akses Demo Cepat (RBAC)</span>
-            <span class="text-[10px] bg-blue-100 text-blue-700 font-bold px-2 py-0.5 rounded-full">1-Click Login</span>
-          </div>
-          <p class="text-xs text-slate-500 mb-4 leading-relaxed">
-            Klik salah satu akun di bawah untuk menguji pembatasan hak akses dan isolasi tiket antar staf teknisi:
-          </p>
-
-          <!-- List of Quick Demo Accounts (Dinamis dari Database MySQL) -->
-          <div class="space-y-2.5">
-            <button 
-              v-for="user in activeUsers" 
-              :key="user.id"
-              @click="quickLogin(user.email)"
-              type="button"
-              class="w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-blue-50/60 hover:border-blue-300 transition-all shadow-2xs group cursor-pointer"
-            >
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-bold text-xs text-slate-900 group-hover:text-blue-700">{{ user.name }}</span>
-                <span 
-                  class="text-[10px] font-bold px-2 py-0.2 rounded border"
-                  :class="(user.roleCode || user.role) === 'ADMIN' ? 'bg-purple-100 text-purple-700 border-purple-200' : 'bg-blue-100 text-blue-700 border-blue-200'"
-                >
-                  {{ user.roleCode || user.role }}
-                </span>
-              </div>
-              <p class="text-[11px] text-slate-500 leading-tight">
-                {{ user.email }} &bull; {{ user.phone || 'Staf Operasional' }}
-              </p>
-            </button>
-          </div>
-        </div>
-
-        <div class="mt-4 pt-3 border-t border-slate-200/70 text-[10px] text-slate-400 text-center">
-          Mode pengujian Role-Based Access Control aktif.
         </div>
       </div>
     </div>
@@ -241,27 +196,22 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/authStore';
 
 const router = useRouter();
 const authStore = useAuthStore();
 
-const email = ref('admin@glotratech.com');
-const password = ref('password123');
+const email = ref('');
+const password = ref('');
 const showPassword = ref(false);
 const showForgotPasswordModal = ref(false);
 const isLoading = ref(false);
 const errorMessage = ref('');
 
-const activeUsers = computed(() => (authStore.users || []).filter(u => u.isActive));
-
 onMounted(async () => {
   await authStore.fetchUsersFromApi();
-  if (activeUsers.value.length > 0 && !email.value) {
-    email.value = activeUsers.value[0].email;
-  }
 });
 
 const handleLogin = () => {
@@ -284,11 +234,5 @@ const handleLogin = () => {
       router.push('/');
     }
   }, 300);
-};
-
-const quickLogin = (userEmail) => {
-  email.value = userEmail;
-  password.value = 'password123';
-  handleLogin();
 };
 </script>
