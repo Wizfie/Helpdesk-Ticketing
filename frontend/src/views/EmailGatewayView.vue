@@ -25,7 +25,7 @@
             v-model="selectedTicketId" 
             class="text-xs px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-800 font-semibold focus:ring-2 focus:ring-blue-500"
           >
-            <option value="DEMO">Demo Simulasi (TK-DEMO)</option>
+            <option v-if="isDevMode" value="DEMO">Demo Simulasi (TK-DEMO)</option>
             <option v-for="t in ticketStore.tickets" :key="t.id" :value="t.id">
               {{ t.ticketNumber }} - {{ t.title?.slice(0, 28) }}...
             </option>
@@ -46,6 +46,7 @@
         </button>
 
         <router-link
+          v-if="previewTicket?.trackingToken && (selectedTicketId !== 'DEMO' || isDevMode)"
           :to="selectedTicketId === 'DEMO' ? '/track/TK-DEMO?token=demo_token' : `/track/${previewTicket.ticketNumber}?token=${previewTicket.trackingToken}`"
           target="_blank"
           class="px-3.5 py-2 text-xs font-semibold text-blue-700 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl transition flex items-center space-x-1.5 shadow-2xs cursor-pointer"
@@ -304,7 +305,8 @@ import { useTicketStore } from '../stores/ticketStore';
 import EmailPreviewModal from '../components/EmailPreviewModal.vue';
 
 const ticketStore = useTicketStore();
-const selectedTicketId = ref('DEMO');
+const isDevMode = import.meta.env.DEV;
+const selectedTicketId = ref(ticketStore.tickets[0]?.id || (isDevMode ? 'DEMO' : ''));
 const showTemplatePreview = ref(false);
 const showPassword = ref(false);
 
@@ -471,6 +473,9 @@ onMounted(async () => {
   fetchConfig();
   if (ticketStore.tickets.length === 0) {
     await ticketStore.fetchTickets();
+  }
+  if (ticketStore.tickets.length > 0 && (!selectedTicketId.value || selectedTicketId.value === 'DEMO')) {
+    selectedTicketId.value = ticketStore.tickets[0].id;
   }
   if (ticketStore.customers.length === 0) {
     await ticketStore.fetchCustomers();

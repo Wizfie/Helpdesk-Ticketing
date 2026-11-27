@@ -71,7 +71,7 @@ const STORAGE_KEY_ROLE = 'gtt_current_role';
 const STORAGE_KEY_USERS = 'gtt_users_data';
 
 const USER_DATA_VERSION_KEY = 'gtt_user_data_version';
-const CURRENT_USER_DATA_VERSION = 'v10.0-synced-db-session-clear';
+const CURRENT_USER_DATA_VERSION = 'v11.0-prod-auth-clean';
 
 function getStoredUsers() {
   if (typeof window === 'undefined' || !window.localStorage) {
@@ -91,25 +91,24 @@ function getStoredUsers() {
       localStorage.removeItem('gtt_sla_policies_clean_v2');
       localStorage.removeItem('gtt_knowledge_base_data');
       localStorage.removeItem('gtt_audit_logs_data');
-      localStorage.removeItem(STORAGE_KEY_SELECTED_TICKET_ID);
-      localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(DEFAULT_USERS));
-      localStorage.setItem(STORAGE_KEY_USER_ID, '1');
-      localStorage.setItem(STORAGE_KEY_ROLE, 'ADMIN');
+      localStorage.removeItem('gtt_selected_ticket_id');
       return DEFAULT_USERS;
     }
     const raw = localStorage.getItem(STORAGE_KEY_USERS);
     if (raw) {
       const parsed = JSON.parse(raw);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        let changed = false;
-        DEFAULT_USERS.forEach(defU => {
-          if (!parsed.some(u => u.id === defU.id || u.email === defU.email)) {
-            parsed.push(defU);
-            changed = true;
+        if (import.meta.env.DEV) {
+          let changed = false;
+          DEFAULT_USERS.forEach(defU => {
+            if (!parsed.some(u => u.id === defU.id || u.email === defU.email)) {
+              parsed.push(defU);
+              changed = true;
+            }
+          });
+          if (changed) {
+            localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(parsed));
           }
-        });
-        if (changed) {
-          localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(parsed));
         }
         return parsed;
       }
@@ -215,14 +214,20 @@ export const useAuthStore = defineStore('auth', {
       const trimmedEmail = (email || '').trim().toLowerCase();
       const user = this.users.find(u => u.email.toLowerCase() === trimmedEmail);
       if (!user) {
-        return { success: false, message: 'Email staf tidak terdaftar dalam sistem GTT.' };
+        return { success: false, message: 'Email atau kata sandi tidak sesuai. Periksa kembali kredensial Anda.' };
       }
       if (!user.isActive) {
-        return { success: false, message: 'Akun staf berstatus non-aktif. Silakan hubungi Admin CPIG.' };
+        return { success: false, message: 'Akun staf berstatus non-aktif. Silakan hubungi Administrator.' };
       }
-      // Demo password check (allow 'password123' or matching user password)
-      if (password && password !== 'password123' && user.password && user.password !== password) {
-        return { success: false, message: 'Kata sandi tidak sesuai. Gunakan kata sandi akun Anda atau password123.' };
+
+      const PLACEHOLDER_HASH = '$2a$10$defaultPlaceholderHash2026';
+      const hasCustomPassword = Boolean(user.password && user.password !== PLACEHOLDER_HASH);
+      const isPasswordValid = hasCustomPassword
+        ? user.password === password
+        : password === 'password123';
+
+      if (!password || !isPasswordValid) {
+        return { success: false, message: 'Email atau kata sandi tidak sesuai. Periksa kembali kredensial Anda.' };
       }
 
       if (typeof window !== 'undefined' && window.localStorage) {
@@ -230,6 +235,15 @@ export const useAuthStore = defineStore('auth', {
       }
       this.currentUser = user;
       saveCurrentAuthState(user);
+
+      api.login({ userId: user.id, email: user.email })
+        .then((res) => {
+          if (res?.token && typeof window !== 'undefined' && window.localStorage) {
+            localStorage.setItem('gtt_jwt_token', res.token);
+          }
+        })
+        .catch(() => {});
+
       return { success: true, user };
     },
     loginAs(user) {
@@ -268,6 +282,7 @@ export const useAuthStore = defineStore('auth', {
       this.currentUser = null;
     },
     switchUser(userId) {
+      if (!import.meta.env.DEV) return;
       const user = this.users.find(u => u.id === Number(userId));
       if (user) {
         if (typeof window !== 'undefined' && window.localStorage) {
@@ -278,6 +293,7 @@ export const useAuthStore = defineStore('auth', {
       }
     },
     switchRole(roleCode) {
+      if (!import.meta.env.DEV) return;
       const user = this.users.find(u => u.roleCode === roleCode);
       if (user) {
         this.currentUser = user;
@@ -487,13 +503,17 @@ export const useAuthStore = defineStore('auth', {
       return { success: true, message: 'Data profil berhasil diperbarui.' };
     },
 
-    adminResetPassword(userId, newPassword, actorUser, ticketStore) {
+    async adminResetPassword(userId, newPassword, actorUser, ticketStore) {
       const user = this.users.find(u => u.id === Number(userId));
       if (!user) {
         return { success: false, message: 'Pengguna tidak ditemukan.' };
       }
 
-      const passToSet = newPassword && newPassword.trim() ? newPassword.trim() : 'GTT@2026!';
+      const passToSet = newPassword ? String(newPassword).trim() : '';
+      if (passToSet.length < 6) {
+        return { success: false, message: 'Kata sandi baru minimal harus 6 karakter.' };
+      }
+
       user.password = passToSet;
 
       if (this.currentUser && this.currentUser.id === user.id) {
@@ -502,6 +522,12 @@ export const useAuthStore = defineStore('auth', {
       }
 
       saveUsersState(this.users);
+
+      try {
+        await api.updateUser(user.id, { password: passToSet });
+      } catch (err) {
+        console.warn('API reset password warning:', err.message);
+      }
 
       if (ticketStore && ticketStore.addAuditLog) {
         ticketStore.addAuditLog({
@@ -516,7 +542,7 @@ export const useAuthStore = defineStore('auth', {
 
       return {
         success: true,
-        message: `Kata sandi untuk ${user.name} berhasil direset menjadi: ${passToSet}`,
+        message: `Kata sandi untuk ${user.name} berhasil direset.`,
         temporaryPassword: passToSet
       };
     }

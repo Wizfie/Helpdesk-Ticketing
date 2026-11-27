@@ -309,6 +309,7 @@ const ticketNumber = computed(() => route.params.ticketNumber);
 const routeToken = computed(() => route.query.token);
 
 const isDemoMode = computed(() => {
+  if (!import.meta.env.DEV) return false;
   const num = (ticketNumber.value || '').toUpperCase();
   const token = routeToken.value || '';
   return num === 'DEMO' || num === 'TK-DEMO' || num.includes('DEMO') || token === 'demo_token' || token === 'sec_demo_token_123' || route.query.demo === 'true';

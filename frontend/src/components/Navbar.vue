@@ -380,13 +380,4 @@ const handleLogout = () => {
   authStore.logout();
   router.push('/login');
 };
-
-const switchRole = (code) => {
-  authStore.switchRole(code);
-  if (code === 'ENGINEER') {
-    router.push('/tickets');
-  } else {
-    router.push('/');
-  }
-};
 </script>

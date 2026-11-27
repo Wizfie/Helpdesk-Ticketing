@@ -22,9 +22,8 @@
             <div>
               <div class="flex items-center space-x-2">
                 <span class="font-black text-slate-900 text-lg tracking-tight">Glotra ServiceDesk</span>
-                <span class="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">v1.0 RBAC</span>
               </div>
-              <p class="text-xs text-slate-500 font-medium italic">"Think it, Solve it" &bull; 24x7 Enterprise SLA</p>
+              <p class="text-xs text-slate-500 font-medium italic">"Think it, Solve it"</p>
             </div>
           </div>
 
@@ -61,7 +60,7 @@
                   v-model="email" 
                   type="email" 
                   required
-                  placeholder="nama.staf@glotratech.com" 
+                  placeholder="email@perusahaan.com" 
                   class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl text-xs placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-slate-800"
                 />
                 <svg class="w-4 h-4 text-slate-400 absolute left-3 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -130,12 +129,8 @@
         </div>
 
         <!-- Footer Notice -->
-        <div class="pt-6 mt-6 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-          <span>&copy; 2026 PT Glotra Technology.</span>
-          <span class="inline-flex items-center gap-1 text-emerald-600 font-medium">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-            Node JKT-01A Operational
-          </span>
+        <div class="pt-6 mt-6 border-t border-slate-100 text-center text-[11px] text-slate-400">
+          <span>&copy; 2026 PT Global Transformasi Teknologi.</span>
         </div>
       </div>
     </div>
@@ -152,7 +147,7 @@
             </div>
             <div>
               <h4 class="font-bold text-slate-900 text-sm">Bantuan Pemulihan Sandi</h4>
-              <p class="text-[11px] text-slate-500">Kebijakan Reset Akun PT Glotra Technology</p>
+              <p class="text-[11px] text-slate-500">Kebijakan Reset Akun PT Global Transformasi Teknologi</p>
             </div>
           </div>
           <button @click="showForgotPasswordModal = false" class="text-slate-400 hover:text-slate-600 text-lg leading-none cursor-pointer">&times;</button>
@@ -160,24 +155,16 @@
 
         <div class="space-y-3 text-slate-600 leading-relaxed text-[11px]">
           <p>
-            Untuk menjaga integritas operasional Helpdesk 24/7, <strong>fitur reset kata sandi tidak menggunakan link email publik</strong>, melainkan dibantu dan dikonfirmasi langsung oleh <strong>Administrator / CPIG Helpdesk</strong>.
+            Demi keamanan akses sistem, <strong>reset kata sandi tidak dilakukan melalui tautan publik</strong>, melainkan dibantu dan diverifikasi langsung oleh <strong>Administrator Helpdesk</strong>.
           </p>
 
           <div class="bg-blue-50 border border-blue-200 rounded-xl p-3.5 space-y-2 text-blue-900">
-            <span class="font-bold block text-xs">Cara Mendapatkan Reset Sandi:</span>
+            <span class="font-bold block text-xs">Prosedur Reset Sandi:</span>
             <ol class="list-decimal list-inside space-y-1 text-[11px] text-blue-800">
-              <li>Hubungi Administrator melalui email resmi <strong>admin@glotratech.com</strong>.</li>
-              <li>Sebutkan email perusahaan dan nama lengkap Anda untuk verifikasi staf.</li>
-              <li>Admin akan mereset akun Anda dari menu <em>Manajemen Pengguna</em> dan memberikan sandi sementara.</li>
+              <li>Hubungi Administrator Helpdesk internal perusahaan.</li>
+              <li>Sampaikan nama lengkap dan email akun Anda untuk verifikasi staf.</li>
+              <li>Administrator akan menerbitkan sandi sementara melalui menu <em>Manajemen Pengguna</em>.</li>
             </ol>
-          </div>
-
-          <div class="bg-slate-50 p-3 rounded-xl border border-slate-200">
-            <span class="text-[10px] text-slate-400 block font-mono">KONTAK ADMINISTRATOR OPERASIONAL:</span>
-            <div class="flex items-center justify-between mt-1 text-slate-700 font-semibold">
-              <span>Ahmad Fauzi (SysAdmin Lead)</span>
-              <span class="font-mono text-blue-600">0811-9988-771</span>
-            </div>
           </div>
         </div>
 
@@ -210,13 +197,19 @@ const showForgotPasswordModal = ref(false);
 const isLoading = ref(false);
 const errorMessage = ref('');
 
-onMounted(async () => {
-  await authStore.fetchUsersFromApi();
+let usersSyncPromise = null;
+
+onMounted(() => {
+  usersSyncPromise = authStore.fetchUsersFromApi();
 });
 
-const handleLogin = () => {
+const handleLogin = async () => {
   errorMessage.value = '';
   isLoading.value = true;
+
+  if (usersSyncPromise) {
+    await usersSyncPromise;
+  }
 
   setTimeout(() => {
     const res = authStore.login(email.value, password.value);

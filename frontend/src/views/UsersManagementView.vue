@@ -515,15 +515,17 @@
               v-model="resetPasswordValue"
               type="text"
               required
+              minlength="6"
+              placeholder="Minimal 6 karakter"
               class="flex-1 px-3 py-2 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-800 focus:ring-2 focus:ring-amber-500"
             />
             <button
               type="button"
-              @click="resetPasswordValue = 'GTT@2026!'"
+              @click="generateTempPassword"
               class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-[11px] shrink-0 cursor-pointer"
-              title="Gunakan default GTT@2026!"
+              title="Buat kata sandi sementara acak"
             >
-              Default
+              Buat Acak
             </button>
           </div>
           <p class="text-[11px] text-slate-500">
@@ -621,8 +623,17 @@ const showEditModal = ref(false);
 const showResetModal = ref(false);
 
 const resetTargetUser = ref(null);
-const resetPasswordValue = ref("GTT@2026!");
+const resetPasswordValue = ref("");
 const resetSuccessMsg = ref("");
+
+const generateTempPassword = () => {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  let suffix = "";
+  for (let i = 0; i < 6; i++) {
+    suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  resetPasswordValue.value = `Gtt#${suffix}`;
+};
 
 // Dropdown options
 const roleOptions = [
@@ -678,13 +689,17 @@ const openEditModal = (user) => {
 
 const openResetModal = (user) => {
   resetTargetUser.value = user;
-  resetPasswordValue.value = "GTT@2026!";
+  resetPasswordValue.value = "";
   resetSuccessMsg.value = "";
   showResetModal.value = true;
 };
 
 const submitResetPassword = async () => {
   if (!resetTargetUser.value) return;
+  if (!resetPasswordValue.value || resetPasswordValue.value.trim().length < 6) {
+    uiStore.toastError("Kata sandi sementara minimal harus 6 karakter.");
+    return;
+  }
   const ok = await uiStore.confirm({
     title: "Reset Kata Sandi Pengguna?",
     message: `Reset kata sandi untuk staf "${resetTargetUser.value.name}" menjadi kata sandi baru?`,
@@ -693,7 +708,7 @@ const submitResetPassword = async () => {
   });
   if (!ok) return;
 
-  const res = authStore.adminResetPassword(
+  const res = await authStore.adminResetPassword(
     resetTargetUser.value.id,
     resetPasswordValue.value,
     authStore.currentUser,
@@ -702,6 +717,8 @@ const submitResetPassword = async () => {
   if (res.success) {
     resetSuccessMsg.value = `Sandi berhasil direset ke: ${res.temporaryPassword}`;
     uiStore.toastSuccess(`Kata sandi "${resetTargetUser.value.name}" berhasil direset.`);
+  } else {
+    uiStore.toastError(res.message || "Gagal mereset kata sandi.");
   }
 };
 

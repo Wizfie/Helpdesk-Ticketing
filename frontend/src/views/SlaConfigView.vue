@@ -1825,7 +1825,7 @@ const getPolicyDescription = (policy) => {
 
 const getPolicyCreator = (policy) => {
   const meta = getPolicyMeta(policy);
-  return meta.createdBy || authStore.currentUser?.name || 'Ahmad Fauzi';
+  return meta.createdBy || authStore.currentUser?.name || 'Administrator';
 };
 
 

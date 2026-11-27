@@ -4,9 +4,9 @@
     <router-view />
   </div>
 
-  <!-- Internal Staff Portal Layout (with Navbar, Sidebar, and RBAC Switcher) -->
+  <!-- Internal Staff Portal Layout -->
   <div v-else class="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col font-sans antialiased text-slate-800 dark:text-slate-100">
-    <!-- Top Navbar with GTT Logo, Live Time, Role Switcher -->
+    <!-- Top Navbar -->
     <Navbar />
 
     <!-- Main Container (Sidebar + Content) -->
