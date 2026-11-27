@@ -54,6 +54,9 @@ services:
     volumes:
       # Volume persisten untuk file lampiran bukti digital & dokumen KB
       - ${UPLOAD_STORAGE_PATH:-uploads_data}:/app/uploads
+      # Mount .env host ke container agar perubahan dari menu Gateway Email tersimpan permanen
+      # (Pastikan sudah menjalankan 'cp .env.example .env' sebelum 'docker compose up')
+      - ./.env:/app/.env
     networks:
       - helpdesk-net
 

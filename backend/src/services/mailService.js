@@ -4,6 +4,33 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
+// Baca ulang khusus key email dari .env agar perubahan via UI tetap terbaca meski container di-restart
+const EMAIL_OVERRIDE_KEYS = new Set([
+  'EMAIL_PLATFORM',
+  'EMAIL_DRIVER',
+  'EMAIL_FROM_NAME',
+  'EMAIL_FROM_ADDRESS',
+  'SMTP_HOST',
+  'SMTP_PORT',
+  'SMTP_SECURE',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'RESEND_API_KEY'
+]);
+for (const envCandidate of [path.resolve(process.cwd(), '.env'), path.resolve(process.cwd(), 'backend', '.env')]) {
+  try {
+    if (fs.existsSync(envCandidate)) {
+      const parsedEnv = dotenv.parse(fs.readFileSync(envCandidate, 'utf8'));
+      for (const [k, v] of Object.entries(parsedEnv)) {
+        if (EMAIL_OVERRIDE_KEYS.has(k) && v !== undefined && v !== '') {
+          process.env[k] = v;
+        }
+      }
+      break;
+    }
+  } catch (e) {}
+}
+
 /**
  * Tentukan platform email secara dinamis dari host SMTP agar tidak terjebak fallback Gmail
  */
